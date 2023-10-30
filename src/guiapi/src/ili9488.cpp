@@ -336,24 +336,6 @@ bool ili9488_is_reset_required() {
     return false;
 }
 
-/*void ili9488_test_miso(void)
-{
-//	uint16_t data_out[8] = {CLR565_WHITE, CLR565_WHITE, CLR565_RED, CLR565_RED, CLR565_GREEN, CLR565_GREEN, CLR565_BLUE, CLR565_BLUE};
-        uint8_t data_out[16] = {0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        uint8_t data_in[32];
-        memset(data_in, 0, sizeof(data_in));
-        ili9488_clr_cs();
-        ili9488_cmd_caset(0, ILI9488_COLS - 1);
-        ili9488_cmd_raset(0, ILI9488_ROWS - 1);
-        ili9488_cmd_ramwr((uint8_t*)data_out, 16);
-        ili9488_set_cs();
-        ili9488_clr_cs();
-        ili9488_cmd_caset(0, ILI9488_COLS - 1);
-        ili9488_cmd_raset(0, ILI9488_ROWS - 1);
-        ili9488_cmd_ramrd(data_in, 32);
-        ili9488_set_cs();
-}*/
-
 void ili9488_reset(void) {
     // some extra step based on new manufacturer recommendation
     if (Configuration::Instance().has_display_backlight_control()) {
