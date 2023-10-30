@@ -41,6 +41,7 @@ struct ili9488_config_t {
 
 constexpr static uint8_t DEFAULT_MADCTL = 0xE0; // memory data access control (mirror XY)
 constexpr static uint8_t DEFAULT_COLMOD = 0x66; // interface pixel format (6-6-6, hi-color)
+constexpr static uint8_t TRIBIT_COLMOD = 0x61; // interface pixel format (6-6-6, hi-color)
 
 static ili9488_config_t ili9488_config = {
     .flg = ILI9488_FLG_DMA, // flags (DMA, MISO)
@@ -512,11 +513,42 @@ uint32_t ili9488_get_pixel_colorFormat666(uint16_t point_x, uint16_t point_y) {
     return ret; // directColor;
 }
 
+static void ili9488_fill_rect_color_fast(uint16_t rect_x, uint16_t rect_y, uint16_t rect_w, uint16_t rect_h, uint8_t clr33) {
+    // prepare buffer; we are writing two pixels per byte
+    const uint32_t pixel_count = (uint32_t)rect_w * rect_h;
+    const uint32_t size = (pixel_count + 1) / 2;
+    const int n = size / sizeof(ili9488_buff);
+    const int s = size % sizeof(ili9488_buff);
+    memset(ili9488_buff, clr33, n ? sizeof(ili9488_buff) : s);
+
+    // issue commands; note that COLMOD needs to be issued just before RAMWR
+    ili9488_clr_cs();
+    ili9488_cmd_caset(rect_x, rect_x + rect_w - 1);
+    ili9488_cmd_raset(rect_y, rect_y + rect_h - 1);
+    ili9488_cmd_colmod(TRIBIT_COLMOD);
+    ili9488_cmd_ramwr(0, 0);
+    for (int i = 0; i < n; i++) {
+        ili9488_wr(ili9488_buff, sizeof(ili9488_buff));
+    }
+    if (s) {
+        ili9488_wr(ili9488_buff, s);
+    }
+    ili9488_cmd_colmod(DEFAULT_COLMOD);
+    ili9488_set_cs();
+}
+
 void ili9488_fill_rect_colorFormat666(uint16_t rect_x, uint16_t rect_y, uint16_t rect_w, uint16_t rect_h, uint32_t clr666) {
     // BFW-6328 Some displays possibly problematic with higher baudrate, reduce 40 -> 20 MHz
     SPIBaudRatePrescalerGuard _g(&SPI_HANDLE_FOR(lcd), SPI_BAUDRATEPRESCALER_4, reduce_display_baudrate);
 
     assert(!ili9488_buff_borrowed && "Buffer lent to someone");
+
+    // fast path for black and white pixels; no need to support more colors at the moment
+    if (clr666 == 0x00000000 || clr666 == 0x00fcfcfc) {
+        const uint8_t clr33 = clr666 == 0 ? 0 : 0x3f;
+        ili9488_fill_rect_color_fast(rect_x, rect_y, rect_w, rect_h, clr33);
+        return;
+    }
 
     int i;
     uint32_t size = (uint32_t)rect_w * rect_h * 3;
