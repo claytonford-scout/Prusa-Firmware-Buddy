@@ -159,12 +159,6 @@ static void ili9488_clr_rst(void) {
     displayRst.write(Pin::State::low);
 }
 
-static inline void ili9488_fill_ui16(uint16_t *p, uint16_t v, uint16_t c) {
-    while (c--) {
-        *(p++) = v;
-    }
-}
-
 static void ili9488_fill_ui24(uint8_t *p, uint32_t v, int c) {
     while (c--) {
         p[0] = 0xFF & v;
