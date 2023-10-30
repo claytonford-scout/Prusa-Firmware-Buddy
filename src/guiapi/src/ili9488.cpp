@@ -481,29 +481,7 @@ void ili9488_done(void) {
 }
 
 void ili9488_clear(uint32_t clr666) {
-    assert(!ili9488_buff_borrowed && "Buffer lent to someone");
-
-    int i;
-    uint8_t *p_byte = (uint8_t *)ili9488_buff;
-
-    for (i = 0; i < ILI9488_COLS * ILI9488_BUFF_ROWS - 1; i++) {
-        *((uint32_t *)p_byte) = clr666;
-        p_byte += 3; // increase the address by 3 because the color has 3 bytes
-    }
-    uint8_t *clr_ptr = (uint8_t *)&clr666;
-    for (int j = 0; j < 3; j++) {
-        *(p_byte + j) = *(clr_ptr + j);
-    }
-
-    ili9488_clr_cs();
-    ili9488_cmd_caset(0, ILI9488_COLS - 1);
-    ili9488_cmd_raset(0, ILI9488_ROWS - 1);
-    ili9488_cmd_ramwr(0, 0);
-    for (i = 0; i < ILI9488_ROWS / ILI9488_BUFF_ROWS; i++) {
-        ili9488_wr(ili9488_buff, sizeof(ili9488_buff));
-    }
-    ili9488_set_cs();
-    //	ili9488_test_miso();
+    ili9488_fill_rect_colorFormat666(0, 0, ILI9488_COLS, ILI9488_ROWS, clr666);
 }
 
 void ili9488_set_pixel(uint16_t point_x, uint16_t point_y, uint32_t clr666) {
