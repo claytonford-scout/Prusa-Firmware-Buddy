@@ -59,7 +59,6 @@
 #include "module/printcounter.h"
 #include "feature/closedloop.h"
 #include "feature/safety_timer.h"
-#include "feature/bed_preheat.hpp"
 #if !BOARD_IS_DWARF()
 #include "pause_stubbed.hpp"
 #endif
@@ -543,10 +542,6 @@ void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
   manage_inactivity(no_stepper_sleep);
 
   thermalManager.manage_heater();
-
-  #if HAS_HEATED_BED
-    bed_preheat.update();
-  #endif
 
   #if USE_BEEPER
     buzzer.tick();
