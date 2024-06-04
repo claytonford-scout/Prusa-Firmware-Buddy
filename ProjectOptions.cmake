@@ -784,3 +784,8 @@ set(MDNS
     CACHE BOOL "Enable MDNS responder"
     )
 define_boolean_option(MDNS ${MDNS})
+set(E2EE_SUPPORT
+    "ON"
+    CACHE BOOL "End 2 End Encryption support"
+    )
+define_boolean_option(E2EE_SUPPORT ${E2EE_SUPPORT})
