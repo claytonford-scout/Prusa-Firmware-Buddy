@@ -38,6 +38,19 @@ MI_KEYGEN::MI_KEYGEN()
 void MI_KEYGEN::click(IWindowMenu &) {
     Screens::Access()->Get()->WindowEvent(nullptr, GUI_event_t::CHILD_CLICK, this);
 }
+
+MI_EXPORT::MI_EXPORT()
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_EXPORT::click(IWindowMenu &) {
+    if (e2ee::export_key()) {
+        MsgBox(_("Exported"), Responses_Ok);
+    } else {
+        // TODO: More details?
+        MsgBoxWarning(_("Failed to export"), Responses_Ok);
+    }
+}
+
 } // namespace detail_e2ee
 
 ScreenMenuE2ee::ScreenMenuE2ee()

@@ -35,11 +35,25 @@ struct Contexts {
         pk.pk_ctx = &rsa;
     }
     ~Contexts() {
+        // For some reasons, the pk works fine when it is a result of reading
+        // it from somewhere. But when we "compose" it from parts, as above, it
+        // does weird things and corrupts the memory. Therefore, we have to
+        // decompose it before destruction.
         pk.pk_ctx = nullptr;
         mbedtls_pk_free(&pk);
         mbedtls_rsa_free(&rsa);
         mbedtls_ctr_drbg_free(&ctr_drbg);
         mbedtls_entropy_free(&entropy);
+    }
+};
+
+struct Pk {
+    mbedtls_pk_context pk;
+    Pk() {
+        mbedtls_pk_init(&pk);
+    }
+    ~Pk() {
+        mbedtls_pk_free(&pk);
     }
 };
 
@@ -96,6 +110,54 @@ KeyGen::LoopResult KeyGen::loop() {
     }
 
     return LoopResult::Done;
+}
+
+bool export_key() {
+    unique_ptr<uint8_t, FreeDeleter> buffer(reinterpret_cast<uint8_t *>(malloc_fallible(buffer_size)));
+    if (!buffer) {
+        return false;
+    }
+
+    unique_file_ptr inf(fopen(key_path, "rb"));
+    if (!inf) {
+        return false;
+    }
+
+    size_t ins = fread(buffer.get(), 1, buffer_size, inf.get());
+    if (ins == 0 || ferror(inf.get()) || !feof(inf.get())) {
+        return false;
+    }
+
+    inf.reset();
+
+    int ret = 0;
+    {
+        Pk pk;
+        if (mbedtls_pk_parse_key(&pk.pk, buffer.get(), ins, NULL /* No password */, 0) != 0) {
+            return false;
+        }
+
+        ret = mbedtls_pk_write_pubkey_der(&pk.pk, buffer.get(), buffer_size);
+
+        if (ret <= 0) {
+            return false;
+        }
+    } // Destroy the pk
+
+    unique_file_ptr outf(fopen(pubkey_path, "wb"));
+    if (!outf) {
+        return false;
+    }
+
+    // Note: mbedtls writes to the _end_ of the buffer.
+    if (fwrite(buffer.get() + buffer_size - ret, ret, 1, outf.get()) != 1) {
+        outf.reset();
+        // Result not checked - no way we can fail twice anyway.
+        remove(pubkey_path);
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace e2ee

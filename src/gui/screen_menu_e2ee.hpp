@@ -30,9 +30,19 @@ protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
 
+class MI_EXPORT final : public IWindowMenuItem {
+    constexpr static const char *const label = N_("Export");
+
+public:
+    MI_EXPORT();
+
+protected:
+    virtual void click(IWindowMenu &window_menu) override;
+};
+
 // TODO:
 // * Delete key? Do we need it?
-using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN>;
+using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, MI_EXPORT>;
 } // namespace detail_e2ee
 
 class ScreenMenuE2ee final : public detail_e2ee::Menu {
