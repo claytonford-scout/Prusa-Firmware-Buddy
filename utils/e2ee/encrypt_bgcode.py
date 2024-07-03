@@ -74,17 +74,6 @@ class BlockType(IntEnum):
     IdentityBlock = 6
     KeyBlock = 7
     EncryptedBlock = 8
-    Endblock = 9
-
-
-class AsymAlgo(IntEnum):
-    No = 0
-    RSA = 1
-
-
-class SymAlgo(IntEnum):
-    No = 0
-    AES_128_CBC = 1
 
 
 class Compression(IntEnum):
@@ -92,6 +81,16 @@ class Compression(IntEnum):
     Deflate = 1
     HeatShrink_11_4 = 2
     HeatShrink_12_4 = 3
+
+
+class KeyBlockEncryption(IntEnum):
+    No = 0
+    RSA_ENC_SHA256_SIGN = 1
+
+
+class EncryptedBlockEncryption(IntEnum):
+    No = 0
+    AES128_CBC_SHA256_HMAC = 1
 
 
 class FileHeader:
@@ -108,6 +107,18 @@ class FileHeader:
         assert (self.magic == b"GCDE")
         assert (self.version == 1)
         assert (self.checksumType in [0, 1])
+
+
+def paramsSize(block_type: BlockType) -> int:
+    if block_type == BlockType.Thumbnail:
+        return 6
+    #TODO pramaeters to these blocks
+    elif block_type == BlockType.IdentityBlock:
+        return 0
+    elif block_type == BlockType.EncryptedBlock:
+        return 3
+    else:
+        return 2
 
 
 class BlockHeader:
@@ -130,14 +141,7 @@ class BlockHeader:
         return 8 if self.compression == 0 else 12
 
     def payloadSizeWithParams(self):
-        if self.type == BlockType.Thumbnail:
-            additional = 6
-        #TODO pramaeters to these blocks
-        elif self.type == BlockType.IdentityBlock or self.type == BlockType.KeyBlock or self.type == BlockType.Endblock:
-            additional = 0
-        else:
-            additional = 2
-        return additional + self.compressed_size
+        return paramsSize(self.type) + self.compressed_size
 
 
 def readBlockHeader(file) -> BlockHeader:
@@ -157,8 +161,6 @@ class IdentityBlock:
         self.slicer_public_key_bytes = bytes()
         self.identity_name = bytes()
         #TODO
-        self.asym_algo = AsymAlgo.RSA
-        self.sym_algo = SymAlgo.AES_128_CBC
         self.intro_hash = bytes()
         self.key_bloks_hash = bytes()
         self.header = BlockHeader(BlockType.IdentityBlock, Compression.No,
@@ -184,14 +186,8 @@ class IdentityBlock:
         slicer_pub_key = stream.read(slicer_pub_key_len)
         identity_name_len = struct.unpack("<B", stream.read(1))[0]
         identity_name = stream.read(identity_name_len)
-        self.asym_algo = struct.unpack("<B", stream.read(1))[0]
-        if self.asym_algo != AsymAlgo.RSA and self.asym_algo != AsymAlgo.No:
-            sys.exit("Unsupported asymetric crypto algorithm")
-        self.sym_algo = struct.unpack("<B", stream.read(1))[0]
-        if self.sym_algo != SymAlgo.AES_128_CBC:
-            sys.exit("Unsupported symetric crypto algorithm")
-        intro_hash = bytearray(stream.read(32))
-        key_blocks_hash = bytearray(stream.read(32))
+        intro_hash = stream.read(32)
+        key_blocks_hash = stream.read(32)
         self.sign = stream.read(SIGN_SIZE)
         self.generate(slicer_pub_key, identity_name, intro_hash,
                       key_blocks_hash)
@@ -203,8 +199,6 @@ class IdentityBlock:
         buffer.extend(self.slicer_public_key_bytes)
         buffer.extend(struct.pack("<B", len(self.identity_name)))
         buffer.extend(self.identity_name)
-        buffer.extend(struct.pack("<B", self.asym_algo))
-        buffer.extend(struct.pack("<B", self.sym_algo))
         buffer.extend(self.intro_hash)
         buffer.extend(self.key_bloks_hash)
         return buffer
@@ -226,10 +220,9 @@ class IdentityBlock:
         return buffer
 
     def dataSize(self) -> int:
-        size = (
-            2 + len(self.slicer_public_key_bytes) + 1 +
-            len(self.identity_name) + 2  #algos
-            + len(self.intro_hash) + len(self.key_bloks_hash)) + SIGN_SIZE
+        size = (2 + len(self.slicer_public_key_bytes) + 1 +
+                len(self.identity_name) + len(self.intro_hash) +
+                len(self.key_bloks_hash)) + SIGN_SIZE
         return size
 
 
@@ -271,8 +264,8 @@ def verify(key, message, signature):
                     salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
 
 
-def key_block_encrypt(slicer_private_key: PrivateKeyTypes,
-                      printer_pub_key: PublicKeyTypes, key_block):
+def rsa_sha256_sign_block_encrypt(slicer_private_key: PrivateKeyTypes,
+                                  printer_pub_key: PublicKeyTypes, key_block):
     slicer_pub_key_hash = sha256(slicer_private_key.public_key().public_bytes(
         crypto_serialization.Encoding.DER,
         crypto_serialization.PublicFormat.SubjectPublicKeyInfo))
@@ -288,8 +281,9 @@ def key_block_encrypt(slicer_private_key: PrivateKeyTypes,
     return outer + signature
 
 
-def key_block_decrypt(slicer_pub_key, printer_pub_key, printer_private_key,
-                      enc_key_block) -> Optional[bytes]:
+def rsa_sha256_sign_block_decrypt(slicer_pub_key, printer_pub_key,
+                                  printer_private_key,
+                                  enc_key_block) -> Optional[bytes]:
     sig = enc_key_block[len(enc_key_block) - SIGN_SIZE:]
     outer_msg = enc_key_block[:len(enc_key_block) - SIGN_SIZE]
     verify(slicer_pub_key, outer_msg, sig)
@@ -341,15 +335,52 @@ def readHashWriteMetadata(file_header: FileHeader, in_file: io.BufferedReader,
     return metadata_hash.digest()
 
 
+def createEncryptedBlockAES(plain_data: bytes, iv: bytes, enc_aes_key: bytes,
+                            key_blocks: list, checksumType: ChecksumType,
+                            is_last: bool) -> bytes:
+    result = bytearray()
+    enc_data = aes_cbc_encrypt(plain_data, enc_aes_key, iv)
+    size = len(enc_data) + len(key_blocks) * HMAC_SIZE
+    block_header = BlockHeader(BlockType.EncryptedBlock, Compression.No, size,
+                               size)
+    last_blog_flag = (int(is_last)).to_bytes(1, 'little')
+    params = EncryptedBlockEncryption.AES128_CBC_SHA256_HMAC.to_bytes(
+        2, 'little') + last_blog_flag
+    hmac_data = block_header.bytes() + iv + params + enc_data
+    result.extend(block_header.bytes())
+    result.extend(params)
+    result.extend(enc_data)
+    crc = crc32(block_header.bytes() + params + enc_data)
+    for key_block in key_blocks:
+        hmac_sig = hmac.new(key_block.signKey(), hmac_data, sha256).digest()
+        result.extend(hmac_sig)
+        crc = crc32(hmac_sig, crc)
+    if checksumType == ChecksumType.CRC32:
+        result.extend(crc.to_bytes(4, 'little'))
+    return result
+
+
+def decryptEncryptedBlockAES(enc_aes_key: bytes, sign_key: bytes,
+                             block_header: bytes, iv: bytes, enc_data: bytes,
+                             num_of_hmacs: int, hmac_index: int,
+                             params: bytes):
+    plain_block = decrypt_aes_block(enc_aes_key, sign_key, block_header, iv,
+                                    enc_data, num_of_hmacs, hmac_index, params)
+    decrypted_header = readBlockHeader(io.BytesIO(plain_block))
+    block_data = plain_block[decrypted_header.size():]
+    return decrypted_header, block_data
+
+
 class KeyBlock:
 
     def __init__(self, enc_aes_key: bytes, printer_pub_key: PublicKeyTypes,
                  slicer_private_key: PrivateKeyTypes) -> None:
         sign_key = os.urandom(16)
+        self.params = KeyBlockEncryption.RSA_ENC_SHA256_SIGN.to_bytes(
+            2, 'little')
         self.plain_key_block = enc_aes_key + sign_key
-        self.enc_key_block = key_block_encrypt(slicer_private_key,
-                                               printer_pub_key,
-                                               self.plain_key_block)
+        self.enc_key_block = rsa_sha256_sign_block_encrypt(
+            slicer_private_key, printer_pub_key, self.plain_key_block)
         self.header = BlockHeader(BlockType.KeyBlock, Compression.No,
                                   len(self.enc_key_block),
                                   len(self.enc_key_block))
@@ -360,30 +391,26 @@ class KeyBlock:
     def signKey(self) -> bytes:
         return self.plain_key_block[AES_KEY_SIZE:]
 
-    def bytes(self, checksumType: ChecksumType) -> bytes:
+    def bytes(self, checksum_type: ChecksumType) -> bytes:
         buffer = bytearray()
         buffer.extend(self.header.bytes())
+        buffer.extend(self.params)
         buffer.extend(self.enc_key_block)
-        if checksumType == ChecksumType.CRC32:
+        if checksum_type == ChecksumType.CRC32:
             buffer.extend(crc32(buffer).to_bytes(4, 'little'))
-
         return buffer
 
 
-def generateIdentityBlock(key_blocks: list,
+def generateIdentityBlock(key_blocks_hash: bytes,
                           slicer_private_key: PrivateKeyTypes,
                           metadata_hash: bytes,
                           identity_name: str) -> IdentityBlock:
-    key_blocks_hash = sha256()
-    for key_block in key_blocks:
-        key_blocks_hash.update(key_block.enc_key_block)
-
     slicer_public_key_bytes = slicer_private_key.public_key().public_bytes(
         crypto_serialization.Encoding.DER,
         crypto_serialization.PublicFormat.SubjectPublicKeyInfo)
     identity_block = IdentityBlock()
     identity_block.generate(slicer_public_key_bytes, identity_name.encode(),
-                            metadata_hash, key_blocks_hash.digest())
+                            metadata_hash, key_blocks_hash)
 
     return identity_block
 
@@ -395,58 +422,35 @@ def readEncryptAndWriteGcodeBlocks(out_file: io.BufferedWriter,
     while True:
         block_header = readBlockHeader(in_file)
         size = block_header.payloadSizeWithParams()
+
         gcode_block = GcodeBlock(block_header, in_file.read(size))
         if checksumType == ChecksumType.CRC32:
             #Read and ignore the CRC, we will make a new one
             #TODO maybe check it first and report error if it does not match
-            _ = in_file.read(4)
+            _ = in_file.read(CRC32_SIZE)
 
-        iv = (out_file.tell() + gcode_block.header.size()).to_bytes(
-            16, 'little')
-        encrypted_block = aes_cbc_encrypt(gcode_block.data, enc_aes_key, iv)
-        gcode_block.header.compressed_size = len(
-            encrypted_block) + len(key_blocks) * HMAC_SIZE
-        hmac_data = gcode_block.header.bytes(
-        ) + iv + gcode_block.params + encrypted_block
-        out_file.write(gcode_block.header.bytes())
-        out_file.write(gcode_block.params)
-        out_file.write(encrypted_block)
-
-        crc = crc32(gcode_block.header.bytes() + gcode_block.params +
-                    encrypted_block)
-        for key_block in key_blocks:
-            hmac_sig = hmac.new(key_block.signKey(), hmac_data,
-                                sha256).digest()
-            out_file.write(hmac_sig)
-            crc = crc32(hmac_sig, crc)
-        if checksumType == ChecksumType.CRC32:
-            out_file.write(crc.to_bytes(4, 'little'))
+        iv = out_file.tell().to_bytes(16, 'little')
+        plain_data = gcode_block.header.bytes(
+        ) + gcode_block.params + gcode_block.data
+        out_file.write(
+            createEncryptedBlockAES(plain_data, iv, enc_aes_key, key_blocks,
+                                    checksumType, False))
 
         if in_file.tell() == os.fstat(in_file.fileno()).st_size:
             break
 
 
 def generateAndWriteEndBlock(file: io.BufferedWriter, key_blocks: list,
-                             enc_aes_key: bytes) -> None:
-    block_bytes = b"END"
-    block_size = len(block_bytes)
-    header = BlockHeader(BlockType.Endblock, Compression.No, block_size,
-                         block_size)
-    iv = (file.tell() + header.size()).to_bytes(16, 'little')
-    encrypted_block = aes_cbc_encrypt(block_bytes, enc_aes_key, iv)
-    header.compressed_size = len(encrypted_block) + len(key_blocks) * HMAC_SIZE
-    #TODO uncompressed aes blocks do not work!!
-    header.uncompressed_size = len(
-        encrypted_block) + len(key_blocks) * HMAC_SIZE
-    hmac_data = header.bytes() + iv + encrypted_block
-    file.write(header.bytes())
-    file.write(encrypted_block)
-    crc = crc32(header.bytes() + encrypted_block)
-    for key_block in key_blocks:
-        hmac_sig = hmac.new(key_block.signKey(), hmac_data, sha256).digest()
-        file.write(hmac_sig)
-        crc = crc32(hmac_sig, crc)
-    file.write(crc.to_bytes(4, 'little'))
+                             enc_aes_key: bytes,
+                             checksumType: ChecksumType) -> None:
+    header = BlockHeader(BlockType.Gcode, Compression.No, 0, 0)
+    params = (0).to_bytes(2, 'little')
+    block = GcodeBlock(header, params)
+    iv = file.tell().to_bytes(16, 'little')
+    plain_data = block.header.bytes() + block.params + block.data
+    file.write(
+        createEncryptedBlockAES(plain_data, iv, enc_aes_key, key_blocks,
+                                checksumType, True))
 
 
 def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
@@ -463,12 +467,15 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
 
     enc_aes_key = os.urandom(16)
     key_blocks = []
+    key_blocks_hash = sha256()
     for key in printer_pub_keys:
         key_block = KeyBlock(enc_aes_key, key, slicer_private_key)
         key_blocks.append(key_block)
+        key_blocks_hash.update(key_block.bytes(ChecksumType.NONE))
 
-    identity_block = generateIdentityBlock(key_blocks, slicer_private_key,
-                                           metadata_hash, identity_name)
+    identity_block = generateIdentityBlock(key_blocks_hash.digest(),
+                                           slicer_private_key, metadata_hash,
+                                           identity_name)
 
     out_file.write(
         identity_block.bytes(file_header.checksumType, slicer_private_key))
@@ -477,7 +484,10 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
 
     readEncryptAndWriteGcodeBlocks(out_file, in_file, key_blocks, enc_aes_key,
                                    file_header.checksumType)
-    generateAndWriteEndBlock(out_file, key_blocks, enc_aes_key)
+    # generate empty gcode block at the end with the last flag, so I
+    # don't need to care about catching the last block while reading them
+    generateAndWriteEndBlock(out_file, key_blocks, enc_aes_key,
+                             file_header.checksumType)
 
 
 def is_metadata_block(type) -> bool:
@@ -508,7 +518,6 @@ def decrypt_aes_block(aes_enc_key,
     enc_data = block[:hmacs_begin]
     our_hmac_begin = hmacs_begin + hmac_index * HMAC_SIZE
     our_hmac = block[our_hmac_begin:our_hmac_begin + HMAC_SIZE]
-
     hmac_data = block_header_bytes + iv + params + enc_data
     computed_hmac = hmac.new(sign_key, hmac_data, sha256)
     if not hmac.compare_digest(our_hmac, computed_hmac.digest()):
@@ -524,25 +533,39 @@ def decrypt_bgcode(in_filename, out_filename,
     file_header.check()
     out_bytes = bytearray()
     out_bytes.extend(file_header.bytes())
-    #TODO ensure these are assigned from key/identity block before using them
     gcode_enc_key = bytes()
     gcode_sign_key = bytes()
     crc = bytes()
-    #TODO
     identity_block = IdentityBlock()
-    # -1 so that the first hmac has index 0
-    key_block_index = -1
+    key_block_index = 0
     num_of_key_blocks = 0
-    enc_key_blocks_data = []
+    key_blocks_hash = sha256()
+    #enc_key_blocks_data = []
     first_gcode_block = True
+    is_last_block = False
 
     while True:
-        block_header = readBlockHeader(enc_file)
         iv = enc_file.tell().to_bytes(16, 'little')
+        block_header = readBlockHeader(enc_file)
         size = block_header.payloadSizeWithParams()
         block = enc_file.read(size)
         if file_header.checksumType == ChecksumType.CRC32:
             crc = enc_file.read(4)
+            gen_crc = crc32(block_header.bytes() + block)
+            if int.from_bytes(crc, 'little') != gen_crc:
+                sys.exit("Block CRC mismatch!!")
+
+        if block_header.type == BlockType.EncryptedBlock:
+            params = block[:paramsSize(BlockType.EncryptedBlock)]
+            data = block[paramsSize(BlockType.EncryptedBlock):]
+            algo = int.from_bytes(params[:2], 'little')
+            is_last_block = int.from_bytes(params[2:], 'little')
+            if algo == EncryptedBlockEncryption.AES128_CBC_SHA256_HMAC:
+                block_header, block = decryptEncryptedBlockAES(
+                    gcode_enc_key, gcode_sign_key, block_header.bytes(), iv,
+                    data, num_of_key_blocks, key_block_index, params)
+            else:
+                sys.exit("Unsupported encryption algorithm")
 
         if is_metadata_block(block_header.type):
             out_bytes.extend(block_header.bytes())
@@ -560,76 +583,55 @@ def decrypt_bgcode(in_filename, out_filename,
 
             case BlockType.KeyBlock:
                 num_of_key_blocks += 1
-                enc_key_blocks_data.append(block)
-                if identity_block.asym_algo == AsymAlgo.RSA:
-                    key_block = key_block_decrypt(
+                key_blocks_hash.update(block_header.bytes() + block)
+                algo = int.from_bytes(block[:paramsSize(BlockType.KeyBlock)],
+                                      'little')
+                if algo == KeyBlockEncryption.RSA_ENC_SHA256_SIGN:
+                    key_block = rsa_sha256_sign_block_decrypt(
                         identity_block.slicer_pub_key,
                         printer_private_key.public_key(), printer_private_key,
-                        block)
-                    #to know which hmac to check
-                    key_block_index += 1
-                    if key_block is None:
+                        block[paramsSize(BlockType.KeyBlock):])
+                    if key_block:
+                        #to know which hmac to check
+                        key_block_index = num_of_key_blocks - 1
+                        gcode_enc_key = key_block[:AES_KEY_SIZE]
+                        gcode_sign_key = key_block[AES_KEY_SIZE:]
+                    else:
                         continue
-                elif identity_block.asym_algo == AsymAlgo.No:
-                    key_block = block
+                elif algo == KeyBlockEncryption.No:
+                    key_block_index = num_of_key_blocks - 1
+                    gcode_enc_key = block[:AES_KEY_SIZE]
+                    gcode_sign_key = block[AES_KEY_SIZE:]
                 else:
                     sys.exit("Unsupported asymetric crypto algorithm")
 
-                gcode_enc_key = key_block[:AES_KEY_SIZE]
-                gcode_sign_key = key_block[AES_KEY_SIZE:]
-
             case BlockType.Gcode:
                 if first_gcode_block:
-                    key_block_hash = sha256()
-                    for enc_key in enc_key_blocks_data:
-                        key_block_hash.update(enc_key)
-
-                    if key_block_hash.digest(
+                    if key_blocks_hash.digest(
                     ) != identity_block.key_bloks_hash:
                         sys.exit("Key blocks hash mismatch!!")
                     first_gcode_block = False
 
                 gcode_block = GcodeBlock(block_header, block)
-                #TODO move to identity block??
-                if identity_block.sym_algo == SymAlgo.AES_128_CBC:
-                    decoded_block = decrypt_aes_block(gcode_enc_key,
-                                                      gcode_sign_key,
-                                                      block_header.bytes(), iv,
-                                                      gcode_block.data,
-                                                      num_of_key_blocks,
-                                                      key_block_index,
-                                                      gcode_block.params)
-                else:
-                    sys.exit("Unsupported symetric crypto algorithm")
-
-                block_header.compressed_size = len(decoded_block)
-                out_bytes.extend(block_header.bytes())
-                out_bytes.extend(block[:2])
-                out_bytes.extend(decoded_block)
-                if file_header.checksumType == ChecksumType.CRC32:
-                    out_bytes.extend(
-                        crc32(block_header.bytes() + block[:2] +
-                              decoded_block).to_bytes(4, 'little'))
-            case BlockType.Endblock:
-                if identity_block.sym_algo == SymAlgo.AES_128_CBC:
-                    decoded_block = decrypt_aes_block(gcode_enc_key,
-                                                      gcode_sign_key,
-                                                      block_header.bytes(), iv,
-                                                      block, num_of_key_blocks,
-                                                      key_block_index)
-                else:
-                    sys.exit("Unsupported symetric crypto algorithm")
-
-                if decoded_block != b"END":
-                    sys.exit("End block damaged!!")
-                if enc_file.tell() == os.fstat(enc_file.fileno()).st_size:
-                    out_file = open(out_filename, 'wb')
-                    out_file.write(out_bytes)
-                    print("Done succesfully")
-                    sys.exit(0)
-                else:
-                    sys.exit(
-                        "End block is not at the end, appended data found!!")
+                #handle empty gcode block
+                if len(gcode_block.data) > 0:
+                    out_bytes.extend(block_header.bytes())
+                    out_bytes.extend(gcode_block.params)
+                    out_bytes.extend(gcode_block.data)
+                    if file_header.checksumType == ChecksumType.CRC32:
+                        out_bytes.extend(
+                            crc32(block_header.bytes() + gcode_block.params +
+                                  gcode_block.data).to_bytes(4, 'little'))
+                if is_last_block:
+                    if enc_file.tell() == os.fstat(enc_file.fileno()).st_size:
+                        out_file = open(out_filename, 'wb')
+                        out_file.write(out_bytes)
+                        print("Done succesfully")
+                        sys.exit(0)
+                    else:
+                        sys.exit(
+                            "Last gcode block is not at the end, appended data found!!"
+                        )
 
         if enc_file.tell() == os.fstat(enc_file.fileno()).st_size:
             sys.exit("Truncated file!!")
