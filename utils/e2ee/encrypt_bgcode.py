@@ -8,7 +8,6 @@ from enum import IntEnum
 from pathlib import Path
 import struct
 import hmac
-import math
 import argparse
 
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -83,14 +82,17 @@ class Compression(IntEnum):
     HeatShrink_12_4 = 3
 
 
+class IdentityBlockSign(IntEnum):
+    RSA = 0
+
+
 class KeyBlockEncryption(IntEnum):
     No = 0
     RSA_ENC_SHA256_SIGN = 1
 
 
 class EncryptedBlockEncryption(IntEnum):
-    No = 0
-    AES128_CBC_SHA256_HMAC = 1
+    AES128_CBC_SHA256_HMAC = 0
 
 
 class FileHeader:
@@ -112,9 +114,8 @@ class FileHeader:
 def paramsSize(block_type: BlockType) -> int:
     if block_type == BlockType.Thumbnail:
         return 6
-    #TODO pramaeters to these blocks
     elif block_type == BlockType.IdentityBlock:
-        return 0
+        return 2
     elif block_type == BlockType.EncryptedBlock:
         return 3
     else:
@@ -160,11 +161,11 @@ class IdentityBlock:
     def __init__(self) -> None:
         self.slicer_public_key_bytes = bytes()
         self.identity_name = bytes()
-        #TODO
         self.intro_hash = bytes()
         self.key_bloks_hash = bytes()
         self.header = BlockHeader(BlockType.IdentityBlock, Compression.No,
                                   self.dataSize(), self.dataSize())
+        self.params = bytes()
         self.sign = bytes()
 
     def generate(self, slicer_pub_key, name, intro_hash, key_block_hash):
@@ -172,16 +173,15 @@ class IdentityBlock:
         self.slicer_pub_key = crypto_serialization.load_der_public_key(
             self.slicer_public_key_bytes)
         self.identity_name = name
-        #TODO
-        self.algorithms_used = None
         self.intro_hash = intro_hash
         self.key_bloks_hash = key_block_hash
-        #set later
+        self.params = IdentityBlockSign.RSA.to_bytes(2, 'little')
         self.header = BlockHeader(BlockType.IdentityBlock, Compression.No,
                                   self.dataSize(), self.dataSize())
 
     def read(self, block: bytes):
         stream = io.BytesIO(block)
+        self.params = struct.unpack("<h", stream.read(2))[0]
         slicer_pub_key_len = struct.unpack("<h", stream.read(2))[0]
         slicer_pub_key = stream.read(slicer_pub_key_len)
         identity_name_len = struct.unpack("<B", stream.read(1))[0]
@@ -195,6 +195,7 @@ class IdentityBlock:
     def bytesToSign(self) -> bytes:
         buffer = bytearray()
         buffer.extend(self.header.bytes())
+        buffer.extend(self.params)
         buffer.extend(struct.pack("<h", len(self.slicer_public_key_bytes)))
         buffer.extend(self.slicer_public_key_bytes)
         buffer.extend(struct.pack("<B", len(self.identity_name)))
@@ -208,6 +209,8 @@ class IdentityBlock:
 
     def verify(self) -> None:
         assert (len(self.sign) == SIGN_SIZE)
+        if int.from_bytes(self.params, 'little') != IdentityBlockSign.RSA:
+            sys.exit("Unsupported identity block sign algorithm")
         verify(self.slicer_pub_key, self.bytesToSign(), self.sign)
 
     def bytes(self, checksumType: ChecksumType,
