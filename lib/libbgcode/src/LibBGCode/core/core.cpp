@@ -73,7 +73,7 @@ EResult verify_block_checksum(FILE& file, const FileHeader& file_header, const B
 }
 
 static uint16_t checksum_types_count()    { return 1 + (uint16_t)EChecksumType::CRC32; }
-static uint16_t block_types_count()       { return 1 + (uint16_t)EBlockType::Thumbnail; }
+static uint16_t block_types_count()       { return 1 + (uint16_t)EBlockType::EncryptedBlock; }
 static uint16_t compression_types_count() { return 1 + (uint16_t)ECompressionType::Heatshrink_12_4; }
 
 Checksum::Checksum(EChecksumType type)
@@ -520,6 +520,9 @@ BGCODE_CORE_EXPORT size_t block_parameters_size(EBlockType type)
     case EBlockType::PrinterMetadata: { return sizeof(uint16_t); } /* encoding_type */
     case EBlockType::PrintMetadata:   { return sizeof(uint16_t); } /* encoding_type */
     case EBlockType::Thumbnail:       { return sizeof(uint16_t) + sizeof(uint16_t) + sizeof(uint16_t); } /* format, width, height */
+    case EBlockType::IdentityBlock:   { return sizeof(uint16_t) + sizeof(uint8_t); } /* signing cypher + identity flags */
+    case EBlockType::KeyBlock:        { return sizeof(uint16_t); } /* signing and encryption algorithm */
+    case EBlockType::EncryptedBlock:  { return sizeof(uint16_t) + sizeof(uint8_t); } /* used encryption, last block flag */
     }
     return 0;
 }

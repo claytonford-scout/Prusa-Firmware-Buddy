@@ -6,6 +6,7 @@
 
 /* mbed TLS feature support */
 #define MBEDTLS_PKCS1_V15
+#define MBEDTLS_PKCS1_V21
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
 // Needed for certificate expiration checks.

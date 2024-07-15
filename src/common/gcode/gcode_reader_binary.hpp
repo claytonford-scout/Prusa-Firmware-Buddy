@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/core.hpp"
+#include <e2ee.hpp>
 #include "gcode_buffer.hpp"
 #include "gcode_reader_interface.hpp"
 #include "meatpack.h"
@@ -71,6 +72,8 @@ private:
     } stream;
 
     StreamRestoreInfo::PrusaPack stream_restore_info; //< Restore info for last two blocks
+    e2ee::IdentityBlockInfo identity_block_info;
+    e2ee::SymmetricKeys symmetric_keys;
 
     /// helper enum for iterate_blocks function
     enum class IterateResult_t {

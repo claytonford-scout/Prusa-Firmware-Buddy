@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 size_t strlcat(char *dst, const char *src, size_t size) {
     /*
@@ -32,4 +33,16 @@ strlcpy(char *dst, const char *src, size_t siz) {
             ;
     }
     return (s - src - 1); /* count does not include NUL */
+}
+
+void *calloc_fallible(size_t nmemb, size_t size) {
+    return calloc(nmemb, size);
+}
+
+void *malloc_fallible(size_t size) {
+    return malloc(size);
+}
+
+int mbedtls_hardware_poll([[maybe_unused]] void *Data, unsigned char *Output, size_t Len, size_t *oLen) {
+    return 3;
 }

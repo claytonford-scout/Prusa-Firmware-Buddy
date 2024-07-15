@@ -1,19 +1,26 @@
 #include "gcode_reader_binary.hpp"
 
+#include <e2ee.hpp>
+#include "RAII.hpp"
 #include "lang/i18n.h"
+#include <sha256.h>
+#include <mbedtls/pk.h>
 #include "transfers/transfer.hpp"
 #include <cassert>
 #include <errno.h> // for EAGAIN
 #include <filename_type.hpp>
 #include <sys/stat.h>
 #include <ranges>
+#include <optional>
 #include <type_traits>
 #include <config_store/store_instance.hpp>
 
 using bgcode::core::BlockHeader;
 using bgcode::core::EBlockType;
+using bgcode::core::EChecksumType;
 using bgcode::core::ECompressionType;
 using bgcode::core::EGCodeEncodingType;
+using bgcode::core::FileHeader;
 
 PrusaPackGcodeReader::PrusaPackGcodeReader(FILE &f, const struct stat &stat_info)
     : GcodeReaderCommon(f) {
@@ -622,13 +629,264 @@ bool PrusaPackGcodeReader::init_decompression() {
     return true;
 }
 
+namespace {
+bool is_metadata_block(EBlockType type) {
+    switch (type) {
+    case EBlockType::FileMetadata:
+    case EBlockType::PrinterMetadata:
+    case EBlockType::Thumbnail:
+    case EBlockType::PrintMetadata:
+    case EBlockType::SlicerMetadata:
+        return true;
+    default:
+        return false;
+    }
+}
+class MultiuseHash {
+public:
+    MultiuseHash() {
+        mbedtls_sha256_init(&sha256_ctx);
+        mbedtls_sha256_starts_ret(&sha256_ctx, false);
+    }
+
+    ~MultiuseHash() {
+        mbedtls_sha256_free(&sha256_ctx);
+    }
+
+    void get_hash(uint8_t *buffer, [[maybe_unused]] size_t buffer_size) {
+        assert(buffer_size == e2ee::HASH_SIZE);
+        mbedtls_sha256_finish_ret(&sha256_ctx, buffer);
+        reset();
+    }
+
+    void update(const uint8_t *data, size_t size) {
+        mbedtls_sha256_update_ret(&sha256_ctx, data, size);
+    }
+
+private:
+    mbedtls_sha256_context sha256_ctx;
+    void reset() {
+        mbedtls_sha256_free(&sha256_ctx);
+        mbedtls_sha256_init(&sha256_ctx);
+        mbedtls_sha256_starts_ret(&sha256_ctx, false);
+    }
+};
+
+class BlockSequenceValidator {
+public:
+    const char *metadata_found(FileHeader file_header, BlockHeader block_header) {
+        if (have_gcode_block || have_identity_block || have_key_block) {
+            return "Corrupted bgcode, metadata not at the beggining.";
+        }
+        last_metadata_pos_end = block_header.get_position() + (long)block_header.get_size() + (long)block_content_size(file_header, block_header);
+        return nullptr;
+    }
+
+    const char *identity_block_found(FileHeader file_header, BlockHeader block_header) {
+        if (last_metadata_pos_end != block_header.get_position()) {
+            return "Additional non authorized data found.";
+        }
+        have_identity_block = true;
+        identity_pos_end = block_header.get_position() + (long)block_header.get_size() + (long)block_content_size(file_header, block_header);
+        return nullptr;
+    }
+
+    const char *key_block_found(FileHeader file_header, BlockHeader block_header) {
+        key_block_pos_end = block_header.get_position() + (long)block_header.get_size() + (long)block_content_size(file_header, block_header);
+        if (have_key_block) {
+            return nullptr;
+        }
+        have_key_block = true;
+        if (!have_identity_block) {
+            return "Corrupted bgcode, key block before identity block.";
+        }
+        if (identity_pos_end != block_header.get_position()) {
+            return "Additional non authorized data found.";
+        }
+        return nullptr;
+    }
+
+    const char *encrypted_block_found(BlockHeader block_header) {
+        if (key_block_pos_end != block_header.get_position()) {
+            return "Additional non authorized data found.";
+        }
+        if (!have_identity_block) {
+            return "Corrupted bgcode, encrypted block before identity block.";
+        } else if (!have_key_block) {
+            return "Corrupted bgcode, encrypted block before key block.";
+        } else {
+            return nullptr;
+        }
+    }
+
+    const char *gcode_block_found() {
+        if (have_identity_block) {
+            return "Unencrypted gcode block found in encrypted bgcode.";
+        }
+        return nullptr;
+    }
+
+private:
+    long last_metadata_pos_end = 0;
+    long identity_pos_end = 0;
+    bool have_identity_block = false;
+    bool have_key_block = false;
+    long key_block_pos_end = 0;
+    bool have_gcode_block = false;
+};
+
+void file_header_sha256(const FileHeader &file_header, MultiuseHash &hash) {
+    hash.update(reinterpret_cast<const uint8_t *>(&file_header.magic), sizeof(file_header.magic));
+    hash.update(reinterpret_cast<const uint8_t *>(&file_header.version), sizeof(file_header.version));
+    hash.update(reinterpret_cast<const uint8_t *>(&file_header.checksum_type), sizeof(file_header.checksum_type));
+}
+
+void block_sha_256_update(MultiuseHash &hash, const BlockHeader &header, EChecksumType crc, FILE *file) {
+    auto file_pos = ftell(file);
+    hash.update(reinterpret_cast<const uint8_t *>(&header.type), sizeof(header.type));
+    hash.update(reinterpret_cast<const uint8_t *>(&header.compression), sizeof(header.compression));
+    hash.update(reinterpret_cast<const uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size));
+    if ((ECompressionType)header.compression != ECompressionType::None) {
+        hash.update(reinterpret_cast<const uint8_t *>(&header.compressed_size), sizeof(header.compressed_size));
+    }
+    size_t params_size = bgcode::core::block_parameters_size((EBlockType)header.type);
+    uint8_t params[6]; // 6 is max params size
+    size_t s = fread(params, 1, params_size, file);
+    if (s != params_size) {
+        return;
+    }
+    hash.update(params, params_size);
+    static constexpr size_t BUFF_SIZE = 32;
+    uint8_t buffer[BUFF_SIZE];
+    size_t rest = header.compression == 0 ? header.uncompressed_size : header.compressed_size;
+    while (rest > 0) {
+        size_t to_read = std::min(rest, BUFF_SIZE);
+        s = fread(buffer, 1, to_read, file);
+        if (s != to_read) {
+            return;
+        }
+        hash.update(buffer, to_read);
+        rest -= to_read;
+    }
+    if (crc == EChecksumType::CRC32) {
+        s = fread(buffer, 1, 4, file);
+        if (s != 4) {
+            return;
+        }
+        hash.update(buffer, 4);
+    }
+    fseek(file, file_pos, SEEK_SET);
+}
+
+// So that we have just one pointer to capture in the in_place_function
+// and it fits the storage
+class ValidationContext {
+public:
+    MultiuseHash hash;
+    BlockSequenceValidator seq_validator;
+
+    ValidationContext() {
+        mbedtls_pk_init(&printer_private_key);
+    }
+    ~ValidationContext() {
+        mbedtls_pk_free(&printer_private_key);
+    }
+
+    mbedtls_pk_context *get_printer_private_key() {
+        if (key_valid) {
+            return &printer_private_key;
+        }
+        std::unique_ptr<uint8_t[]> buffer(new uint8_t[e2ee::PRIVATE_KEY_BUFFER_SIZE]);
+        //  Get the private key, this will eventually live in flash
+        unique_file_ptr inf(fopen(e2ee::key_path, "rb"));
+        if (!inf) {
+            return nullptr;
+        }
+
+        size_t ins = fread(buffer.get(), 1, e2ee::PRIVATE_KEY_BUFFER_SIZE, inf.get());
+        if (ins == 0 || ferror(inf.get()) || !feof(inf.get())) {
+            return nullptr;
+        }
+        inf.reset();
+        if (mbedtls_pk_parse_key(&printer_private_key, buffer.get(), ins, NULL /* No password */, 0) != 0) {
+            return nullptr;
+        }
+
+        key_valid = true;
+        return &printer_private_key;
+    }
+
+private:
+    mbedtls_pk_context printer_private_key;
+    bool key_valid = false;
+};
+
+} // namespace
+
 bool PrusaPackGcodeReader::valid_for_print() {
-    // prusa pack can be printed when we have at least one gcode block
-    // all metadata has to be preset at that point, because they are before gcode block
-    auto res = iterate_blocks(false, [](BlockHeader &block_header) {
+    // To have the file_header initialized for the hash
+    read_and_check_header();
+    ValidationContext valid_context;
+    file_header_sha256(file_header, valid_context.hash);
+    auto res = iterate_blocks(false, [&valid_context, this](BlockHeader &block_header) {
+        const auto set_error_end = [this](const char *err) __attribute__((always_inline)) {
+            set_error(err);
+            return IterateResult_t::End;
+        };
+        if (is_metadata_block((EBlockType)block_header.type)) {
+
+            if (auto err = valid_context.seq_validator.metadata_found(file_header, block_header); err != nullptr) {
+                return set_error_end(err);
+            }
+            block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+        }
+        // prusa pack can be printed when we have at least one gcode block
+        // all metadata has to be preset at that point, because they are before gcode block
         // check if correct type, if so, return this block
-        if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode) {
-            return IterateResult_t::Return;
+        if ((EBlockType)block_header.type == EBlockType::GCode) {
+            if (auto err = valid_context.seq_validator.gcode_block_found(); err != nullptr) {
+                return set_error_end(err);
+            } else {
+                return IterateResult_t::Return;
+            }
+        }
+        if ((EBlockType)block_header.type == EBlockType::EncryptedBlock) {
+            if (auto err = valid_context.seq_validator.encrypted_block_found(block_header); err != nullptr) {
+                return set_error_end(err);
+            }
+            uint8_t key_block_hash[e2ee::HASH_SIZE];
+            valid_context.hash.get_hash(key_block_hash, sizeof(key_block_hash));
+            if (memcmp(key_block_hash, identity_block_info.key_block_hash.data(), sizeof(key_block_hash)) != 0) {
+                return set_error_end("Key block hash mismatch");
+            }
+            if (!symmetric_keys.valid) {
+                // TODO Revise the texts, they are shown to the user
+                return set_error_end("Bgcode not encrypted for this printer!");
+            } else {
+                return IterateResult_t::Return;
+            }
+        }
+
+        if ((EBlockType)block_header.type == EBlockType::IdentityBlock) {
+            if (auto err = valid_context.seq_validator.identity_block_found(file_header, block_header); err != nullptr) {
+                return set_error_end(err);
+            }
+            uint8_t intro_hash[e2ee::HASH_SIZE];
+            valid_context.hash.get_hash(intro_hash, sizeof(intro_hash));
+            if (const char *err = e2ee::read_and_verify_identity_block(file.get(), block_header, intro_hash, identity_block_info); err != nullptr) {
+                return set_error_end(err);
+            }
+        }
+        if ((EBlockType)block_header.type == EBlockType::KeyBlock) {
+            if (auto err = valid_context.seq_validator.key_block_found(file_header, block_header); err != nullptr) {
+                return set_error_end(err);
+            }
+            // FIXME: We read it once for the hash and once for the actual decryption, optize this to a one read operation.
+            block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+            if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.get_printer_private_key()); keys_opt.has_value()) {
+                symmetric_keys = keys_opt.value();
+                symmetric_keys.valid = true;
+            }
         }
 
         return IterateResult_t::Continue;

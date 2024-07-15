@@ -8,6 +8,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/gcode/gcode_reader_plaintext.cpp
   ${CMAKE_SOURCE_DIR}/src/common/gcode/meatpack.cpp
   ${CMAKE_SOURCE_DIR}/src/common/filename_type.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee.cpp
   ${CMAKE_SOURCE_DIR}/lib/heatshrink/heatshrink_decoder.c
   gcode_reader.cpp
   missing_functions.c
@@ -17,6 +18,7 @@ target_include_directories(
   PRIVATE .
           ${CMAKE_CURRENT_BINARY_DIR}
           ${CMAKE_SOURCE_DIR}/src/common
+          ${CMAKE_SOURCE_DIR}/src/common/utils
           ${CMAKE_SOURCE_DIR}/src
           ${CMAKE_SOURCE_DIR}/src/common/gcode
           ${CMAKE_SOURCE_DIR}/lib
