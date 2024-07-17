@@ -474,7 +474,7 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
     for key in printer_pub_keys:
         key_block = KeyBlock(enc_aes_key, key, slicer_private_key)
         key_blocks.append(key_block)
-        key_blocks_hash.update(key_block.bytes(ChecksumType.NONE))
+        key_blocks_hash.update(key_block.bytes(file_header.checksumType))
 
     identity_block = generateIdentityBlock(key_blocks_hash.digest(),
                                            slicer_private_key, metadata_hash,
@@ -587,6 +587,8 @@ def decrypt_bgcode(in_filename, out_filename,
             case BlockType.KeyBlock:
                 num_of_key_blocks += 1
                 key_blocks_hash.update(block_header.bytes() + block)
+                if file_header.checksumType == ChecksumType.CRC32:
+                    key_blocks_hash.update(crc)
                 algo = int.from_bytes(block[:paramsSize(BlockType.KeyBlock)],
                                       'little')
                 if algo == KeyBlockEncryption.RSA_ENC_SHA256_SIGN:
