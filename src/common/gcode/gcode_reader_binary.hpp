@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/core.hpp"
-#include <e2ee.hpp>
+#include <e2ee/e2ee.hpp>
 #include "gcode_buffer.hpp"
 #include "gcode_reader_interface.hpp"
 #include "meatpack.h"

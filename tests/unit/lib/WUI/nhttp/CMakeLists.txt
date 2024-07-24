@@ -32,7 +32,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/lib/WUI/nhttp/handler.cpp
   ${CMAKE_SOURCE_DIR}/src/common/crc32.cpp
   ${CMAKE_SOURCE_DIR}/src/common/directory.cpp
-  ${CMAKE_SOURCE_DIR}/src/common/e2ee.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/e2ee.cpp
   ${CMAKE_SOURCE_DIR}/src/common/json_encode.cpp
   ${CMAKE_SOURCE_DIR}/src/common/segmented_json.cpp
   ${CMAKE_SOURCE_DIR}/src/common/automata/core.cpp
@@ -88,6 +88,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/tests/unit/common/printer_state_mock.cpp
   ${CMAKE_SOURCE_DIR}/tests/stubs/strlcpy.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/jsmn_impl.c
+  ${CMAKE_SOURCE_DIR}/tests/stubs/e2ee/printer_private_key_mock.cpp
   ${CMAKE_SOURCE_DIR}/tests/unit/mock/bsod.cpp
   ${CMAKE_SOURCE_DIR}/src/common/str_utils.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/http_req_automaton.cpp

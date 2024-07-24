@@ -227,6 +227,25 @@ IdentityBlockInfo &IdentityBlockInfo::operator=(IdentityBlockInfo &&other) {
     return *this;
 }
 
+PrinterPrivateKey::PrinterPrivateKey()
+    : key(std::make_unique<mbedtls_pk_context>()) {
+    mbedtls_pk_init(key.get());
+}
+
+PrinterPrivateKey::~PrinterPrivateKey() {
+    mbedtls_pk_free(key.get());
+}
+
+PrinterPrivateKey::PrinterPrivateKey(PrinterPrivateKey &&other)
+    : key_valid(other.key_valid)
+    , key(std::move(other.key)) {}
+
+PrinterPrivateKey &PrinterPrivateKey::operator=(PrinterPrivateKey &&other) {
+    key_valid = other.key_valid;
+    key = std::move(other.key);
+    return *this;
+}
+
 bool rsa_sha256_sign_verify(mbedtls_pk_context &pk, const uint8_t *message, size_t message_size, const uint8_t *signature, size_t sig_size) {
     unsigned char hash[HASH_SIZE];
 
@@ -273,16 +292,15 @@ bool rsa_oaep_decrypt(mbedtls_pk_context &pk, const uint8_t *encrypted_msg, size
 }
 
 const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info) {
-    const char *file_error = "Error while reading file.";
     uint16_t algo;
     if (!read_from_file(&algo, sizeof(algo), file)) {
         return file_error;
     }
     if (algo != ftrstd::to_underlying(EIdentityBlockSignCypher::RSA)) {
-        return "Unknown Identity block cypher";
+        return unknown_identity_cypher;
     }
     if (block_header.compression != ftrstd::to_underlying(ECompressionType::None)) {
-        return "Compressed identity block not supported";
+        return compressed_identity_block;
     }
     size_t block_size = block_header.uncompressed_size;
     size_t signed_bytes_size = block_header.get_size() + block_parameters_size(EBlockType::IdentityBlock) + block_size - SIGN_SIZE;
@@ -303,7 +321,7 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     pos += sizeof(key_len);
     string_view_u8 key(&bytes.get()[pos], key_len);
     if (mbedtls_pk_parse_public_key(info.identity_pk.get(), key.data(), key.length()) != 0) {
-        return "Identity block parsing error";
+        return identity_parsing_error;
     }
     uint8_t sign[SIGN_SIZE];
     if (!read_from_file(sign, SIGN_SIZE, file)) {
@@ -311,14 +329,14 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     }
     auto res = rsa_sha256_sign_verify(*info.identity_pk, bytes.get(), signed_bytes_size, sign, SIGN_SIZE);
     if (!res) {
-        return "Identity verification failed!";
+        return identity_verification_fail;
     }
     pos += key_len;
     uint8_t name_len;
     memcpy(&name_len, &bytes.get()[pos], sizeof(name_len));
     pos += sizeof(name_len);
     if (name_len > IdentityBlockInfo::IDENTITY_NAME_LEN - 1) {
-        return "Identity name too long";
+        return identity_name_too_long;
     }
     memcpy(info.identity_name.data(), &bytes.get()[pos], name_len);
     info.identity_name[name_len] = '\0';
@@ -328,7 +346,7 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     pos += HASH_SIZE;
     memcpy(info.key_block_hash.data(), &bytes.get()[pos], HASH_SIZE);
     if (memcmp(computed_intro_hash, intro_hash, HASH_SIZE) != 0) {
-        return "File has corrupted metadata";
+        return corrupted_metadata;
     }
 
     return nullptr;

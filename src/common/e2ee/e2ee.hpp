@@ -24,6 +24,23 @@ constexpr size_t SIGN_SIZE = 256;
 // FIXME: the key is probably smaller, investigate the size more and maybe make this smaller
 constexpr size_t PRIVATE_KEY_BUFFER_SIZE = 2048;
 
+// Error texts
+constexpr const char *encrypted_for_different_printer = "Bgcode not encrypted for this printer!";
+constexpr const char *key_block_hash_mismatch = "Key block hash mismatch";
+constexpr const char *metadata_not_beggining = "Corrupted bgcode, metadata not at the beggining.";
+constexpr const char *additional_data = "Additional non authorized data found.";
+constexpr const char *key_before_identity = "Corrupted bgcode, key block before identity block.";
+constexpr const char *encrypted_before_identity = "Corrupted bgcode, encrypted block before identity block.";
+constexpr const char *encrypted_before_key = "Corrupted bgcode, encrypted block before key block.";
+constexpr const char *unencrypted_in_encrypted = "Unencrypted gcode block found in encrypted bgcode.";
+constexpr const char *file_error = "Error while reading file.";
+constexpr const char *unknown_identity_cypher = "Unknown Identity block cypher";
+constexpr const char *compressed_identity_block = "Compressed identity block not supported";
+constexpr const char *identity_parsing_error = "Identity block parsing error";
+constexpr const char *identity_verification_fail = "Identity verification failed!";
+constexpr const char *identity_name_too_long = "Identity name too long";
+constexpr const char *corrupted_metadata = "File has corrupted metadata";
+
 class KeyGen {
 public:
     enum class LoopResult {
@@ -51,6 +68,21 @@ struct IdentityBlockInfo {
     IdentityBlockInfo &operator=(const IdentityBlockInfo &) = delete;
     IdentityBlockInfo(IdentityBlockInfo &&);
     IdentityBlockInfo &operator=(IdentityBlockInfo &&);
+};
+
+class PrinterPrivateKey {
+public:
+    PrinterPrivateKey();
+    ~PrinterPrivateKey();
+    PrinterPrivateKey(const PrinterPrivateKey &) = delete;
+    PrinterPrivateKey &operator=(const PrinterPrivateKey &) = delete;
+    PrinterPrivateKey(PrinterPrivateKey &&);
+    PrinterPrivateKey &operator=(PrinterPrivateKey &&);
+    mbedtls_pk_context *get_printer_private_key();
+
+private:
+    bool key_valid = false;
+    std::unique_ptr<mbedtls_pk_context> key;
 };
 
 const char *read_and_verify_identity_block(FILE *file, const bgcode::core::BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info);

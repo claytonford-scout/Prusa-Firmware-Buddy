@@ -1,10 +1,9 @@
 #include "gcode_reader_binary.hpp"
 
-#include <e2ee.hpp>
+#include <e2ee/e2ee.hpp>
 #include "RAII.hpp"
 #include "lang/i18n.h"
 #include <sha256.h>
-#include <mbedtls/pk.h>
 #include "transfers/transfer.hpp"
 #include <cassert>
 #include <errno.h> // for EAGAIN
@@ -676,7 +675,7 @@ class BlockSequenceValidator {
 public:
     const char *metadata_found(FileHeader file_header, BlockHeader block_header) {
         if (have_gcode_block || have_identity_block || have_key_block) {
-            return "Corrupted bgcode, metadata not at the beggining.";
+            return e2ee::metadata_not_beggining;
         }
         last_metadata_pos_end = block_header.get_position() + (long)block_header.get_size() + (long)block_content_size(file_header, block_header);
         return nullptr;
@@ -684,7 +683,7 @@ public:
 
     const char *identity_block_found(FileHeader file_header, BlockHeader block_header) {
         if (last_metadata_pos_end != block_header.get_position()) {
-            return "Additional non authorized data found.";
+            return e2ee::additional_data;
         }
         have_identity_block = true;
         identity_pos_end = block_header.get_position() + (long)block_header.get_size() + (long)block_content_size(file_header, block_header);
@@ -698,30 +697,29 @@ public:
         }
         have_key_block = true;
         if (!have_identity_block) {
-            return "Corrupted bgcode, key block before identity block.";
+            return e2ee::key_before_identity;
         }
         if (identity_pos_end != block_header.get_position()) {
-            return "Additional non authorized data found.";
+            return e2ee::additional_data;
         }
         return nullptr;
     }
 
     const char *encrypted_block_found(BlockHeader block_header) {
-        if (key_block_pos_end != block_header.get_position()) {
-            return "Additional non authorized data found.";
-        }
         if (!have_identity_block) {
-            return "Corrupted bgcode, encrypted block before identity block.";
+            return e2ee::encrypted_before_identity;
         } else if (!have_key_block) {
-            return "Corrupted bgcode, encrypted block before key block.";
-        } else {
-            return nullptr;
+            return e2ee::encrypted_before_key;
         }
+        if (key_block_pos_end != block_header.get_position()) {
+            return e2ee::additional_data;
+        }
+        return nullptr;
     }
 
     const char *gcode_block_found() {
         if (have_identity_block) {
-            return "Unencrypted gcode block found in encrypted bgcode.";
+            return e2ee::unencrypted_in_encrypted;
         }
         return nullptr;
     }
@@ -784,41 +782,7 @@ class ValidationContext {
 public:
     MultiuseHash hash;
     BlockSequenceValidator seq_validator;
-
-    ValidationContext() {
-        mbedtls_pk_init(&printer_private_key);
-    }
-    ~ValidationContext() {
-        mbedtls_pk_free(&printer_private_key);
-    }
-
-    mbedtls_pk_context *get_printer_private_key() {
-        if (key_valid) {
-            return &printer_private_key;
-        }
-        std::unique_ptr<uint8_t[]> buffer(new uint8_t[e2ee::PRIVATE_KEY_BUFFER_SIZE]);
-        //  Get the private key, this will eventually live in flash
-        unique_file_ptr inf(fopen(e2ee::key_path, "rb"));
-        if (!inf) {
-            return nullptr;
-        }
-
-        size_t ins = fread(buffer.get(), 1, e2ee::PRIVATE_KEY_BUFFER_SIZE, inf.get());
-        if (ins == 0 || ferror(inf.get()) || !feof(inf.get())) {
-            return nullptr;
-        }
-        inf.reset();
-        if (mbedtls_pk_parse_key(&printer_private_key, buffer.get(), ins, NULL /* No password */, 0) != 0) {
-            return nullptr;
-        }
-
-        key_valid = true;
-        return &printer_private_key;
-    }
-
-private:
-    mbedtls_pk_context printer_private_key;
-    bool key_valid = false;
+    e2ee::PrinterPrivateKey printer_pk;
 };
 
 } // namespace
@@ -857,11 +821,11 @@ bool PrusaPackGcodeReader::valid_for_print() {
             uint8_t key_block_hash[e2ee::HASH_SIZE];
             valid_context.hash.get_hash(key_block_hash, sizeof(key_block_hash));
             if (memcmp(key_block_hash, identity_block_info.key_block_hash.data(), sizeof(key_block_hash)) != 0) {
-                return set_error_end("Key block hash mismatch");
+                return set_error_end(e2ee::key_block_hash_mismatch);
             }
             if (!symmetric_keys.valid) {
                 // TODO Revise the texts, they are shown to the user
-                return set_error_end("Bgcode not encrypted for this printer!");
+                return set_error_end(e2ee::encrypted_for_different_printer);
             } else {
                 return IterateResult_t::Return;
             }
@@ -883,7 +847,7 @@ bool PrusaPackGcodeReader::valid_for_print() {
             }
             // FIXME: We read it once for the hash and once for the actual decryption, optize this to a one read operation.
             block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
-            if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.get_printer_private_key()); keys_opt.has_value()) {
+            if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.printer_pk.get_printer_private_key()); keys_opt.has_value()) {
                 symmetric_keys = keys_opt.value();
                 symmetric_keys.valid = true;
             }

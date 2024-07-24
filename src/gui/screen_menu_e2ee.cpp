@@ -1,7 +1,7 @@
 #include "screen_menu_e2ee.hpp"
 #include "ScreenHandler.hpp"
 
-#include <common/e2ee.hpp>
+#include <common/e2ee/e2ee.hpp>
 #include <common/stat_retry.hpp>
 
 #include <sys/stat.h>

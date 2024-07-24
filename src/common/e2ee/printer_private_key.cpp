@@ -1,0 +1,32 @@
+#include "e2ee.hpp"
+#include "unique_file_ptr.hpp"
+
+#include <mbedtls/pk.h>
+
+namespace e2ee {
+
+mbedtls_pk_context *PrinterPrivateKey::get_printer_private_key() {
+    if (key_valid) {
+        return key.get();
+    }
+    std::unique_ptr<uint8_t[]> buffer(new uint8_t[e2ee::PRIVATE_KEY_BUFFER_SIZE]);
+    //  Get the private key, this will eventually live in flash
+    unique_file_ptr inf(fopen(e2ee::key_path, "rb"));
+    if (!inf) {
+        return nullptr;
+    }
+
+    size_t ins = fread(buffer.get(), 1, e2ee::PRIVATE_KEY_BUFFER_SIZE, inf.get());
+    if (ins == 0 || ferror(inf.get()) || !feof(inf.get())) {
+        return nullptr;
+    }
+    inf.reset();
+    if (mbedtls_pk_parse_key(key.get(), buffer.get(), ins, NULL /* No password */, 0) != 0) {
+        return nullptr;
+    }
+
+    key_valid = true;
+    return key.get();
+}
+
+} // namespace e2ee

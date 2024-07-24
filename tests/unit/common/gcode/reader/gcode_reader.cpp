@@ -659,3 +659,85 @@ TEST_CASE("Reader CRC: incorrect on another gcode") {
     // We finish by finding a corruption, not running until the very end.
     REQUIRE(result == IGcodeReader::Result_t::RESULT_CORRUPT);
 }
+
+TEST_CASE("Plain bgcode valid") {
+    AnyGcodeFormatReader reader("test_binary_heatshrink.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE(reader->valid_for_print());
+}
+
+TEST_CASE("Encrypted bgcode valid") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_correct.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE(reader->valid_for_print());
+}
+
+TEST_CASE("Encrypted bgcode key for different printer") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_diff_printer.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_for_different_printer) == 0);
+}
+
+TEST_CASE("Encrypted bgcode wrong key block hash") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_bad_key_hash.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::key_block_hash_mismatch) == 0);
+}
+
+TEST_CASE("Encrypted bgcode metadata not at beggining") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_metadata_not_beggining.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::metadata_not_beggining) == 0);
+}
+
+TEST_CASE("Encrypted bgcode key block before identity") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_key_before_identity.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::key_before_identity) == 0);
+}
+
+TEST_CASE("Encrypted bgcode encrypted block before identity") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_encrypted_before_identity.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_identity) == 0);
+}
+
+TEST_CASE("Encrypted bgcode encrypted block before key") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_encrypted_before_key.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_key) == 0);
+}
+
+TEST_CASE("Encrypted bgcode plain gcode block in encrypted block") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_plain_gcode_inside_encrypted.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::unencrypted_in_encrypted) == 0);
+}
+
+TEST_CASE("Encrypted bgcode invalid identity key") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_invalid_identity_key.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::identity_parsing_error) == 0);
+}
+
+TEST_CASE("Encrypted bgcode bad identity block signature") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_bad_identity_block_signature.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::identity_verification_fail) == 0);
+}
+
+TEST_CASE("Encrypted bgcode corrupted metadata") {
+    AnyGcodeFormatReader reader("test_encrypted_gcode_corrupted_metadata.bgcode");
+    REQUIRE(reader.is_open());
+    REQUIRE_FALSE(reader->valid_for_print());
+    REQUIRE(strcmp(reader->error_str(), e2ee::corrupted_metadata) == 0);
+}
