@@ -10,6 +10,7 @@ namespace core {
 }
 } // namespace bgcode
 struct mbedtls_pk_context;
+struct Pk;
 
 namespace e2ee {
 
@@ -57,7 +58,7 @@ bool export_key();
 struct IdentityBlockInfo {
     static constexpr size_t IDENTITY_NAME_LEN = 32;
 
-    std::unique_ptr<mbedtls_pk_context> identity_pk;
+    std::unique_ptr<Pk> identity_pk;
     // TODO: how long sould we allow this to be??
     std::array<char, IDENTITY_NAME_LEN> identity_name;
     std::array<uint8_t, HASH_SIZE> key_block_hash;
@@ -82,7 +83,7 @@ public:
 
 private:
     bool key_valid = false;
-    std::unique_ptr<mbedtls_pk_context> key;
+    std::unique_ptr<Pk> key;
 };
 
 const char *read_and_verify_identity_block(FILE *file, const bgcode::core::BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info);
@@ -95,7 +96,7 @@ struct SymmetricKeys {
     bool extract_keys(uint8_t *key_block, size_t size);
 };
 
-std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, mbedtls_pk_context &identity_pk, mbedtls_pk_context *printer_private_key);
+std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key);
 
 bool rsa_sha256_sign_verify(mbedtls_pk_context &pk, const uint8_t *message, size_t message_size, const uint8_t *signature, size_t sig_size);
 bool rsa_oaep_decrypt(mbedtls_pk_context &pk, const uint8_t *encrypted_msg, size_t msg_size, uint8_t *output, size_t out_size);

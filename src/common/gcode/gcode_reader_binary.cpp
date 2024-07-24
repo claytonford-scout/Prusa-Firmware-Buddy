@@ -1,7 +1,6 @@
 #include "gcode_reader_binary.hpp"
 
 #include <e2ee/e2ee.hpp>
-#include "RAII.hpp"
 #include "lang/i18n.h"
 #include <sha256.h>
 #include "transfers/transfer.hpp"

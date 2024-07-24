@@ -1,10 +1,14 @@
 #include "e2ee.hpp"
+#include "key.hpp"
 
-#include "core/core.hpp"
-#include "heap.h"
+#include <core/core.hpp>
+#include <heap.h>
 #include <sha256.h>
 #include "unique_file_ptr.hpp"
 #include <raii/deleter.hpp>
+#include <unique_file_ptr.hpp>
+#include <sys/stat.h>
+#include <common/stat_retry.hpp>
 
 #include <mbedtls/config.h>
 #include <mbedtls/ecp.h>
@@ -57,29 +61,6 @@ struct KeyGenContexts {
         mbedtls_rsa_free(&rsa);
         mbedtls_ctr_drbg_free(&ctr_drbg);
         mbedtls_entropy_free(&entropy);
-    }
-};
-
-struct RandomContexts {
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
-    RandomContexts() {
-        mbedtls_entropy_init(&entropy);
-        mbedtls_ctr_drbg_init(&ctr_drbg);
-    }
-    ~RandomContexts() {
-        mbedtls_ctr_drbg_free(&ctr_drbg);
-        mbedtls_entropy_free(&entropy);
-    }
-};
-
-struct Pk {
-    mbedtls_pk_context pk;
-    Pk() {
-        mbedtls_pk_init(&pk);
-    }
-    ~Pk() {
-        mbedtls_pk_free(&pk);
     }
 };
 
@@ -207,44 +188,18 @@ bool export_key() {
 }
 
 IdentityBlockInfo::IdentityBlockInfo()
-    : identity_pk(std::make_unique<mbedtls_pk_context>()) {
-    mbedtls_pk_init(identity_pk.get());
-}
+    : identity_pk(std::make_unique<Pk>()) {}
 
-IdentityBlockInfo::~IdentityBlockInfo() {
-    mbedtls_pk_free(identity_pk.get());
-}
-
-IdentityBlockInfo::IdentityBlockInfo(IdentityBlockInfo &&other)
-    : identity_pk(std::move(other.identity_pk))
-    , identity_name(std::move(other.identity_name))
-    , key_block_hash(std::move(other.key_block_hash)) {}
-
-IdentityBlockInfo &IdentityBlockInfo::operator=(IdentityBlockInfo &&other) {
-    identity_pk = std::move(other.identity_pk);
-    identity_name = std::move(other.identity_name);
-    key_block_hash = std::move(other.key_block_hash);
-    return *this;
-}
+IdentityBlockInfo::~IdentityBlockInfo() = default;
+IdentityBlockInfo::IdentityBlockInfo(IdentityBlockInfo &&other) = default;
+IdentityBlockInfo &IdentityBlockInfo::operator=(IdentityBlockInfo &&other) = default;
 
 PrinterPrivateKey::PrinterPrivateKey()
-    : key(std::make_unique<mbedtls_pk_context>()) {
-    mbedtls_pk_init(key.get());
-}
+    : key(std::make_unique<Pk>()) {}
 
-PrinterPrivateKey::~PrinterPrivateKey() {
-    mbedtls_pk_free(key.get());
-}
-
-PrinterPrivateKey::PrinterPrivateKey(PrinterPrivateKey &&other)
-    : key_valid(other.key_valid)
-    , key(std::move(other.key)) {}
-
-PrinterPrivateKey &PrinterPrivateKey::operator=(PrinterPrivateKey &&other) {
-    key_valid = other.key_valid;
-    key = std::move(other.key);
-    return *this;
-}
+PrinterPrivateKey::~PrinterPrivateKey() = default;
+PrinterPrivateKey::PrinterPrivateKey(PrinterPrivateKey &&other) = default;
+PrinterPrivateKey &PrinterPrivateKey::operator=(PrinterPrivateKey &&other) = default;
 
 bool rsa_sha256_sign_verify(mbedtls_pk_context &pk, const uint8_t *message, size_t message_size, const uint8_t *signature, size_t sig_size) {
     unsigned char hash[HASH_SIZE];
@@ -320,14 +275,14 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     memcpy(&key_len, &bytes.get()[pos], sizeof(key_len));
     pos += sizeof(key_len);
     string_view_u8 key(&bytes.get()[pos], key_len);
-    if (mbedtls_pk_parse_public_key(info.identity_pk.get(), key.data(), key.length()) != 0) {
+    if (mbedtls_pk_parse_public_key(&info.identity_pk->pk, key.data(), key.length()) != 0) {
         return identity_parsing_error;
     }
     uint8_t sign[SIGN_SIZE];
     if (!read_from_file(sign, SIGN_SIZE, file)) {
         return file_error;
     }
-    auto res = rsa_sha256_sign_verify(*info.identity_pk, bytes.get(), signed_bytes_size, sign, SIGN_SIZE);
+    auto res = rsa_sha256_sign_verify(info.identity_pk->pk, bytes.get(), signed_bytes_size, sign, SIGN_SIZE);
     if (!res) {
         return identity_verification_fail;
     }
@@ -361,7 +316,7 @@ bool SymmetricKeys::extract_keys(uint8_t *key_block, size_t size) {
     return true;
 }
 
-std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, mbedtls_pk_context &identity_pk, mbedtls_pk_context *printer_private_key) {
+std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key) {
     if (printer_private_key == nullptr) {
         return std::nullopt;
     }
@@ -388,7 +343,7 @@ std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::B
         }
         string_view_u8 encrypted_block(buffer.get(), block_header.uncompressed_size - SIGN_SIZE);
         string_view_u8 sign(buffer.get() + block_header.uncompressed_size - SIGN_SIZE, SIGN_SIZE);
-        if (!rsa_sha256_sign_verify(identity_pk, encrypted_block.data(), encrypted_block.size(), sign.data(), sign.size())) {
+        if (!rsa_sha256_sign_verify(identity_pk.pk, encrypted_block.data(), encrypted_block.size(), sign.data(), sign.size())) {
             return std::nullopt;
         }
         const size_t correct_decrypted_size = 2 * HASH_SIZE + 2 * KEY_SIZE;
@@ -407,7 +362,7 @@ std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::B
         uint8_t printer_public_key_hash[HASH_SIZE];
         mbedtls_sha256_ret(buffer.get() + block_header.uncompressed_size - ret, ret, printer_public_key_hash, false);
 
-        ret = mbedtls_pk_write_pubkey_der(&identity_pk, buffer.get(), block_header.uncompressed_size);
+        ret = mbedtls_pk_write_pubkey_der(&identity_pk.pk, buffer.get(), block_header.uncompressed_size);
         if (ret <= 0) {
             return std::nullopt;
         }
