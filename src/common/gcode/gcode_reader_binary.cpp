@@ -1,6 +1,6 @@
 #include "gcode_reader_binary.hpp"
-
 #include <e2ee/e2ee.hpp>
+#include <utility_extensions.hpp>
 #include "lang/i18n.h"
 #include <sha256.h>
 #include "transfers/transfer.hpp"
@@ -134,10 +134,10 @@ bool PrusaPackGcodeReader::stream_metadata_start() {
     }
 
     stream.reset();
-    stream.current_block_header = get<BlockHeader>(res);
+    stream.current_plain_block_header = get<BlockHeader>(res);
 
     uint16_t encoding;
-    if (fread(&encoding, 1, sizeof(encoding), file.get()) != sizeof(encoding)) {
+    if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
         return false;
     }
 
@@ -145,12 +145,12 @@ bool PrusaPackGcodeReader::stream_metadata_start() {
         return false;
     }
 
-    if (static_cast<ECompressionType>(stream.current_block_header.compression) != ECompressionType::None) {
+    if (static_cast<ECompressionType>(stream.current_plain_block_header.compression) != ECompressionType::None) {
         return false; // no compression supported on metadata
     }
     // return characters directly from file
     ptr_stream_getc = static_cast<stream_getc_type>(&PrusaPackGcodeReader::stream_getc_file);
-    stream.block_remaining_bytes_compressed = ((bgcode::core::ECompressionType)stream.current_block_header.compression == bgcode::core::ECompressionType::None) ? stream.current_block_header.uncompressed_size : stream.current_block_header.compressed_size;
+    stream.block_remaining_bytes_compressed = ((bgcode::core::ECompressionType)stream.current_plain_block_header.compression == bgcode::core::ECompressionType::None) ? stream.current_plain_block_header.uncompressed_size : stream.current_plain_block_header.compressed_size;
     stream_mode_ = StreamMode::metadata;
     return true;
 }
@@ -163,6 +163,23 @@ const PrusaPackGcodeReader::StreamRestoreInfo::PrusaPackRec *PrusaPackGcodeReade
     }
 
     return nullptr;
+}
+IGcodeReader::Result_t PrusaPackGcodeReader::read_encrypted_block_header(FILE *file, BlockHeader &header) {
+    if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.type), sizeof(header.type))) {
+        return Result_t::RESULT_ERROR;
+    }
+    if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compression), sizeof(header.compression))) {
+        return Result_t::RESULT_ERROR;
+    }
+    if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size))) {
+        return Result_t::RESULT_ERROR;
+    }
+    if (header.compression != ftrstd::to_underlying(ECompressionType::None)) {
+        if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compressed_size), sizeof(header.compressed_size))) {
+            return Result_t::RESULT_ERROR;
+        }
+    }
+    return Result_t::RESULT_OK;
 }
 
 IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc) {
@@ -181,7 +198,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
         // get first gcode block
         auto res = iterate_blocks(check_crc, [](BlockHeader &block_header) {
             // check if correct type, if so, return this block
-            if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode) {
+            if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode || (bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
                 return IterateResult_t::Return;
             }
 
@@ -228,13 +245,23 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     }
 
     stream.reset();
-    stream.current_block_header = std::move(start_block);
-    if (fread(&stream.encoding, 1, sizeof(stream.encoding), file) != sizeof(stream.encoding)) {
-        return Result_t::RESULT_ERROR;
+    if (start_block.type == ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
+        // TODO: HMAC validation
+        init_decryption();
+        if (auto res = init_encrypted_block_streaming(start_block); res != Result_t::RESULT_OK) {
+            return res;
+        }
+        set_ptr_stream_getc_decrypted(&PrusaPackGcodeReader::stream_getc_decrypted);
+    } else {
+        set_ptr_stream_getc_decrypted(&PrusaPackGcodeReader::stream_getc_file);
+        stream.current_plain_block_header = std::move(start_block);
+        if (fread(&stream.encoding, sizeof(stream.encoding), 1, file) != 1) {
+            return Result_t::RESULT_ERROR;
+        }
     }
 
     stream.uncompressed_offset = block_decompressed_offset;
-    stream.block_remaining_bytes_compressed = ((bgcode::core::ECompressionType)stream.current_block_header.compression == bgcode::core::ECompressionType::None) ? stream.current_block_header.uncompressed_size : stream.current_block_header.compressed_size;
+    stream.block_remaining_bytes_compressed = ((bgcode::core::ECompressionType)stream.current_plain_block_header.compression == bgcode::core::ECompressionType::None) ? stream.current_plain_block_header.uncompressed_size : stream.current_plain_block_header.compressed_size;
     stream.multiblock = true;
     if (!init_decompression()) {
         return Result_t::RESULT_ERROR;
@@ -254,12 +281,41 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     return Result_t::RESULT_OK;
 }
 
+GcodeReaderCommon::Result_t PrusaPackGcodeReader::init_encrypted_block_streaming(const bgcode::core::BlockHeader &block_header) {
+    stream.current_encrypted_block_header = block_header;
+    uint16_t encryption;
+    if (fread(&encryption, sizeof(encryption), 1, file.get()) != 1) {
+        return Result_t::RESULT_ERROR;
+    }
+    if (encryption != ftrstd::to_underlying(bgcode::core::EEncryptedBlockEncryption::AES128_CBC_SHA256_HMAC)) {
+        return Result_t::RESULT_ERROR;
+    }
+    // TODO: Handle last block
+    bool last;
+    if (fread(&last, sizeof(last), 1, file.get()) != 1) {
+        return Result_t::RESULT_ERROR;
+    }
+
+    // Note: This is the size of the EncryptedBlock, so it is the size of encrypted data + HMACs
+    stream.decryptor.setup_block(stream.current_encrypted_block_header.get_position(), block_header.uncompressed_size);
+    if (auto res = read_encrypted_block_header(file.get(), stream.current_plain_block_header); res != Result_t::RESULT_OK) {
+        return res;
+    }
+    if (!stream.decryptor.decrypt(file.get(), reinterpret_cast<uint8_t *>(&stream.encoding), sizeof(stream.encoding))) {
+        return Result_t::RESULT_ERROR;
+    }
+
+    return Result_t::RESULT_OK;
+}
+
 IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
     auto file = this->file.get();
     const bool verify = config_store().verify_gcode.get();
+    const bool encrypted = symmetric_info.valid;
 
+    BlockHeader &skip_block = encrypted ? stream.current_encrypted_block_header : stream.current_plain_block_header;
     // go to next block
-    if (bgcode::core::skip_block(*file, file_header, stream.current_block_header) != bgcode::core::EResult::Success) {
+    if (bgcode::core::skip_block(*file, file_header, skip_block) != bgcode::core::EResult::Success) {
         return Result_t::RESULT_ERROR;
     }
 
@@ -268,20 +324,34 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
     if (auto res = read_block_header(new_block, /*check_crc=*/verify); res != Result_t::RESULT_OK) {
         return res;
     }
+    if (encrypted) {
+        // TODO: HMAC validation
+        if (new_block.type != ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
+            return Result_t::RESULT_ERROR;
+        }
+        BlockHeader old_plain_block_header = stream.current_plain_block_header;
+        uint16_t old_plain_block_encoding = stream.encoding;
+        if (auto res = init_encrypted_block_streaming(new_block); res != Result_t::RESULT_OK) {
+            return res;
+        }
+        if (stream.encoding != old_plain_block_encoding || stream.current_plain_block_header.type != old_plain_block_header.type || stream.current_plain_block_header.compression != old_plain_block_header.compression) {
+            return Result_t::RESULT_ERROR;
+        }
+    } else {
+        // read encoding
+        uint16_t encoding;
+        if (fread(&encoding, sizeof(encoding), 1, file) != 1) {
+            return Result_t::RESULT_ERROR;
+        }
 
-    // read encoding
-    uint16_t encoding;
-    if (fread(&encoding, 1, sizeof(encoding), file) != sizeof(encoding)) {
-        return Result_t::RESULT_ERROR;
-    }
-
-    if (stream.encoding != encoding || stream.current_block_header.type != new_block.type || stream.current_block_header.compression != new_block.compression) {
-        return Result_t::RESULT_ERROR;
+        if (stream.encoding != encoding || stream.current_plain_block_header.type != new_block.type || stream.current_plain_block_header.compression != new_block.compression) {
+            return Result_t::RESULT_ERROR;
+        }
+        stream.current_plain_block_header = new_block;
     }
 
     // update stream
-    stream.current_block_header = new_block;
-    stream.block_remaining_bytes_compressed = ((bgcode::core::ECompressionType)stream.current_block_header.compression == bgcode::core::ECompressionType::None) ? stream.current_block_header.uncompressed_size : stream.current_block_header.compressed_size;
+    stream.block_remaining_bytes_compressed = ((bgcode::core::ECompressionType)stream.current_plain_block_header.compression == bgcode::core::ECompressionType::None) ? stream.current_plain_block_header.uncompressed_size : stream.current_plain_block_header.compressed_size;
     stream.meatpack.reset_state();
     if (stream.hs_decoder) {
         heatshrink_decoder_reset(stream.hs_decoder.get());
@@ -294,7 +364,11 @@ void PrusaPackGcodeReader::store_restore_block() {
     // shift away oldest restore info
     stream_restore_info[0] = stream_restore_info[1];
     // and store new restore info
-    stream_restore_info[1].block_file_pos = stream.current_block_header.get_position();
+    if (symmetric_info.valid) {
+        stream_restore_info[1].block_file_pos = stream.current_encrypted_block_header.get_position();
+    } else {
+        stream_restore_info[1].block_file_pos = stream.current_plain_block_header.get_position();
+    }
     stream_restore_info[1].block_start_offset = stream.uncompressed_offset;
 }
 
@@ -320,10 +394,13 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_getc_file(char &out) {
 }
 
 IGcodeReader::Result_t PrusaPackGcodeReader::stream_current_block_read(char *buffer, size_t size) {
-    auto read_res = fread(buffer, 1, size, file.get());
-    stream.block_remaining_bytes_compressed -= size;
-    if (read_res != size) {
-        return IGcodeReader::Result_t::RESULT_ERROR;
+    for (size_t i = 0; i < size; i++) {
+        char c;
+        auto res = (this->*ptr_stream_getc_decrypted)(c);
+        if (res != Result_t::RESULT_OK) {
+            return res;
+        }
+        buffer[i] = c;
     }
     return IGcodeReader::Result_t::RESULT_OK;
 }
@@ -349,6 +426,25 @@ IGcodeReader::Result_t PrusaPackGcodeReader::heatshrink_sink_data() {
 
     stream.hs_decoder->input_size += to_sink;
 
+    return Result_t::RESULT_OK;
+}
+
+IGcodeReader::Result_t PrusaPackGcodeReader::stream_getc_decrypted(char &out) {
+    if (stream.block_remaining_bytes_compressed == 0) {
+        if (stream.multiblock) {
+            auto res = switch_to_next_block();
+            if (res != Result_t::RESULT_OK) {
+                return res;
+            }
+        } else {
+            return Result_t::RESULT_EOF;
+        }
+    }
+    if (!stream.decryptor.decrypt(file.get(), reinterpret_cast<uint8_t *>(&out), sizeof(out))) {
+        return Result_t::RESULT_ERROR;
+    }
+
+    stream.block_remaining_bytes_compressed--;
     return Result_t::RESULT_OK;
 }
 
@@ -495,6 +591,11 @@ AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expect
         stream_mode_ = StreamMode::none;
         return nullptr;
     }
+
+    set_ptr_stream_getc(&PrusaPackGcodeReader::stream_getc_file);
+    stream.reset();
+    stream.current_plain_block_header = *header;
+    stream.block_remaining_bytes_compressed = header->uncompressed_size; // thumbnail is read as-is, no decompression, so use uncompressed size
     stream_mode_ = StreamMode::thumbnail;
     thumbnail_reader.file = file.get();
     thumbnail_reader.size = header->uncompressed_size;
@@ -583,9 +684,13 @@ IGcodeReader::FileVerificationResult PrusaPackGcodeReader::verify_file(FileVerif
     return { .is_ok = true };
 }
 
+void PrusaPackGcodeReader::init_decryption() {
+    stream.decryptor.set_cipher_info(symmetric_info);
+}
+
 bool PrusaPackGcodeReader::init_decompression() {
     // first setup decompression step
-    const ECompressionType compression = static_cast<ECompressionType>(stream.current_block_header.compression);
+    const ECompressionType compression = static_cast<ECompressionType>(stream.current_plain_block_header.compression);
     uint8_t hs_window_sz = 0;
     uint8_t hs_lookahead_sz = 0;
     if (compression == ECompressionType::None) {
@@ -610,8 +715,9 @@ bool PrusaPackGcodeReader::init_decompression() {
 
         set_ptr_stream_getc_decompressed(&PrusaPackGcodeReader::stream_getc_decompressed_heatshrink);
     } else {
-        // no compression, setup data returning directly from file
-        set_ptr_stream_getc_decompressed(&PrusaPackGcodeReader::stream_getc_file);
+        // no compression, setup data returning from decrypt stream, which might decrypt,
+        // or just take it straight from file
+        set_ptr_stream_getc_decompressed(ptr_stream_getc_decrypted);
     }
 
     const auto encoding = static_cast<EGCodeEncodingType>(stream.encoding);
@@ -690,6 +796,7 @@ public:
     }
 
     const char *key_block_found(FileHeader file_header, BlockHeader block_header) {
+        num_of_key_blocks++;
         key_block_pos_end = block_header.get_position() + (long)block_header.get_size() + (long)block_content_size(file_header, block_header);
         if (have_key_block) {
             return nullptr;
@@ -723,6 +830,10 @@ public:
         return nullptr;
     }
 
+    uint32_t get_num_of_key_blocks() const {
+        return num_of_key_blocks;
+    }
+
 private:
     long last_metadata_pos_end = 0;
     long identity_pos_end = 0;
@@ -730,6 +841,8 @@ private:
     bool have_key_block = false;
     long key_block_pos_end = 0;
     bool have_gcode_block = false;
+    // So that we know how many HMAC there will be in the encrypted blocks
+    uint32_t num_of_key_blocks = 0;
 };
 
 void file_header_sha256(const FileHeader &file_header, MultiuseHash &hash) {
@@ -822,7 +935,8 @@ bool PrusaPackGcodeReader::valid_for_print() {
             if (memcmp(key_block_hash, identity_block_info.key_block_hash.data(), sizeof(key_block_hash)) != 0) {
                 return set_error_end(e2ee::key_block_hash_mismatch);
             }
-            if (!symmetric_keys.valid) {
+            symmetric_info.num_of_hmacs = valid_context.seq_validator.get_num_of_key_blocks();
+            if (!symmetric_info.valid) {
                 // TODO Revise the texts, they are shown to the user
                 return set_error_end(e2ee::encrypted_for_different_printer);
             } else {
@@ -847,8 +961,9 @@ bool PrusaPackGcodeReader::valid_for_print() {
             // FIXME: We read it once for the hash and once for the actual decryption, optize this to a one read operation.
             block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
             if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.printer_pk.get_printer_private_key()); keys_opt.has_value()) {
-                symmetric_keys = keys_opt.value();
-                symmetric_keys.valid = true;
+                symmetric_info = keys_opt.value();
+                symmetric_info.valid = true;
+                symmetric_info.hmac_index = valid_context.seq_validator.get_num_of_key_blocks() - 1;
             }
         }
 
@@ -879,10 +994,101 @@ bool PrusaPackGcodeReader::valid_for_print() {
 
 void PrusaPackGcodeReader::stream_t::reset() {
     multiblock = false;
-    current_block_header = bgcode::core::BlockHeader();
+    current_plain_block_header = bgcode::core::BlockHeader();
+    current_encrypted_block_header = bgcode::core::BlockHeader();
     encoding = (uint16_t)bgcode::core::EGCodeEncodingType::None;
     block_remaining_bytes_compressed = 0; //< remaining bytes in current block
     uncompressed_offset = 0; //< offset of next char that will be outputted
     hs_decoder.reset();
     meatpack.reset_state();
+}
+
+void PrusaPackGcodeReader::Decryptor::set_cipher_info(e2ee::SymmetricCipherInfo cipher_info) {
+    memcpy(hmac_key.data(), cipher_info.sign_key, hmac_key.size());
+    mbedtls_aes_setkey_dec(&context, cipher_info.encryption_key, e2ee::KEY_SIZE * 8);
+    num_of_hmacs = cipher_info.num_of_hmacs;
+}
+
+PrusaPackGcodeReader::Decryptor::Decryptor() {
+    mbedtls_aes_init(&context);
+    cache_curr_pos = cache.end();
+    cache_end = cache.end();
+}
+
+PrusaPackGcodeReader::Decryptor::~Decryptor() {
+    mbedtls_aes_free(&context);
+}
+
+void PrusaPackGcodeReader::Decryptor::setup_block(uint64_t offset, uint32_t block_size) {
+    memset(cache.data(), 0, cache.size());
+    cache_curr_pos = cache.end();
+    cache_end = cache.end();
+    memset(iv.data(), 0, iv.size());
+    memcpy(iv.data(), reinterpret_cast<const uint8_t *>(&offset), sizeof offset);
+    remaining_encrypted_data_size = block_size - num_of_hmacs * e2ee::HMAC_SIZE;
+    assert(remaining_encrypted_data_size % BlockSize == 0);
+}
+
+namespace {
+std::optional<size_t> pkcs7_padding_data_len(PrusaPackGcodeReader::Decryptor::Block &block) {
+    uint8_t padding_len = block.back();
+    for (size_t i = block.size() - 1; i > block.size() - 1 - padding_len; i--) {
+        if (block[i] != padding_len) {
+            // Invalid padding
+            return std::nullopt;
+        }
+    }
+    return block.size() - padding_len;
+}
+} // namespace
+
+// Note: The error checks here can fail only from programmer mistakes or malformed bgcode file
+bool PrusaPackGcodeReader::Decryptor::decrypt(FILE *file, uint8_t *buffer, size_t size) {
+    if (size > remaining_encrypted_data_size) {
+        return false;
+    }
+
+    size_t cache_size = cache_end - cache_curr_pos;
+    // Take all we can from cache
+    size_t from_cache = std::min(size, cache_size);
+    memcpy(buffer, cache_curr_pos, from_cache);
+    cache_curr_pos += from_cache;
+    size -= from_cache;
+    remaining_encrypted_data_size -= from_cache;
+
+    // Decrypt the rest, until we are done
+    while (size > 0) {
+        Block in;
+        if (fread(in.data(), 1, in.size(), file) != in.size()) {
+            return false;
+        }
+        size_t to_return = std::min(size, in.size());
+        auto ret = mbedtls_aes_crypt_cbc(&context, MBEDTLS_AES_DECRYPT, cache.size(), iv.data(), in.data(), cache.data());
+        if (ret != 0) {
+            return false;
+        }
+        // last block, handle padding
+        if (remaining_encrypted_data_size == BlockSize) {
+            auto data_size_opt = pkcs7_padding_data_len(cache);
+            if (!data_size_opt.has_value()) {
+                return false;
+            }
+            size_t data_size = data_size_opt.value();
+            if (to_return > data_size) {
+                return false;
+            }
+            cache_curr_pos = cache.begin();
+            // point one after the last valid byte
+            cache_end = cache.begin() + data_size + 1;
+            remaining_encrypted_data_size -= BlockSize - data_size;
+        } else {
+            cache_curr_pos = cache.begin();
+        }
+        memcpy(buffer, cache_curr_pos, to_return);
+        remaining_encrypted_data_size -= to_return;
+        cache_curr_pos += to_return;
+        buffer += to_return;
+        size -= to_return;
+    }
+    return true;
 }

@@ -19,6 +19,7 @@ constexpr const char *const key_path = "/usb/e2ee.der";
 constexpr const char *const pubkey_path = "/usb/pubkey.der";
 
 constexpr size_t HASH_SIZE = 32;
+constexpr size_t HMAC_SIZE = 32;
 constexpr size_t KEY_SIZE = 16;
 constexpr size_t SIGN_SIZE = 256;
 // Size discovered by experimental means.
@@ -88,15 +89,17 @@ private:
 
 const char *read_and_verify_identity_block(FILE *file, const bgcode::core::BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info);
 
-struct SymmetricKeys {
+struct SymmetricCipherInfo {
     bool valid = false;
     uint8_t encryption_key[KEY_SIZE];
     uint8_t sign_key[KEY_SIZE];
+    uint32_t num_of_hmacs = 0;
+    uint32_t hmac_index = 0; // where our HMAC is
 
     bool extract_keys(uint8_t *key_block, size_t size);
 };
 
-std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key);
+std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key);
 
 bool rsa_sha256_sign_verify(mbedtls_pk_context &pk, const uint8_t *message, size_t message_size, const uint8_t *signature, size_t sig_size);
 bool rsa_oaep_decrypt(mbedtls_pk_context &pk, const uint8_t *encrypted_msg, size_t msg_size, uint8_t *output, size_t out_size);

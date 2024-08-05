@@ -56,6 +56,8 @@ public:
 
     void update_validity(const char *) {}
 
+    virtual bool valid_for_print();
+
 private:
     StubGcodeProviderBase *provider = nullptr;
 };

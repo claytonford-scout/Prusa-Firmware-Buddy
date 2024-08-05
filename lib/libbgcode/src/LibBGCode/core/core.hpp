@@ -80,6 +80,11 @@ enum class EKeyBlockEncryption : uint16_t
     RSA_ENC_SHA256_SIGN
 };
 
+enum class EEncryptedBlockEncryption : uint16_t
+{
+    AES128_CBC_SHA256_HMAC
+};
+
 enum class ECompressionType : uint16_t
 {
     None,

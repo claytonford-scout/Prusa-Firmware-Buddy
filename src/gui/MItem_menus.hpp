@@ -13,10 +13,8 @@
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_mmu2.h>
 #include <option/e2ee_support.h>
-#include <option/e2ee_support.h>
 #include <img_resources.hpp>
 #include <ScreenFactory.hpp>
-
 
 class MI_SCREEN_BASE : public IWindowMenuItem {
 protected:

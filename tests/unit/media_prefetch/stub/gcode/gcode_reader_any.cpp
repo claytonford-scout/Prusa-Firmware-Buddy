@@ -43,3 +43,7 @@ AnyGcodeFormatReader::~AnyGcodeFormatReader() {
         check_prefetch_mutex_not_locked();
     }
 }
+
+bool AnyGcodeFormatReader::valid_for_print() {
+    return true;
+}

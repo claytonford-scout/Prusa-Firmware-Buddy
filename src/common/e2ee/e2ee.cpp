@@ -307,7 +307,7 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     return nullptr;
 }
 
-bool SymmetricKeys::extract_keys(uint8_t *key_block, size_t size) {
+bool SymmetricCipherInfo::extract_keys(uint8_t *key_block, size_t size) {
     if (size != 2 * KEY_SIZE) {
         return false;
     }
@@ -316,7 +316,7 @@ bool SymmetricKeys::extract_keys(uint8_t *key_block, size_t size) {
     return true;
 }
 
-std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key) {
+std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key) {
     if (printer_private_key == nullptr) {
         return std::nullopt;
     }
@@ -378,7 +378,7 @@ std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::B
             return std::nullopt;
         }
 
-        SymmetricKeys keys;
+        SymmetricCipherInfo keys;
         keys.extract_keys(decrypted_key_block + 2 * HASH_SIZE, 2 * KEY_SIZE);
         return keys;
     } else /*No encryption*/ {
@@ -389,7 +389,7 @@ std::optional<SymmetricKeys> decrypt_key_block(FILE *file, const bgcode::core::B
         if (!read_from_file(&plain_key_block, sizeof(plain_key_block), file)) {
             return std::nullopt;
         }
-        SymmetricKeys keys;
+        SymmetricCipherInfo keys;
         keys.extract_keys(plain_key_block, sizeof(plain_key_block));
         return keys;
     }
