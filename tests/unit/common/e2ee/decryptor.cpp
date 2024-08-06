@@ -111,6 +111,25 @@ TEST_CASE("20 bytes encrypted") {
         decryptor.decrypt(file, buffer + 18, 2);
     }
 
+    // Note: The move has to be either on the edge of the block or read enough after
+    // so that we don't just take it from cache and really call the decryption
+    SECTION("Test move constructor of decryptor") {
+        memset(buffer, 0, sizeof(buffer));
+        decryptor.decrypt(file, buffer, 16);
+        REQUIRE(memcmp(buffer, original, 16) == 0);
+        PrusaPackGcodeReader::Decryptor another_decryptor(std::move(decryptor));
+        another_decryptor.decrypt(file, buffer + 16, 4);
+    }
+
+    SECTION("Test move operator of decryptor") {
+        memset(buffer, 0, sizeof(buffer));
+        decryptor.decrypt(file, buffer, 16);
+        REQUIRE(memcmp(buffer, original, 16) == 0);
+        PrusaPackGcodeReader::Decryptor another_decryptor;
+        another_decryptor = std::move(decryptor);
+        another_decryptor.decrypt(file, buffer + 16, 4);
+    }
+
     SECTION("Read by more sizes") {
         memset(buffer, 0, sizeof(buffer));
         decryptor.decrypt(file, buffer, 8);

@@ -3,6 +3,7 @@
 
 #include "core/core.hpp"
 #include <e2ee/e2ee.hpp>
+#include <e2ee/movable_aes_context.hpp>
 #include "gcode_buffer.hpp"
 #include "gcode_reader_interface.hpp"
 #include "meatpack.h"
@@ -53,11 +54,15 @@ public:
         bool decrypt(FILE *file, uint8_t *buffer, size_t size);
         void set_cipher_info(e2ee::SymmetricCipherInfo keys);
         Decryptor();
+        Decryptor(const Decryptor &) = delete;
+        Decryptor operator=(const Decryptor &) = delete;
+        Decryptor(Decryptor &&) = default;
+        Decryptor &operator=(Decryptor &&) = default;
         ~Decryptor();
 
     private:
         std::array<uint8_t, e2ee::KEY_SIZE> hmac_key;
-        mbedtls_aes_context context;
+        MovableAesContext aes_ctx;
         uint32_t remaining_encrypted_data_size = 0;
         uint32_t num_of_hmacs = 0;
         uint8_t *cache_curr_pos = 0;

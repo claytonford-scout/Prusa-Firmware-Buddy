@@ -1005,18 +1005,16 @@ void PrusaPackGcodeReader::stream_t::reset() {
 
 void PrusaPackGcodeReader::Decryptor::set_cipher_info(e2ee::SymmetricCipherInfo cipher_info) {
     memcpy(hmac_key.data(), cipher_info.sign_key, hmac_key.size());
-    mbedtls_aes_setkey_dec(&context, cipher_info.encryption_key, e2ee::KEY_SIZE * 8);
+    mbedtls_aes_setkey_dec(&aes_ctx.context, cipher_info.encryption_key, e2ee::KEY_SIZE * 8);
     num_of_hmacs = cipher_info.num_of_hmacs;
 }
 
 PrusaPackGcodeReader::Decryptor::Decryptor() {
-    mbedtls_aes_init(&context);
     cache_curr_pos = cache.end();
     cache_end = cache.end();
 }
 
 PrusaPackGcodeReader::Decryptor::~Decryptor() {
-    mbedtls_aes_free(&context);
 }
 
 void PrusaPackGcodeReader::Decryptor::setup_block(uint64_t offset, uint32_t block_size) {
@@ -1063,7 +1061,7 @@ bool PrusaPackGcodeReader::Decryptor::decrypt(FILE *file, uint8_t *buffer, size_
             return false;
         }
         size_t to_return = std::min(size, in.size());
-        auto ret = mbedtls_aes_crypt_cbc(&context, MBEDTLS_AES_DECRYPT, cache.size(), iv.data(), in.data(), cache.data());
+        auto ret = mbedtls_aes_crypt_cbc(&aes_ctx.context, MBEDTLS_AES_DECRYPT, cache.size(), iv.data(), in.data(), cache.data());
         if (ret != 0) {
             return false;
         }
