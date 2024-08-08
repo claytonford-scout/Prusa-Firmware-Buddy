@@ -660,6 +660,75 @@ TEST_CASE("Reader CRC: incorrect on another gcode") {
     REQUIRE(result == IGcodeReader::Result_t::RESULT_CORRUPT);
 }
 
+TEST_CASE("Encrypted bgcode stream whole file") {
+    AnyGcodeFormatReader enc_reader("test_encrypted_gcode_correct.bgcode");
+    REQUIRE(enc_reader.is_open());
+    REQUIRE(enc_reader->valid_for_print());
+    AnyGcodeFormatReader dec_reader("test_decrypted_gcode_correct.bgcode");
+    REQUIRE(dec_reader.is_open());
+    REQUIRE(dec_reader->valid_for_print());
+    IGcodeReader::Result_t enc_result;
+    IGcodeReader::Result_t dec_result;
+
+    SECTION("metadata") {
+        REQUIRE(enc_reader->stream_metadata_start());
+        REQUIRE(dec_reader->stream_metadata_start());
+        GcodeBuffer enc_buffer;
+        GcodeBuffer dec_buffer;
+        dec_result = dec_reader->stream_get_line(dec_buffer, IGcodeReader::Continuations::Discard);
+        while ((enc_result = enc_reader->stream_get_line(enc_buffer, IGcodeReader::Continuations::Discard)) == IGcodeReader::Result_t::RESULT_OK) {
+            REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_OK);
+            REQUIRE(strcmp(enc_buffer.buffer.data(), dec_buffer.buffer.data()) == 0);
+            dec_result = dec_reader->stream_get_line(dec_buffer, IGcodeReader::Continuations::Discard);
+        }
+        REQUIRE(enc_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+        REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+    }
+
+    SECTION("gcode get_line") {
+        REQUIRE(enc_reader->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+        REQUIRE(dec_reader->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+        GcodeBuffer enc_buffer;
+        GcodeBuffer dec_buffer;
+        dec_result = dec_reader->stream_get_line(dec_buffer, IGcodeReader::Continuations::Discard);
+        while ((enc_result = enc_reader->stream_get_line(enc_buffer, IGcodeReader::Continuations::Discard)) == IGcodeReader::Result_t::RESULT_OK) {
+            REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_OK);
+            REQUIRE(strcmp(enc_buffer.buffer.data(), dec_buffer.buffer.data()) == 0);
+            dec_result = dec_reader->stream_get_line(dec_buffer, IGcodeReader::Continuations::Discard);
+        }
+        REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+        REQUIRE(enc_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+    }
+
+    char enc_char;
+    char dec_char;
+    SECTION("gcode by chars") {
+        REQUIRE(enc_reader->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+        REQUIRE(dec_reader->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+        dec_result = dec_reader->stream_getc(dec_char);
+        while ((enc_result = enc_reader->stream_getc(enc_char)) == IGcodeReader::Result_t::RESULT_OK) {
+            REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_OK);
+            REQUIRE(dec_char == enc_char);
+            dec_result = dec_reader->stream_getc(dec_char);
+        }
+        REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+        REQUIRE(enc_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+    }
+
+    SECTION("thumbnail") {
+        REQUIRE(enc_reader->stream_thumbnail_start(16, 16, IGcodeReader::ImgType::PNG, true));
+        REQUIRE(dec_reader->stream_thumbnail_start(16, 16, IGcodeReader::ImgType::PNG, true));
+        dec_result = dec_reader->stream_getc(dec_char);
+        while ((enc_result = enc_reader->stream_getc(enc_char)) == IGcodeReader::Result_t::RESULT_OK) {
+            REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_OK);
+            REQUIRE(dec_char == enc_char);
+            dec_result = dec_reader->stream_getc(dec_char);
+        }
+        REQUIRE(dec_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+        REQUIRE(enc_result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
+    }
+}
+
 TEST_CASE("Plain bgcode valid") {
     AnyGcodeFormatReader reader("test_binary_heatshrink.bgcode");
     REQUIRE(reader.is_open());
