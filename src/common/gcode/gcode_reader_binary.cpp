@@ -164,18 +164,19 @@ const PrusaPackGcodeReader::StreamRestoreInfo::PrusaPackRec *PrusaPackGcodeReade
 
     return nullptr;
 }
-IGcodeReader::Result_t PrusaPackGcodeReader::read_encrypted_block_header(FILE *file, BlockHeader &header) {
-    if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.type), sizeof(header.type))) {
+
+IGcodeReader::Result_t PrusaPackGcodeReader::read_encrypted_block_header(FILE *file, BlockHeader &header, Decryptor &decryptor) {
+    if (!decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.type), sizeof(header.type))) {
         return Result_t::RESULT_ERROR;
     }
-    if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compression), sizeof(header.compression))) {
+    if (!decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compression), sizeof(header.compression))) {
         return Result_t::RESULT_ERROR;
     }
-    if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size))) {
+    if (!decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size))) {
         return Result_t::RESULT_ERROR;
     }
     if (header.compression != ftrstd::to_underlying(ECompressionType::None)) {
-        if (!stream.decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compressed_size), sizeof(header.compressed_size))) {
+        if (!decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compressed_size), sizeof(header.compressed_size))) {
             return Result_t::RESULT_ERROR;
         }
     }
@@ -298,7 +299,7 @@ GcodeReaderCommon::Result_t PrusaPackGcodeReader::init_encrypted_block_streaming
 
     // Note: This is the size of the EncryptedBlock, so it is the size of encrypted data + HMACs
     stream.decryptor.setup_block(stream.current_encrypted_block_header.get_position(), block_header.uncompressed_size);
-    if (auto res = read_encrypted_block_header(file.get(), stream.current_plain_block_header); res != Result_t::RESULT_OK) {
+    if (auto res = read_encrypted_block_header(file.get(), stream.current_plain_block_header, stream.decryptor); res != Result_t::RESULT_OK) {
         return res;
     }
     if (!stream.decryptor.decrypt(file.get(), reinterpret_cast<uint8_t *>(&stream.encoding), sizeof(stream.encoding))) {
@@ -606,26 +607,51 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size_estimate() {
     auto file = this->file.get();
     long pos = ftell(file); // store file position, so we don't break any running streams
 
+    // Just so we can capture only this one struct and dont need more space in the
+    // inplace function
     struct {
-        uint32_t blocks_read = 0;
-        uint32_t gcode_stream_size_compressed = 0;
-        uint32_t gcode_stream_size_uncompressed = 0;
-        uint32_t first_gcode_block_pos = 0;
-    } stats;
+        struct {
+            uint32_t blocks_read = 0;
+            // Start at one, instead of zero, so that if the reading of the file fails
+            // in iterate blocks or in the decryption for any reason (USB disconnect?)
+            // it at least will not divide by zero, even if the estimate will be just
+            // equal to the size of the compressed data. This is very unlikely, so displaying
+            // some really bad estimate, but not crashing is probably ok.
+            uint32_t gcode_stream_size_compressed = 1;
+            uint32_t gcode_stream_size_uncompressed = 1;
+            uint32_t first_gcode_block_pos = 0;
+        } stats;
+        // Have another decryptor for this, so we dont break any ongoing decryption by wiping cache,
+        // iv and size
+        Decryptor decryptor;
+    } estimate_context;
+    estimate_context.decryptor.set_cipher_info(symmetric_info);
 
     // estimate works as follows:
     // first NUM_BLOCKS_TO_ESTIMATE are read, compression ratio of those blocks is calculated. Assuming compression ratio is the same for rest of the file, we guess total gcode stream size
     static constexpr unsigned int NUM_BLOCKS_TO_ESTIMATE = 2;
-    iterate_blocks(false, [&file, &stats](BlockHeader &block_header) {
+    iterate_blocks(false, [&file, &estimate_context](BlockHeader &block_header) {
         if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode) {
-            stats.gcode_stream_size_uncompressed += block_header.uncompressed_size;
-            stats.gcode_stream_size_compressed += ((bgcode::core::ECompressionType)block_header.compression == bgcode::core::ECompressionType::None) ? block_header.uncompressed_size : block_header.compressed_size;
-            ++stats.blocks_read;
-            if (stats.first_gcode_block_pos == 0) {
-                stats.first_gcode_block_pos = ftell(file);
+            estimate_context.stats.gcode_stream_size_uncompressed += block_header.uncompressed_size;
+            estimate_context.stats.gcode_stream_size_compressed += ((bgcode::core::ECompressionType)block_header.compression == bgcode::core::ECompressionType::None) ? block_header.uncompressed_size : block_header.compressed_size;
+            ++estimate_context.stats.blocks_read;
+            if (estimate_context.stats.first_gcode_block_pos == 0) {
+                estimate_context.stats.first_gcode_block_pos = ftell(file);
+            }
+        } else if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
+            // seek over encrypted block params
+            fseek(file, 3, SEEK_CUR);
+            estimate_context.decryptor.setup_block(block_header.get_position(), block_header.uncompressed_size);
+            BlockHeader decrypted_gcode_header {};
+            read_encrypted_block_header(file, decrypted_gcode_header, estimate_context.decryptor);
+            estimate_context.stats.gcode_stream_size_uncompressed += decrypted_gcode_header.uncompressed_size;
+            estimate_context.stats.gcode_stream_size_compressed += ((bgcode::core::ECompressionType)decrypted_gcode_header.compression == bgcode::core::ECompressionType::None) ? decrypted_gcode_header.uncompressed_size : decrypted_gcode_header.compressed_size;
+            ++estimate_context.stats.blocks_read;
+            if (estimate_context.stats.first_gcode_block_pos == 0) {
+                estimate_context.stats.first_gcode_block_pos = ftell(file);
             }
         }
-        if (stats.blocks_read >= NUM_BLOCKS_TO_ESTIMATE) {
+        if (estimate_context.stats.blocks_read >= NUM_BLOCKS_TO_ESTIMATE) {
             // after reading NUM_BLOCKS_TO_ESTIMATE blocks, stop
             return IterateResult_t::End;
         }
@@ -633,8 +659,8 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size_estimate() {
         return IterateResult_t::Continue;
     });
 
-    float compressionn_ratio = static_cast<float>(stats.gcode_stream_size_compressed) / stats.gcode_stream_size_uncompressed;
-    uint32_t compressed_gcode_stream = file_size - stats.first_gcode_block_pos;
+    float compressionn_ratio = static_cast<float>(estimate_context.stats.gcode_stream_size_compressed) / estimate_context.stats.gcode_stream_size_uncompressed;
+    uint32_t compressed_gcode_stream = file_size - estimate_context.stats.first_gcode_block_pos;
     uint32_t uncompressed_file_size = compressed_gcode_stream / compressionn_ratio;
 
     [[maybe_unused]] auto seek_res = fseek(file, pos, SEEK_SET);
@@ -646,11 +672,26 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size_estimate() {
 uint32_t PrusaPackGcodeReader::get_gcode_stream_size() {
     auto file = this->file.get();
     long pos = ftell(file); // store file position, so we don't break any running streams
-    uint32_t gcode_stream_size_uncompressed = 0;
+    struct {
+        uint32_t gcode_stream_size_uncompressed = 0;
+        Decryptor decryptor;
 
-    iterate_blocks(false, [&](BlockHeader &block_header) {
+    } size_context;
+    size_context.decryptor.set_cipher_info(symmetric_info);
+
+    iterate_blocks(false, [&size_context, &file](BlockHeader &block_header) {
         if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode) {
-            gcode_stream_size_uncompressed += block_header.uncompressed_size;
+            size_context.gcode_stream_size_uncompressed += block_header.uncompressed_size;
+        } else if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
+            // seek over encrypted block params
+            fseek(file, 3, SEEK_CUR);
+            size_context.decryptor.setup_block(block_header.get_position(), block_header.uncompressed_size);
+            BlockHeader decrypted_gcode_header;
+            if (auto res = read_encrypted_block_header(file, decrypted_gcode_header, size_context.decryptor); res != Result_t::RESULT_OK) {
+                // This should never happen in practise
+                assert(false);
+            }
+            size_context.gcode_stream_size_uncompressed += decrypted_gcode_header.uncompressed_size;
         }
         return IterateResult_t::Continue;
     });
@@ -658,7 +699,7 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size() {
     [[maybe_unused]] auto seek_res = fseek(file, pos, SEEK_SET);
     assert(seek_res == 0);
 
-    return gcode_stream_size_uncompressed;
+    return size_context.gcode_stream_size_uncompressed;
 }
 
 IGcodeReader::FileVerificationResult PrusaPackGcodeReader::verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const {

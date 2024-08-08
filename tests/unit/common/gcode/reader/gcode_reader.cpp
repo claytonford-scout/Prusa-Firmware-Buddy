@@ -23,6 +23,8 @@ constexpr static const char *BINARY_BAD_CRC_FIRST_GCODE = "test_bad_crc_first_gc
 // Some later gcode block
 constexpr static const char *BINARY_BAD_CRC_OTHER_GCODE = "test_bad_crc_gcode.bgcode";
 
+constexpr static const char *BINARY_ENCRYPTED_CORRECT_GCODE = "test_encrypted_gcode_correct.bgcode";
+
 constexpr static const std::string_view DUMMY_DATA_LONG = "; Short line\n"
                                                           ";Long line012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
                                                           ";Another short line";
@@ -31,7 +33,7 @@ constexpr static const std::string_view DUMMY_DATA_EXACT = ";0123456789012345678
 constexpr static const std::string_view DUMMY_DATA_EXACT_EOF = ";01234567890123456789012345678901234567890123456789012345678901234567890123456789";
 constexpr static const std::string_view DUMMY_DATA_ERR = ";01234567890123456789012345678901234567890123456789012345678901234567890123456789012345";
 
-const std::vector<const char *> test_files = { PLAIN_TEST_FILE, BINARY_NO_COMPRESSION_FILE, BINARY_MEATPACK_FILE, BINARY_HEATSHRINK_FILE, BINARY_HEATSHRINK_MEATPACK_FILE };
+const std::vector<const char *> test_files = { PLAIN_TEST_FILE, BINARY_NO_COMPRESSION_FILE, BINARY_MEATPACK_FILE, BINARY_HEATSHRINK_FILE, BINARY_HEATSHRINK_MEATPACK_FILE, BINARY_ENCRYPTED_CORRECT_GCODE };
 
 using State = transfers::PartialFile::State;
 using ValidPart = transfers::PartialFile::ValidPart;
@@ -458,6 +460,9 @@ TEST_CASE("File size estimate", "[GcodeReader]") {
     for (auto &filename : test_files) {
         SECTION(std::string("Test-file: ") + filename) {
             auto reader = AnyGcodeFormatReader(filename);
+            // Needed for the encrypted file, so that we do all the initial
+            // asymmetric decryption stuff
+            REQUIRE(reader->valid_for_print());
             auto estimate = reader.get()->get_gcode_stream_size_estimate();
             auto real = reader.get()->get_gcode_stream_size();
             float ratio = (float)estimate / real;
@@ -661,7 +666,7 @@ TEST_CASE("Reader CRC: incorrect on another gcode") {
 }
 
 TEST_CASE("Encrypted bgcode stream whole file") {
-    AnyGcodeFormatReader enc_reader("test_encrypted_gcode_correct.bgcode");
+    AnyGcodeFormatReader enc_reader(BINARY_ENCRYPTED_CORRECT_GCODE);
     REQUIRE(enc_reader.is_open());
     REQUIRE(enc_reader->valid_for_print());
     AnyGcodeFormatReader dec_reader("test_decrypted_gcode_correct.bgcode");
@@ -736,7 +741,7 @@ TEST_CASE("Plain bgcode valid") {
 }
 
 TEST_CASE("Encrypted bgcode valid") {
-    AnyGcodeFormatReader reader("test_encrypted_gcode_correct.bgcode");
+    AnyGcodeFormatReader reader(BINARY_ENCRYPTED_CORRECT_GCODE);
     REQUIRE(reader.is_open());
     REQUIRE(reader->valid_for_print());
 }

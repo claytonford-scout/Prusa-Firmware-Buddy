@@ -27,6 +27,7 @@ public:
     virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false) override;
     virtual AbstractByteReader *stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger = false) override;
     virtual Result_t stream_get_line(GcodeBuffer &buffer, Continuations) override;
+    // Call this only after already decrypting the asymmetric stuff for encrypted gcodes
     virtual uint32_t get_gcode_stream_size_estimate() override;
     virtual uint32_t get_gcode_stream_size() override;
 
@@ -132,7 +133,7 @@ private:
 
     Result_t stream_getc_decrypted(char &out);
 
-    Result_t read_encrypted_block_header(FILE *file, bgcode::core::BlockHeader &header);
+    static Result_t read_encrypted_block_header(FILE *file, bgcode::core::BlockHeader &header, Decryptor &decryptor);
 
     // Decode one character from file, when no encoding is enabled
     Result_t stream_getc_decode_none(char &out);
