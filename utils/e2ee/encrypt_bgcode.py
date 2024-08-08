@@ -435,25 +435,16 @@ def readEncryptAndWriteGcodeBlocks(out_file: io.BufferedWriter,
         iv = out_file.tell().to_bytes(16, 'little')
         plain_data = gcode_block.header.bytes(
         ) + gcode_block.params + gcode_block.data
-        out_file.write(
-            createEncryptedBlockAES(plain_data, iv, enc_aes_key, key_blocks,
-                                    checksumType, False))
-
         if in_file.tell() == os.fstat(in_file.fileno()).st_size:
+            # last block, set the last flag
+            out_file.write(
+                createEncryptedBlockAES(plain_data, iv, enc_aes_key,
+                                        key_blocks, checksumType, True))
             break
-
-
-def generateAndWriteEndBlock(file: io.BufferedWriter, key_blocks: list,
-                             enc_aes_key: bytes,
-                             checksumType: ChecksumType) -> None:
-    header = BlockHeader(BlockType.Gcode, Compression.No, 0, 0)
-    params = (0).to_bytes(2, 'little')
-    block = GcodeBlock(header, params)
-    iv = file.tell().to_bytes(16, 'little')
-    plain_data = block.header.bytes() + block.params + block.data
-    file.write(
-        createEncryptedBlockAES(plain_data, iv, enc_aes_key, key_blocks,
-                                checksumType, True))
+        else:
+            out_file.write(
+                createEncryptedBlockAES(plain_data, iv, enc_aes_key,
+                                        key_blocks, checksumType, False))
 
 
 def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
@@ -487,10 +478,6 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
 
     readEncryptAndWriteGcodeBlocks(out_file, in_file, key_blocks, enc_aes_key,
                                    file_header.checksumType)
-    # generate empty gcode block at the end with the last flag, so I
-    # don't need to care about catching the last block while reading them
-    generateAndWriteEndBlock(out_file, key_blocks, enc_aes_key,
-                             file_header.checksumType)
 
 
 def is_metadata_block(type) -> bool:
