@@ -167,6 +167,9 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
         const size_t sizes[] = { 101, 103, 107, 109, 113, 3037, 3041, 3049, 3061, 3067 };
         std::unique_ptr<char[]> buffer1(new char[*std::max_element(sizes, sizes + std::size(sizes))]);
         std::unique_ptr<char[]> buffer2(new char[*std::max_element(sizes, sizes + std::size(sizes))]);
+        // Needed for the encrypted file, so that we do all the initial
+        // asymmetric decryption stuff
+        REQUIRE(reader1.valid_for_print());
         long unsigned int offset = 0;
         REQUIRE(reader1.stream_gcode_start(0) == IGcodeReader::Result_t::RESULT_OK);
         size_t ctr = 0;
@@ -181,6 +184,9 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
             if (has_restore_info) {
                 reader2->set_restore_info(restore_info);
             }
+            // Needed for the encrypted file, so that we do all the initial
+            // asymmetric decryption stuff
+            REQUIRE(reader2->valid_for_print());
             REQUIRE(reader2->stream_gcode_start(offset) == IGcodeReader::Result_t::RESULT_OK);
 
             auto size1 = size;
