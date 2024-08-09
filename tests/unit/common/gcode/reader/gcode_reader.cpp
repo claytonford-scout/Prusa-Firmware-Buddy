@@ -126,6 +126,9 @@ TEST_CASE("Extract data", "[GcodeReader]") {
         }
 
         {
+            // Needed for the encrypted file, so that we do all the initial
+            // asymmetric decryption stuff
+            REQUIRE(r->valid_for_print());
             REQUIRE(r->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
             std::ofstream fs(base_name + "-gcode.gcode", std::ofstream::out);
             IGcodeReader::Result_t result;

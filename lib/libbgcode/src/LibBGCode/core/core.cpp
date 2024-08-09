@@ -421,8 +421,74 @@ BGCODE_CORE_EXPORT EResult is_valid_binary_gcode(FILE& file, bool check_contents
             return EResult::InvalidBlockType;
         }
 
+        bool encrypted = false;
+        EBlockType gcode_block_type;
+        res = skip_block(file, file_header, block_header);
+        if (res != EResult::Success) {
+            // restore file position
+            fseek(&file, curr_pos, SEEK_SET);
+            // propagate error
+            return res;
+        }
+        res = read_next_block_header(file, file_header, block_header, cs_buffer, cs_buffer_size);
+        if (res != EResult::Success) {
+            // restore file position
+            fseek(&file, curr_pos, SEEK_SET);
+            // propagate error
+            return res;
+        }
+        if ((EBlockType)block_header.type == EBlockType::IdentityBlock) {
+            encrypted = true;
+            gcode_block_type = EBlockType::EncryptedBlock;
+        } else if ((EBlockType)block_header.type == EBlockType::GCode) {
+            encrypted = false;
+            gcode_block_type = EBlockType::GCode;
+        } else {
+            // restore file position
+            fseek(&file, curr_pos, SEEK_SET);
+            return EResult::InvalidBlockType;
+        }
+
+        if (encrypted) {
+            res = skip_block(file, file_header, block_header);
+            if (res != EResult::Success) {
+                // restore file position
+                fseek(&file, curr_pos, SEEK_SET);
+                // propagate error
+                return res;
+            }
+            res = read_next_block_header(file, file_header, block_header, cs_buffer, cs_buffer_size);
+            if (res != EResult::Success) {
+                // restore file position
+                fseek(&file, curr_pos, SEEK_SET);
+                // propagate error
+                return res;
+            }
+            while ((EBlockType)block_header.type == EBlockType::KeyBlock) {
+                res = skip_block(file, file_header, block_header);
+                if (res != EResult::Success) {
+                    // restore file position
+                    fseek(&file, curr_pos, SEEK_SET);
+                    // propagate error
+                    return res;
+                }
+                res = read_next_block_header(file, file_header, block_header, cs_buffer, cs_buffer_size);
+                if (res != EResult::Success) {
+                    // restore file position
+                    fseek(&file, curr_pos, SEEK_SET);
+                    // propagate error
+                    return res;
+                }
+            }
+        }
+
         // read gcode block headers
-        do {
+        while (!feof(&file)) {
+            if ((EBlockType)block_header.type != gcode_block_type) {
+                // restore file position
+                fseek(&file, curr_pos, SEEK_SET);
+                return EResult::InvalidBlockType;
+            }
             res = skip_block(file, file_header, block_header);
             if (res != EResult::Success) {
                 // restore file position
@@ -439,12 +505,7 @@ BGCODE_CORE_EXPORT EResult is_valid_binary_gcode(FILE& file, bool check_contents
                 // propagate error
                 return res;
             }
-            if ((EBlockType)block_header.type != EBlockType::GCode) {
-                // restore file position
-                fseek(&file, curr_pos, SEEK_SET);
-                return EResult::InvalidBlockType;
-            }
-        } while (!feof(&file));
+        }
     }
 
     fseek(&file, curr_pos, SEEK_SET);
