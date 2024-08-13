@@ -329,12 +329,14 @@ void MediaPrefetchManager::fetch_routine(AsyncJobExecutionControl &control) {
             }
 
             s.gcode_reader = AnyGcodeFormatReader(filepath.data());
-            // This is needed to extract the symmetric cipher info from the file.
-            // For now it is in two places, here and in GCodeInfo::check_valid_for_print,
-            // eventually we will have two functions, one that only checks if we have enough
-            // data to print (checked in GCodeInfo) and one for asymmetric crypto stuff here.
-            // Then we will also need to propagate the potential errors to the user.
-            s.gcode_reader->valid_for_print();
+            if (!s.gcode_reader->valid_for_print(true)) {
+                log_debug(MediaPrefetch, "Gcode corrupted, not valid for print");
+                if (s.gcode_reader->has_error()) {
+                    log_debug(MediaPrefetch, "reader error: %s", s.gcode_reader->error_str());
+                }
+                fetch_handle_error(control, IGcodeReader::Result_t::RESULT_CORRUPT);
+                return;
+            }
 
             if (!s.gcode_reader.is_open()) {
                 log_debug(MediaPrefetch, "Fetch open failed");

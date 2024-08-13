@@ -44,6 +44,6 @@ AnyGcodeFormatReader::~AnyGcodeFormatReader() {
     }
 }
 
-bool AnyGcodeFormatReader::valid_for_print() {
+bool AnyGcodeFormatReader::valid_for_print([[maybe_unused]] bool) {
     return true;
 }

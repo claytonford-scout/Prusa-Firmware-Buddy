@@ -134,8 +134,12 @@ public:
 
     /**
      * @brief Returns whenever file is valid enough to begin printing it (has metadata and some gcodes)
+     *
+     * Also checks the sequence of the blocks is correct. For encrypted gcodes it also checks if it is encrypted for this printer,
+     * that it does not have anything between the blocks. If the full check is true it also verifies the identity block signature
+     * and the hashes of metadata and keyblocks are correct.
      */
-    virtual bool valid_for_print() = 0;
+    virtual bool valid_for_print(bool full_check) = 0;
 
     /**
      * @brief Load latest validity information from current transfer

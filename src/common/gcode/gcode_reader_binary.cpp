@@ -933,18 +933,23 @@ void block_sha_256_update(MultiuseHash &hash, const BlockHeader &header, EChecks
 // and it fits the storage
 class ValidationContext {
 public:
+    ValidationContext(bool full_check)
+        : full_check(full_check) {}
     MultiuseHash hash;
     BlockSequenceValidator seq_validator;
     e2ee::PrinterPrivateKey printer_pk;
+    bool full_check;
 };
 
 } // namespace
 
-bool PrusaPackGcodeReader::valid_for_print() {
-    // To have the file_header initialized for the hash
-    read_and_check_header();
-    ValidationContext valid_context;
-    file_header_sha256(file_header, valid_context.hash);
+bool PrusaPackGcodeReader::valid_for_print(bool full_check) {
+    ValidationContext valid_context(full_check);
+    if (full_check) {
+        // To have the file_header initialized for the hash
+        read_and_check_header();
+        file_header_sha256(file_header, valid_context.hash);
+    }
     auto res = iterate_blocks(false, [&valid_context, this](BlockHeader &block_header) {
         const auto set_error_end = [this](const char *err) __attribute__((always_inline)) {
             set_error(err);
@@ -955,7 +960,9 @@ bool PrusaPackGcodeReader::valid_for_print() {
             if (auto err = valid_context.seq_validator.metadata_found(file_header, block_header); err != nullptr) {
                 return set_error_end(err);
             }
-            block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+            if (valid_context.full_check) {
+                block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+            }
         }
         // prusa pack can be printed when we have at least one gcode block
         // all metadata has to be preset at that point, because they are before gcode block
@@ -972,9 +979,11 @@ bool PrusaPackGcodeReader::valid_for_print() {
                 return set_error_end(err);
             }
             uint8_t key_block_hash[e2ee::HASH_SIZE];
-            valid_context.hash.get_hash(key_block_hash, sizeof(key_block_hash));
-            if (memcmp(key_block_hash, identity_block_info.key_block_hash.data(), sizeof(key_block_hash)) != 0) {
-                return set_error_end(e2ee::key_block_hash_mismatch);
+            if (valid_context.full_check) {
+                valid_context.hash.get_hash(key_block_hash, sizeof(key_block_hash));
+                if (memcmp(key_block_hash, identity_block_info.key_block_hash.data(), sizeof(key_block_hash)) != 0) {
+                    return set_error_end(e2ee::key_block_hash_mismatch);
+                }
             }
             symmetric_info.num_of_hmacs = valid_context.seq_validator.get_num_of_key_blocks();
             if (!symmetric_info.valid) {
@@ -990,8 +999,10 @@ bool PrusaPackGcodeReader::valid_for_print() {
                 return set_error_end(err);
             }
             uint8_t intro_hash[e2ee::HASH_SIZE];
-            valid_context.hash.get_hash(intro_hash, sizeof(intro_hash));
-            if (const char *err = e2ee::read_and_verify_identity_block(file.get(), block_header, intro_hash, identity_block_info); err != nullptr) {
+            if (valid_context.full_check) {
+                valid_context.hash.get_hash(intro_hash, sizeof(intro_hash));
+            }
+            if (const char *err = e2ee::read_and_verify_identity_block(file.get(), block_header, valid_context.full_check ? intro_hash : nullptr, identity_block_info, valid_context.full_check); err != nullptr) {
                 return set_error_end(err);
             }
         }
@@ -1000,7 +1011,9 @@ bool PrusaPackGcodeReader::valid_for_print() {
                 return set_error_end(err);
             }
             // FIXME: We read it once for the hash and once for the actual decryption, optize this to a one read operation.
-            block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+            if (valid_context.full_check) {
+                block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+            }
             if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.printer_pk.get_printer_private_key()); keys_opt.has_value()) {
                 symmetric_info = keys_opt.value();
                 symmetric_info.valid = true;

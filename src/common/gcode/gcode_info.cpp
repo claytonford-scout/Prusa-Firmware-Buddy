@@ -71,7 +71,10 @@ bool GCodeInfo::check_still_valid() {
 
 bool GCodeInfo::check_valid_for_print(IGcodeReader &reader) {
     reader.update_validity(GetGcodeFilepath());
-    is_printable_ = reader.valid_for_print();
+    // Simpler check, that does not do all the things needed
+    // to fully verify encrypted gcodes, that one is done in
+    // the prefetch only
+    is_printable_ = reader.valid_for_print(false);
 
     if (reader.has_error()) {
         error_str_ = reader.error_str();

@@ -87,11 +87,11 @@ struct DummyReader : public GcodeReaderCommon {
         return FileVerificationResult { true };
     }
 
-    virtual bool valid_for_print() override {
+    virtual bool valid_for_print([[maybe_unused]] bool full_check) override {
         return true;
     }
 
-    virtual Result_t stream_get_line(GcodeBuffer &buffer, Continuations continuations) {
+    virtual Result_t stream_get_line(GcodeBuffer &buffer, Continuations continuations) override {
         return stream_get_line_common(buffer, continuations);
     }
 
@@ -128,7 +128,7 @@ TEST_CASE("Extract data", "[GcodeReader]") {
         {
             // Needed for the encrypted file, so that we do all the initial
             // asymmetric decryption stuff
-            REQUIRE(r->valid_for_print());
+            REQUIRE(r->valid_for_print(true));
             REQUIRE(r->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
             std::ofstream fs(base_name + "-gcode.gcode", std::ofstream::out);
             IGcodeReader::Result_t result;
@@ -169,7 +169,7 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
         std::unique_ptr<char[]> buffer2(new char[*std::max_element(sizes, sizes + std::size(sizes))]);
         // Needed for the encrypted file, so that we do all the initial
         // asymmetric decryption stuff
-        REQUIRE(reader1.valid_for_print());
+        REQUIRE(reader1.valid_for_print(true));
         long unsigned int offset = 0;
         REQUIRE(reader1.stream_gcode_start(0) == IGcodeReader::Result_t::RESULT_OK);
         size_t ctr = 0;
@@ -186,7 +186,7 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
             }
             // Needed for the encrypted file, so that we do all the initial
             // asymmetric decryption stuff
-            REQUIRE(reader2->valid_for_print());
+            REQUIRE(reader2->valid_for_print(true));
             REQUIRE(reader2->stream_gcode_start(offset) == IGcodeReader::Result_t::RESULT_OK);
 
             auto size1 = size;
@@ -471,7 +471,7 @@ TEST_CASE("File size estimate", "[GcodeReader]") {
             auto reader = AnyGcodeFormatReader(filename);
             // Needed for the encrypted file, so that we do all the initial
             // asymmetric decryption stuff
-            REQUIRE(reader->valid_for_print());
+            REQUIRE(reader->valid_for_print(true));
             auto estimate = reader.get()->get_gcode_stream_size_estimate();
             auto real = reader.get()->get_gcode_stream_size();
             float ratio = (float)estimate / real;
@@ -677,10 +677,10 @@ TEST_CASE("Reader CRC: incorrect on another gcode") {
 TEST_CASE("Encrypted bgcode stream whole file") {
     AnyGcodeFormatReader enc_reader(BINARY_ENCRYPTED_CORRECT_GCODE);
     REQUIRE(enc_reader.is_open());
-    REQUIRE(enc_reader->valid_for_print());
+    REQUIRE(enc_reader->valid_for_print(true));
     AnyGcodeFormatReader dec_reader("test_decrypted_gcode_correct.bgcode");
     REQUIRE(dec_reader.is_open());
-    REQUIRE(dec_reader->valid_for_print());
+    REQUIRE(dec_reader->valid_for_print(true));
     IGcodeReader::Result_t enc_result;
     IGcodeReader::Result_t dec_result;
 
@@ -746,81 +746,148 @@ TEST_CASE("Encrypted bgcode stream whole file") {
 TEST_CASE("Plain bgcode valid") {
     AnyGcodeFormatReader reader("test_binary_heatshrink.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE(reader->valid_for_print());
+    SECTION("basic check") {
+        REQUIRE(reader->valid_for_print(false));
+    }
+    SECTION("full check") {
+        REQUIRE(reader->valid_for_print(true));
+    }
 }
 
 TEST_CASE("Encrypted bgcode valid") {
     AnyGcodeFormatReader reader(BINARY_ENCRYPTED_CORRECT_GCODE);
     REQUIRE(reader.is_open());
-    REQUIRE(reader->valid_for_print());
+    SECTION("basic check") {
+        REQUIRE(reader->valid_for_print(false));
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE(reader->valid_for_print(true));
+    }
 }
 
 TEST_CASE("Encrypted bgcode key for different printer") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_diff_printer.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_for_different_printer) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_for_different_printer) == 0);
+    }
+    SECTION("ful check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_for_different_printer) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode wrong key block hash") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_bad_key_hash.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::key_block_hash_mismatch) == 0);
+    SECTION("basic check") {
+        REQUIRE(reader->valid_for_print(false));
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::key_block_hash_mismatch) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode metadata not at beggining") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_metadata_not_beggining.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::metadata_not_beggining) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::metadata_not_beggining) == 0);
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::metadata_not_beggining) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode key block before identity") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_key_before_identity.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::key_before_identity) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::key_before_identity) == 0);
+    }
+    SECTION("full check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::key_before_identity) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode encrypted block before identity") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_encrypted_before_identity.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_identity) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_identity) == 0);
+    }
+    SECTION("full check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_identity) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode encrypted block before key") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_encrypted_before_key.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_key) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_key) == 0);
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::encrypted_before_key) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode plain gcode block in encrypted block") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_plain_gcode_inside_encrypted.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::unencrypted_in_encrypted) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::unencrypted_in_encrypted) == 0);
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::unencrypted_in_encrypted) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode invalid identity key") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_invalid_identity_key.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::identity_parsing_error) == 0);
+    SECTION("basic check") {
+        REQUIRE_FALSE(reader->valid_for_print(false));
+        REQUIRE(strcmp(reader->error_str(), e2ee::identity_parsing_error) == 0);
+    }
+    SECTION("full check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::identity_parsing_error) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode bad identity block signature") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_bad_identity_block_signature.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::identity_verification_fail) == 0);
+    SECTION("basic check") {
+        REQUIRE(reader->valid_for_print(false));
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::identity_verification_fail) == 0);
+    }
 }
 
 TEST_CASE("Encrypted bgcode corrupted metadata") {
     AnyGcodeFormatReader reader("test_encrypted_gcode_corrupted_metadata.bgcode");
     REQUIRE(reader.is_open());
-    REQUIRE_FALSE(reader->valid_for_print());
-    REQUIRE(strcmp(reader->error_str(), e2ee::corrupted_metadata) == 0);
+    SECTION("basic check") {
+        REQUIRE(reader->valid_for_print(false));
+    }
+    SECTION("full asymmetric check") {
+        REQUIRE_FALSE(reader->valid_for_print(true));
+        REQUIRE(strcmp(reader->error_str(), e2ee::corrupted_metadata) == 0);
+    }
 }

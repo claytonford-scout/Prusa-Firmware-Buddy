@@ -245,8 +245,7 @@ bool rsa_oaep_decrypt(mbedtls_pk_context &pk, const uint8_t *encrypted_msg, size
 
     return true;
 }
-
-const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info) {
+const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info, bool verify_signature) {
     uint16_t algo;
     if (!read_from_file(&algo, sizeof(algo), file)) {
         return file_error;
@@ -278,13 +277,15 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     if (mbedtls_pk_parse_public_key(&info.identity_pk->pk, key.data(), key.length()) != 0) {
         return identity_parsing_error;
     }
-    uint8_t sign[SIGN_SIZE];
-    if (!read_from_file(sign, SIGN_SIZE, file)) {
-        return file_error;
-    }
-    auto res = rsa_sha256_sign_verify(info.identity_pk->pk, bytes.get(), signed_bytes_size, sign, SIGN_SIZE);
-    if (!res) {
-        return identity_verification_fail;
+    if (verify_signature) {
+        uint8_t sign[SIGN_SIZE];
+        if (!read_from_file(sign, SIGN_SIZE, file)) {
+            return file_error;
+        }
+        auto res = rsa_sha256_sign_verify(info.identity_pk->pk, bytes.get(), signed_bytes_size, sign, SIGN_SIZE);
+        if (!res) {
+            return identity_verification_fail;
+        }
     }
     pos += key_len;
     uint8_t name_len;
@@ -296,13 +297,13 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     memcpy(info.identity_name.data(), &bytes.get()[pos], name_len);
     info.identity_name[name_len] = '\0';
     pos += name_len;
-    uint8_t intro_hash[HASH_SIZE];
-    memcpy(intro_hash, &bytes.get()[pos], HASH_SIZE);
+    if (computed_intro_hash != nullptr) {
+        if (memcmp(computed_intro_hash, &bytes.get()[pos], HASH_SIZE) != 0) {
+            return corrupted_metadata;
+        }
+    }
     pos += HASH_SIZE;
     memcpy(info.key_block_hash.data(), &bytes.get()[pos], HASH_SIZE);
-    if (memcmp(computed_intro_hash, intro_hash, HASH_SIZE) != 0) {
-        return corrupted_metadata;
-    }
 
     return nullptr;
 }

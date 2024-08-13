@@ -45,7 +45,7 @@ public:
         }
     }
 
-    virtual bool valid_for_print() override;
+    virtual bool valid_for_print(bool full_check) override;
 
     class Decryptor {
     public:

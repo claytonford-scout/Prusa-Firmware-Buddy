@@ -87,7 +87,8 @@ private:
     std::unique_ptr<Pk> key;
 };
 
-const char *read_and_verify_identity_block(FILE *file, const bgcode::core::BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info);
+// if computed_intro_hash is nullptr the hash is not checked
+const char *read_and_verify_identity_block(FILE *file, const bgcode::core::BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info, bool verify_signature);
 
 struct SymmetricCipherInfo {
     bool valid = false;

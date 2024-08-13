@@ -32,7 +32,7 @@ class ClosedReader final : public IGcodeReader {
     Result_t stream_getc(char &) override {
         return Result_t::RESULT_ERROR;
     }
-    bool valid_for_print() override {
+    bool valid_for_print([[maybe_unused]] bool full_check) override {
         return false;
     }
     void update_validity(const char *) override {
