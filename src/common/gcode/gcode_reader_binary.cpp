@@ -3,6 +3,9 @@
 #include <utility_extensions.hpp>
 #include "lang/i18n.h"
 #include <sha256.h>
+#include <md.h>
+#include <crc32.h>
+#include <logging/log.hpp>
 #include "transfers/transfer.hpp"
 #include <cassert>
 #include <errno.h> // for EAGAIN
@@ -10,8 +13,11 @@
 #include <sys/stat.h>
 #include <ranges>
 #include <optional>
+#include<bsod.h>
 #include <type_traits>
 #include <config_store/store_instance.hpp>
+
+LOG_COMPONENT_DEF(PRUSA_PACK_READER, logging::Severity::info);
 
 using bgcode::core::BlockHeader;
 using bgcode::core::EBlockType;
@@ -183,6 +189,128 @@ IGcodeReader::Result_t PrusaPackGcodeReader::read_encrypted_block_header(FILE *f
     return Result_t::RESULT_OK;
 }
 
+namespace {
+class HMAC {
+public:
+    HMAC(const uint8_t *sign_key, size_t key_len) {
+        mbedtls_md_init(&md_ctx);
+        // These errors should not happen in practise
+        if (auto res = mbedtls_md_setup(&md_ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1); res != 0) {
+            bsod("Unable to setup HMAC context: %d", res);
+        }
+        mbedtls_md_hmac_starts(&md_ctx, sign_key, key_len);
+    }
+
+    void update(uint8_t *data, size_t size) {
+        mbedtls_md_hmac_update(&md_ctx, data, size);
+    }
+
+    void finish(uint8_t *output, [[maybe_unused]] size_t size) {
+        assert(size == e2ee::HMAC_SIZE);
+        mbedtls_md_hmac_finish(&md_ctx, output);
+    }
+
+    ~HMAC() {
+        mbedtls_md_free(&md_ctx);
+    }
+
+private:
+    mbedtls_md_context_t md_ctx;
+};
+
+template <typename CB>
+void block_header_bytes_cb(BlockHeader header, CB callback) {
+    callback(reinterpret_cast<uint8_t *>(&header.type), sizeof(header.type));
+    callback(reinterpret_cast<uint8_t *>(&header.compression), sizeof(header.compression));
+    callback(reinterpret_cast<uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size));
+    if ((ECompressionType)header.compression != ECompressionType::None) {
+        callback(reinterpret_cast<uint8_t *>(&header.compressed_size), sizeof(header.compressed_size));
+    }
+}
+
+IGcodeReader::Result_t check_hmac_and_crc(FILE *file, BlockHeader header, const e2ee::SymmetricCipherInfo &info, bool check_crc) {
+    using Result_t = IGcodeReader::Result_t;
+    const bool check_hmac = (EBlockType)header.type == EBlockType::EncryptedBlock;
+    long pos = ftell(file);
+    HMAC hmac(info.sign_key, std::size(info.sign_key));
+    uint32_t crc = 0;
+    if (check_hmac) {
+        block_header_bytes_cb(header, [&hmac](uint8_t *data, size_t size) {
+            hmac.update(data, size);
+        });
+        uint8_t iv[16];
+        auto header_pos = header.get_position();
+        memset(iv, 0, sizeof(iv));
+        memcpy(iv, reinterpret_cast<const uint8_t *>(&header_pos), sizeof header_pos);
+        hmac.update(iv, sizeof(iv));
+    }
+    if (check_crc) {
+        block_header_bytes_cb(header, [&crc](uint8_t *data, size_t size) {
+            crc = crc32_calc_ex(crc, data, size);
+        });
+    }
+    constexpr size_t BLOCK_SIZE = 64;
+    uint8_t block[BLOCK_SIZE];
+    const size_t hmacs_size = info.num_of_hmacs * e2ee::HMAC_SIZE;
+    size_t hmac_data_size = bgcode::core::block_payload_size(header) - hmacs_size;
+    while (hmac_data_size > 0) {
+        size_t to_read = std::min(hmac_data_size, BLOCK_SIZE);
+        if (fread(block, 1, to_read, file) != to_read) {
+            return Result_t::RESULT_ERROR;
+        }
+
+        if (check_hmac) {
+            hmac.update(block, to_read);
+        }
+        if (check_crc) {
+            crc = crc32_calc_ex(crc, block, to_read);
+        }
+        hmac_data_size -= to_read;
+    }
+    // Read HMACs for crc
+    if (check_crc) {
+        size_t size = hmacs_size;
+        while (size > 0) {
+            size_t to_read = std::min(size, BLOCK_SIZE);
+            if (fread(block, 1, to_read, file) != to_read) {
+                return Result_t::RESULT_ERROR;
+            }
+            crc = crc32_calc_ex(crc, block, to_read);
+            size -= to_read;
+        }
+        uint32_t read_crc;
+        if (fread(&read_crc, sizeof(read_crc), 1, file) != 1) {
+            return Result_t::RESULT_ERROR;
+        }
+        if (read_crc != crc) {
+            return Result_t::RESULT_CORRUPT;
+        }
+    }
+
+    if (check_hmac) {
+        uint8_t computed_hmac[e2ee::HMAC_SIZE];
+        hmac.finish(computed_hmac, sizeof(computed_hmac));
+        size_t hmac_pos = header.get_position() + header.get_size() + bgcode::core::block_payload_size(header) - info.num_of_hmacs * e2ee::HMAC_SIZE + info.hmac_index * e2ee::HMAC_SIZE;
+        if (fseek(file, hmac_pos, SEEK_SET) != 0) {
+            return Result_t::RESULT_ERROR;
+        }
+        uint8_t read_hmac[e2ee::HMAC_SIZE];
+        if (fread(read_hmac, 1, sizeof(read_hmac), file) != sizeof(read_hmac)) {
+            return Result_t::RESULT_ERROR;
+        }
+        if (memcmp(read_hmac, computed_hmac, e2ee::HMAC_SIZE) != 0) {
+            log_info(PRUSA_PACK_READER, "HMAC mismatch in block starting at: %ld", header.get_position());
+            return IGcodeReader::Result_t::RESULT_CORRUPT;
+        }
+    }
+
+    if (fseek(file, pos, SEEK_SET) != 0) {
+        return Result_t::RESULT_ERROR;
+    }
+    return IGcodeReader::Result_t::RESULT_OK;
+}
+} // namespace
+
 IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc) {
     BlockHeader start_block;
     uint32_t block_decompressed_offset; //< what is offset of first byte inside block that we start streaming from
@@ -247,7 +375,11 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
 
     stream.reset();
     if (start_block.type == ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
-        // TODO: HMAC validation
+        // This is called only on start and resume (not othat often), so we can afford to read the block
+        // once more for the hmac check
+        if (auto res = check_hmac_and_crc(file, start_block, symmetric_info, false); res != Result_t::RESULT_OK) {
+            return res;
+        }
         init_decryption();
         if (auto res = init_encrypted_block_streaming(start_block); res != Result_t::RESULT_OK) {
             return res;
@@ -322,11 +454,13 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
 
     // read next block
     BlockHeader new_block;
-    if (auto res = read_block_header(new_block, /*check_crc=*/verify); res != Result_t::RESULT_OK) {
+    if (auto res = read_block_header(new_block, false); res != Result_t::RESULT_OK) {
         return res;
     }
     if (encrypted) {
-        // TODO: HMAC validation
+        if (auto res = check_hmac_and_crc(file, new_block, symmetric_info, (EChecksumType)file_header.checksum_type == EChecksumType::CRC32 && verify); res != Result_t::RESULT_OK) {
+            return res;
+        }
         if (new_block.type != ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
             return Result_t::RESULT_ERROR;
         }
@@ -339,6 +473,11 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
             return Result_t::RESULT_ERROR;
         }
     } else {
+        // Note: In this case the symmetric_info will contain some default, which are still valid, just not correct
+        // so it is OK to pass it around
+        if (auto res = check_hmac_and_crc(file, new_block, symmetric_info, (EChecksumType)file_header.checksum_type == EChecksumType::CRC32 && verify); res != Result_t::RESULT_OK) {
+            return res;
+        }
         // read encoding
         uint16_t encoding;
         if (fread(&encoding, sizeof(encoding), 1, file) != 1) {
