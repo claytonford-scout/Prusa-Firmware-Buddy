@@ -45,6 +45,7 @@ file(
        ${CMAKE_CURRENT_SOURCE_DIR}/test_bad_crc_intro.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_bad_crc_gcode.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_correct.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/test_decrypted_gcode_correct.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/printer_private_key.der
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_diff_printer.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_bad_key_hash.bgcode
@@ -56,6 +57,8 @@ file(
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_invalid_identity_key.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_bad_identity_block_signature.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_corrupted_metadata.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_early_last_block.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_no_last_block.bgcode
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
   )
 

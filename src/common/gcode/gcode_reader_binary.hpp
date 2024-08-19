@@ -87,6 +87,7 @@ private:
         uint16_t encoding = (uint16_t)bgcode::core::EGCodeEncodingType::None;
         uint32_t block_remaining_bytes_compressed = 0; //< remaining bytes in current block
         uint32_t uncompressed_offset = 0; //< offset of next char that will be outputted
+        bool last_block = false;
         MeatPack meatpack;
         Decryptor decryptor;
 

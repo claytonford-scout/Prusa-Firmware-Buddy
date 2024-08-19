@@ -63,6 +63,10 @@ IGcodeReader::Result_t PrusaPackGcodeReader::read_block_header(BlockHeader &bloc
     auto res = read_next_block_header(*file, file_header, block_header, check_crc ? crc_buffer : nullptr, check_crc ? crc_buffer_size : 0);
     if (res == bgcode::core::EResult::ReadError && feof(file)) {
         // END of file reached, end
+        if (symmetric_info.valid && !stream.last_block) {
+            log_info(PRUSA_PACK_READER, "No last block found, cropped bgcode file!");
+            return Result_t::RESULT_CORRUPT;
+        }
         return Result_t::RESULT_EOF;
 
     } else if (res == bgcode::core::EResult::InvalidChecksum) {
@@ -423,9 +427,7 @@ GcodeReaderCommon::Result_t PrusaPackGcodeReader::init_encrypted_block_streaming
     if (encryption != ftrstd::to_underlying(bgcode::core::EEncryptedBlockEncryption::AES128_CBC_SHA256_HMAC)) {
         return Result_t::RESULT_ERROR;
     }
-    // TODO: Handle last block
-    bool last;
-    if (fread(&last, sizeof(last), 1, file.get()) != 1) {
+    if (fread(&stream.last_block, sizeof(stream.last_block), 1, file.get()) != 1) {
         return Result_t::RESULT_ERROR;
     }
 
@@ -457,6 +459,12 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
     if (auto res = read_block_header(new_block, false); res != Result_t::RESULT_OK) {
         return res;
     }
+
+    if (stream.last_block) {
+        log_info(PRUSA_PACK_READER, "Data found after last block, corrupted!");
+        return Result_t::RESULT_CORRUPT;
+    }
+
     if (encrypted) {
         if (auto res = check_hmac_and_crc(file, new_block, symmetric_info, (EChecksumType)file_header.checksum_type == EChecksumType::CRC32 && verify); res != Result_t::RESULT_OK) {
             return res;
@@ -1192,6 +1200,7 @@ void PrusaPackGcodeReader::stream_t::reset() {
     encoding = (uint16_t)bgcode::core::EGCodeEncodingType::None;
     block_remaining_bytes_compressed = 0; //< remaining bytes in current block
     uncompressed_offset = 0; //< offset of next char that will be outputted
+    last_block = false;
     hs_decoder.reset();
     meatpack.reset_state();
 }

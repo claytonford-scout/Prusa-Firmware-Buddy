@@ -743,6 +743,26 @@ TEST_CASE("Encrypted bgcode stream whole file") {
     }
 }
 
+TEST_CASE("Encrypted bgcode: wrong last block") {
+    AnyGcodeFormatReader enc_reader;
+    SECTION("early last block") {
+        enc_reader = AnyGcodeFormatReader("test_encrypted_gcode_early_last_block.bgcode");
+    }
+    SECTION("no last block") {
+        enc_reader = AnyGcodeFormatReader("test_encrypted_gcode_no_last_block.bgcode");
+    }
+    // test_encrypted_gcode_no_last_block.bgcode
+    REQUIRE(enc_reader.is_open());
+    REQUIRE(enc_reader->valid_for_print(true));
+    REQUIRE(enc_reader->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+    IGcodeReader::Result_t enc_result;
+    char c;
+    while ((enc_result = enc_reader->stream_getc(c)) == IGcodeReader::Result_t::RESULT_OK) {
+        enc_result = enc_reader->stream_getc(c);
+    }
+    REQUIRE(enc_result == IGcodeReader::Result_t::RESULT_CORRUPT);
+}
+
 TEST_CASE("Plain bgcode valid") {
     AnyGcodeFormatReader reader("test_binary_heatshrink.bgcode");
     REQUIRE(reader.is_open());
