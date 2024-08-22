@@ -7,6 +7,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/lib/heatshrink/heatshrink_decoder.c
   ${CMAKE_SOURCE_DIR}/src/common/gcode/meatpack.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/e2ee.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/sha256_multiuse.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/movable_aes_context.cpp
   ${CMAKE_SOURCE_DIR}/src/common/filename_type.cpp
   ${CMAKE_SOURCE_DIR}/src/common/crc32.cpp

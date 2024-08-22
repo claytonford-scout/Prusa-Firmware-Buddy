@@ -14,6 +14,7 @@ struct Pk;
 
 namespace e2ee {
 
+class SHA256MultiuseHash;
 // FIXME: This is temporary location, for development only. Eventually, we'll "hide" it somewhere in the xflash.
 constexpr const char *const key_path = "/usb/e2ee.der";
 constexpr const char *const pubkey_path = "/usb/pubkey.der";
@@ -100,7 +101,7 @@ struct SymmetricCipherInfo {
     bool extract_keys(uint8_t *key_block, size_t size);
 };
 
-std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key);
+std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key, SHA256MultiuseHash *hash);
 
 bool rsa_sha256_sign_verify(mbedtls_pk_context &pk, const uint8_t *message, size_t message_size, const uint8_t *signature, size_t sig_size);
 bool rsa_oaep_decrypt(mbedtls_pk_context &pk, const uint8_t *encrypted_msg, size_t msg_size, uint8_t *output, size_t out_size);

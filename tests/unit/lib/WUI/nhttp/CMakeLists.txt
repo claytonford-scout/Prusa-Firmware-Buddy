@@ -33,6 +33,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/crc32.cpp
   ${CMAKE_SOURCE_DIR}/src/common/directory.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/e2ee.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/sha256_multiuse.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/movable_aes_context.cpp
   ${CMAKE_SOURCE_DIR}/src/common/json_encode.cpp
   ${CMAKE_SOURCE_DIR}/src/common/segmented_json.cpp

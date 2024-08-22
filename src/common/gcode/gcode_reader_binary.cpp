@@ -2,7 +2,7 @@
 #include <e2ee/e2ee.hpp>
 #include <utility_extensions.hpp>
 #include "lang/i18n.h"
-#include <sha256.h>
+#include <e2ee/sha256_multiuse.hpp>
 #include <md.h>
 #include <crc32.h>
 #include <logging/log.hpp>
@@ -934,35 +934,6 @@ bool is_metadata_block(EBlockType type) {
         return false;
     }
 }
-class MultiuseHash {
-public:
-    MultiuseHash() {
-        mbedtls_sha256_init(&sha256_ctx);
-        mbedtls_sha256_starts_ret(&sha256_ctx, false);
-    }
-
-    ~MultiuseHash() {
-        mbedtls_sha256_free(&sha256_ctx);
-    }
-
-    void get_hash(uint8_t *buffer, [[maybe_unused]] size_t buffer_size) {
-        assert(buffer_size == e2ee::HASH_SIZE);
-        mbedtls_sha256_finish_ret(&sha256_ctx, buffer);
-        reset();
-    }
-
-    void update(const uint8_t *data, size_t size) {
-        mbedtls_sha256_update_ret(&sha256_ctx, data, size);
-    }
-
-private:
-    mbedtls_sha256_context sha256_ctx;
-    void reset() {
-        mbedtls_sha256_free(&sha256_ctx);
-        mbedtls_sha256_init(&sha256_ctx);
-        mbedtls_sha256_starts_ret(&sha256_ctx, false);
-    }
-};
 
 class BlockSequenceValidator {
 public:
@@ -1033,20 +1004,32 @@ private:
     uint32_t num_of_key_blocks = 0;
 };
 
-void file_header_sha256(const FileHeader &file_header, MultiuseHash &hash) {
+void file_header_sha256(const FileHeader &file_header, e2ee::SHA256MultiuseHash &hash) {
     hash.update(reinterpret_cast<const uint8_t *>(&file_header.magic), sizeof(file_header.magic));
     hash.update(reinterpret_cast<const uint8_t *>(&file_header.version), sizeof(file_header.version));
     hash.update(reinterpret_cast<const uint8_t *>(&file_header.checksum_type), sizeof(file_header.checksum_type));
 }
 
-void block_sha_256_update(MultiuseHash &hash, const BlockHeader &header, EChecksumType crc, FILE *file) {
-    auto file_pos = ftell(file);
+void block_header_sha256_update(e2ee::SHA256MultiuseHash &hash, const BlockHeader &header) {
     hash.update(reinterpret_cast<const uint8_t *>(&header.type), sizeof(header.type));
     hash.update(reinterpret_cast<const uint8_t *>(&header.compression), sizeof(header.compression));
     hash.update(reinterpret_cast<const uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size));
     if ((ECompressionType)header.compression != ECompressionType::None) {
         hash.update(reinterpret_cast<const uint8_t *>(&header.compressed_size), sizeof(header.compressed_size));
     }
+}
+
+void block_crc_sha256_update(e2ee::SHA256MultiuseHash &hash, FILE *file) {
+    uint32_t crc;
+    if (fread(&crc, sizeof(crc), 1, file) != 1) {
+        return;
+    }
+    hash.update(reinterpret_cast<uint8_t *>(&crc), sizeof(crc));
+}
+
+void block_sha_256_update(e2ee::SHA256MultiuseHash &hash, const BlockHeader &header, EChecksumType crc, FILE *file) {
+    auto file_pos = ftell(file);
+    block_header_sha256_update(hash, header);
     size_t params_size = bgcode::core::block_parameters_size((EBlockType)header.type);
     uint8_t params[6]; // 6 is max params size
     size_t s = fread(params, 1, params_size, file);
@@ -1067,11 +1050,7 @@ void block_sha_256_update(MultiuseHash &hash, const BlockHeader &header, EChecks
         rest -= to_read;
     }
     if (crc == EChecksumType::CRC32) {
-        s = fread(buffer, 1, 4, file);
-        if (s != 4) {
-            return;
-        }
-        hash.update(buffer, 4);
+        block_crc_sha256_update(hash, file);
     }
     fseek(file, file_pos, SEEK_SET);
 }
@@ -1082,7 +1061,7 @@ class ValidationContext {
 public:
     ValidationContext(bool full_check)
         : full_check(full_check) {}
-    MultiuseHash hash;
+    e2ee::SHA256MultiuseHash hash;
     BlockSequenceValidator seq_validator;
     e2ee::PrinterPrivateKey printer_pk;
     bool full_check;
@@ -1157,14 +1136,16 @@ bool PrusaPackGcodeReader::valid_for_print(bool full_check) {
             if (auto err = valid_context.seq_validator.key_block_found(file_header, block_header); err != nullptr) {
                 return set_error_end(err);
             }
-            // FIXME: We read it once for the hash and once for the actual decryption, optize this to a one read operation.
             if (valid_context.full_check) {
-                block_sha_256_update(valid_context.hash, block_header, (EChecksumType)file_header.checksum_type, file.get());
+                block_header_sha256_update(valid_context.hash, block_header);
             }
-            if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.printer_pk.get_printer_private_key()); keys_opt.has_value()) {
+            if (auto keys_opt = e2ee::decrypt_key_block(file.get(), block_header, *identity_block_info.identity_pk, valid_context.printer_pk.get_printer_private_key(), valid_context.full_check ? &valid_context.hash : nullptr); keys_opt.has_value()) {
                 symmetric_info = keys_opt.value();
                 symmetric_info.valid = true;
                 symmetric_info.hmac_index = valid_context.seq_validator.get_num_of_key_blocks() - 1;
+            }
+            if ((EChecksumType)file_header.checksum_type == EChecksumType::CRC32) {
+                block_crc_sha256_update(valid_context.hash, file.get());
             }
         }
 

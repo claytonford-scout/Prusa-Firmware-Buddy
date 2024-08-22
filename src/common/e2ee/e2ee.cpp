@@ -1,5 +1,6 @@
 #include "e2ee.hpp"
 #include "key.hpp"
+#include "sha256_multiuse.hpp"
 
 #include <core/core.hpp>
 #include <heap.h>
@@ -317,7 +318,7 @@ bool SymmetricCipherInfo::extract_keys(uint8_t *key_block, size_t size) {
     return true;
 }
 
-std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key) {
+std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::core::BlockHeader &block_header, Pk &identity_pk, mbedtls_pk_context *printer_private_key, SHA256MultiuseHash *hash) {
     if (printer_private_key == nullptr) {
         return std::nullopt;
     }
@@ -327,6 +328,9 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
     uint16_t encryption;
     if (!read_from_file(&encryption, sizeof(encryption), file)) {
         return std::nullopt;
+    }
+    if (hash) {
+        hash->update(reinterpret_cast<uint8_t *>(&encryption), sizeof(encryption));
     }
     // early return, so we don't allocate buffers etc.
     if (encryption != ftrstd::to_underlying(EKeyBlockEncryption::None)
@@ -341,6 +345,9 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
         unique_ptr<uint8_t[]> buffer(new uint8_t[block_header.uncompressed_size]);
         if (!read_from_file(buffer.get(), block_header.uncompressed_size, file)) {
             return std::nullopt;
+        }
+        if (hash) {
+            hash->update(buffer.get(), block_header.uncompressed_size);
         }
         string_view_u8 encrypted_block(buffer.get(), block_header.uncompressed_size - SIGN_SIZE);
         string_view_u8 sign(buffer.get() + block_header.uncompressed_size - SIGN_SIZE, SIGN_SIZE);
@@ -389,6 +396,9 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
         }
         if (!read_from_file(&plain_key_block, sizeof(plain_key_block), file)) {
             return std::nullopt;
+        }
+        if (hash) {
+            hash->update(plain_key_block, sizeof(plain_key_block));
         }
         SymmetricCipherInfo keys;
         keys.extract_keys(plain_key_block, sizeof(plain_key_block));
