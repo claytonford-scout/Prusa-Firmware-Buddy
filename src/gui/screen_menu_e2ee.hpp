@@ -1,8 +1,7 @@
 #pragma once
 
 #include "screen_menu.hpp"
-
-#include <memory>
+#include <async_job/async_job.hpp>
 
 namespace e2ee {
 class KeyGen;
@@ -17,7 +16,7 @@ class MI_KEY final : public WI_INFO_t {
 
 public:
     MI_KEY();
-    void update(ScreenMenuE2ee *parent);
+    void update(bool generating);
 };
 
 class MI_KEYGEN final : public IWindowMenuItem {
@@ -47,9 +46,9 @@ using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, M
 
 class ScreenMenuE2ee final : public detail_e2ee::Menu {
 private:
-    friend class detail_e2ee::MI_KEY;
-    std::unique_ptr<e2ee::KeyGen> keygen;
-    void update();
+    void update(bool generating);
+    bool finished_handled = false;
+    AsyncJobWithResult<bool> key_generation;
 
 protected:
     void windowEvent(window_t *sender, GUI_event_t event, void *param);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <async_job/async_job_execution_control.hpp>
 #include <optional>
 #include <memory>
 #include <array>
@@ -10,10 +11,10 @@ namespace core {
 }
 } // namespace bgcode
 struct mbedtls_pk_context;
-struct Pk;
 
 namespace e2ee {
 
+struct Pk;
 class SHA256MultiuseHash;
 // FIXME: This is temporary location, for development only. Eventually, we'll "hide" it somewhere in the xflash.
 constexpr const char *const key_path = "/usb/e2ee.der";
@@ -43,19 +44,6 @@ constexpr const char *identity_parsing_error = "Identity block parsing error";
 constexpr const char *identity_verification_fail = "Identity verification failed!";
 constexpr const char *identity_name_too_long = "Identity name too long";
 constexpr const char *corrupted_metadata = "File has corrupted metadata";
-
-class KeyGen {
-public:
-    enum class LoopResult {
-        Done,
-        Failed,
-        Continue,
-    };
-    LoopResult loop();
-    // TODO
-};
-
-bool export_key();
 
 struct IdentityBlockInfo {
     static constexpr size_t IDENTITY_NAME_LEN = 32;
