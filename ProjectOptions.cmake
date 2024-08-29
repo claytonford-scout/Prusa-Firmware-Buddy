@@ -366,6 +366,7 @@ set_feature_for_printers(
   "MINI"
   )
 set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4")
+set_feature_for_printers_master_board(E2EE_SUPPORT "MK4" "MK3.5" "iX" "COREONE" "XL")
 
 # Printers that support any form of backwards gcode compatibility modes
 set_feature_for_printers(HAS_GCODE_COMPATIBILITY "MK3.5" "MK4" "COREONE")
@@ -784,8 +785,3 @@ set(MDNS
     CACHE BOOL "Enable MDNS responder"
     )
 define_boolean_option(MDNS ${MDNS})
-set(E2EE_SUPPORT
-    "ON"
-    CACHE BOOL "End 2 End Encryption support"
-    )
-define_boolean_option(E2EE_SUPPORT ${E2EE_SUPPORT})

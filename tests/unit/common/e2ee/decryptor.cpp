@@ -1,4 +1,5 @@
 #include <gcode_reader_binary.hpp>
+#include <e2ee/decryptor.hpp>
 #include <fcntl.h>
 #include "catch2/catch.hpp"
 
@@ -17,7 +18,7 @@ uint32_t get_file_size(FILE *file) {
 }
 
 TEST_CASE("16 bytes encrypted") {
-    PrusaPackGcodeReader::Decryptor decryptor;
+    e2ee::Decryptor decryptor;
     e2ee::SymmetricCipherInfo keys;
     keys.valid = true;
     memcpy(keys.encryption_key, encryption_key, 16);
@@ -59,7 +60,7 @@ TEST_CASE("16 bytes encrypted") {
 }
 
 TEST_CASE("20 bytes encrypted") {
-    PrusaPackGcodeReader::Decryptor decryptor;
+    e2ee::Decryptor decryptor;
     e2ee::SymmetricCipherInfo keys;
     keys.valid = true;
     memcpy(keys.encryption_key, encryption_key, 16);
@@ -117,7 +118,7 @@ TEST_CASE("20 bytes encrypted") {
         memset(buffer, 0, sizeof(buffer));
         decryptor.decrypt(file, buffer, 16);
         REQUIRE(memcmp(buffer, original, 16) == 0);
-        PrusaPackGcodeReader::Decryptor another_decryptor(std::move(decryptor));
+        e2ee::Decryptor another_decryptor(std::move(decryptor));
         another_decryptor.decrypt(file, buffer + 16, 4);
     }
 
@@ -125,7 +126,7 @@ TEST_CASE("20 bytes encrypted") {
         memset(buffer, 0, sizeof(buffer));
         decryptor.decrypt(file, buffer, 16);
         REQUIRE(memcmp(buffer, original, 16) == 0);
-        PrusaPackGcodeReader::Decryptor another_decryptor;
+        e2ee::Decryptor another_decryptor;
         another_decryptor = std::move(decryptor);
         another_decryptor.decrypt(file, buffer + 16, 4);
     }

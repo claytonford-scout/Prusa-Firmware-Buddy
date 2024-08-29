@@ -13,6 +13,9 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/key.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/sha256_multiuse.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/movable_aes_context.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/decryptor.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/hmac.cpp
   ${CMAKE_SOURCE_DIR}/lib/heatshrink/heatshrink_decoder.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
   ${CMAKE_SOURCE_DIR}/tests/stubs/e2ee/printer_private_key_mock.cpp

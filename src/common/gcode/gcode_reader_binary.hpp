@@ -2,8 +2,7 @@
 #pragma once
 
 #include "core/core.hpp"
-#include <e2ee/e2ee.hpp>
-#include <e2ee/movable_aes_context.hpp>
+#include <option/e2ee_support.h>
 #include "gcode_buffer.hpp"
 #include "gcode_reader_interface.hpp"
 #include "meatpack.h"
@@ -13,6 +12,12 @@ extern "C" {
 }
 
 #include <inplace_function.hpp>
+
+#if E2EE_SUPPORT()
+    #include <e2ee/e2ee.hpp>
+    #include <e2ee/decryptor.hpp>
+    #include <e2ee/movable_aes_context.hpp>
+#endif
 
 /**
  * @brief Implementation of IGcodeReader for PrusaPack files
@@ -47,31 +52,6 @@ public:
 
     virtual bool valid_for_print(bool full_check) override;
 
-    class Decryptor {
-    public:
-        static constexpr uint32_t BlockSize = 16;
-        using Block = std::array<uint8_t, BlockSize>;
-        void setup_block(uint64_t offset, uint32_t block_size);
-        bool decrypt(FILE *file, uint8_t *buffer, size_t size);
-        void set_cipher_info(e2ee::SymmetricCipherInfo keys);
-        Decryptor();
-        Decryptor(const Decryptor &) = delete;
-        Decryptor operator=(const Decryptor &) = delete;
-        Decryptor(Decryptor &&) = default;
-        Decryptor &operator=(Decryptor &&) = default;
-        ~Decryptor();
-
-    private:
-        std::array<uint8_t, e2ee::KEY_SIZE> hmac_key;
-        MovableAesContext aes_ctx;
-        uint32_t remaining_encrypted_data_size = 0;
-        uint32_t num_of_hmacs = 0;
-        uint8_t *cache_curr_pos = 0;
-        uint8_t *cache_end = 0;
-        Block cache = {};
-        Block iv = {};
-    };
-
 private:
     uint32_t file_size; ///< Size of PrusaPack file in bytes
     bgcode::core::FileHeader file_header; // cached header
@@ -83,13 +63,15 @@ private:
 
         bool multiblock = false;
         bgcode::core::BlockHeader current_plain_block_header;
-        bgcode::core::BlockHeader current_encrypted_block_header;
         uint16_t encoding = (uint16_t)bgcode::core::EGCodeEncodingType::None;
         uint32_t block_remaining_bytes_compressed = 0; //< remaining bytes in current block
         uint32_t uncompressed_offset = 0; //< offset of next char that will be outputted
-        bool last_block = false;
         MeatPack meatpack;
-        Decryptor decryptor;
+#if E2EE_SUPPORT()
+        bool last_block = false;
+        bgcode::core::BlockHeader current_encrypted_block_header;
+        e2ee::Decryptor decryptor;
+#endif
 
         struct HSDecoderDeleter {
             void operator()(heatshrink_decoder *ptr) {
@@ -102,8 +84,10 @@ private:
     } stream;
 
     StreamRestoreInfo::PrusaPack stream_restore_info; //< Restore info for last two blocks
+#if E2EE_SUPPORT()
     e2ee::IdentityBlockInfo identity_block_info;
     e2ee::SymmetricCipherInfo symmetric_info;
+#endif
 
     /// helper enum for iterate_blocks function
     enum class IterateResult_t {
@@ -132,9 +116,13 @@ private:
     /// Use heatshrink to decompress characted form current file (might still be encoded)
     Result_t stream_getc_decompressed_heatshrink(char &out);
 
+#if E2EE_SUPPORT()
     Result_t stream_getc_decrypted(char &out);
 
-    static Result_t read_encrypted_block_header(FILE *file, bgcode::core::BlockHeader &header, Decryptor &decryptor);
+    Result_t init_encrypted_block_streaming(const bgcode::core::BlockHeader &block_header);
+
+    void init_decryption();
+#endif
 
     // Decode one character from file, when no encoding is enabled
     Result_t stream_getc_decode_none(char &out);
@@ -145,15 +133,11 @@ private:
     /// switch to next block in file
     Result_t switch_to_next_block();
 
-    Result_t init_encrypted_block_streaming(const bgcode::core::BlockHeader &block_header);
-
     /// store current block position in file, for future restoration
     void store_restore_block();
 
     // initialize decompression depending on parameters in stream
     bool init_decompression();
-
-    void init_decryption();
 
     // Sink data from current block to headshrink decoder
     Result_t heatshrink_sink_data();

@@ -1,4 +1,5 @@
 #pragma once
+#include <option/e2ee_support.h>
 
 /* System support */
 #define MBEDTLS_HAVE_ASM
@@ -6,7 +7,6 @@
 
 /* mbed TLS feature support */
 #define MBEDTLS_PKCS1_V15
-#define MBEDTLS_PKCS1_V21
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
 // Needed for certificate expiration checks.
@@ -17,7 +17,6 @@
 
 /* mbed TLS modules */
 #define MBEDTLS_AES_C
-#define MBEDTLS_CIPHER_MODE_CBC
 #define MBEDTLS_ASN1_PARSE_C
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CTR_DRBG_C
@@ -47,9 +46,14 @@
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_C
-#define MBEDTLS_RSA_C
-#define MBEDTLS_GENPRIME
-#define MBEDTLS_PK_WRITE_C
+
+#if E2EE_SUPPORT()
+    #define MBEDTLS_RSA_C
+    #define MBEDTLS_CIPHER_MODE_CBC
+    #define MBEDTLS_PKCS1_V21
+    #define MBEDTLS_GENPRIME
+    #define MBEDTLS_PK_WRITE_C
+#endif
 
 #define MBEDTLS_SSL_CIPHERSUITES MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
 #define MBEDTLS_ECDSA_C
