@@ -5,7 +5,6 @@
 
 namespace e2ee {
 void Decryptor::set_cipher_info(e2ee::SymmetricCipherInfo cipher_info) {
-    memcpy(hmac_key.data(), cipher_info.sign_key, hmac_key.size());
     mbedtls_aes_setkey_dec(&aes_ctx.context, cipher_info.encryption_key, e2ee::KEY_SIZE * 8);
     num_of_hmacs = cipher_info.num_of_hmacs;
 }

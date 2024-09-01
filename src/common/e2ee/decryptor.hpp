@@ -20,7 +20,6 @@ public:
     ~Decryptor();
 
 private:
-    std::array<uint8_t, e2ee::KEY_SIZE> hmac_key;
     MovableAesContext aes_ctx;
     uint32_t remaining_encrypted_data_size = 0;
     uint32_t num_of_hmacs = 0;
