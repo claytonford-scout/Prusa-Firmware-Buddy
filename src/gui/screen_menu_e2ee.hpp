@@ -12,15 +12,17 @@ class ScreenMenuE2ee;
 namespace detail_e2ee {
 
 class MI_KEY final : public WI_INFO_t {
-    constexpr static const char *const label = N_("Key");
+    constexpr static const char *const label = N_("Key status");
 
 public:
     MI_KEY();
-    void update(bool generating);
+    virtual void Loop() override;
 };
 
 class MI_KEYGEN final : public IWindowMenuItem {
-    constexpr static const char *const label = N_("Generate");
+    constexpr static const char *const label = N_("Generate new key");
+
+    AsyncJobWithResult<bool> key_generation;
 
 public:
     MI_KEYGEN();
@@ -30,7 +32,7 @@ protected:
 };
 
 class MI_EXPORT final : public IWindowMenuItem {
-    constexpr static const char *const label = N_("Export");
+    constexpr static const char *const label = N_("Export public key");
 
 public:
     MI_EXPORT();
@@ -45,14 +47,6 @@ using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, M
 } // namespace detail_e2ee
 
 class ScreenMenuE2ee final : public detail_e2ee::Menu {
-private:
-    void update(bool generating);
-    bool finished_handled = false;
-    AsyncJobWithResult<bool> key_generation;
-
-protected:
-    void windowEvent(window_t *sender, GUI_event_t event, void *param);
-
 public:
     constexpr static const char *label = N_("Encryption");
     ScreenMenuE2ee();

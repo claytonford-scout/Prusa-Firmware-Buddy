@@ -21,24 +21,41 @@ namespace detail_e2ee {
 
 MI_KEY::MI_KEY()
     : WI_INFO_t(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
-    update(false);
+    Loop();
 }
 
-void MI_KEY::update(bool generating) {
-    if (generating) {
-        ChangeInformation(_("Generating"));
-    } else {
-        // TODO: Shall we show some kind of fingerprint?
-        // What _is_ even a fingerprint for a raw RSA key?
-        ChangeInformation(_(file_exists(e2ee::key_path) ? N_("Present") : N_("---")));
-    }
+void MI_KEY::Loop() {
+    // TODO: Shall we show some kind of fingerprint?
+    // What _is_ even a fingerprint for a raw RSA key?
+    ChangeInformation(_(file_exists(e2ee::key_path) ? N_("Initialized") : N_("Uninitialized")));
 }
 
 MI_KEYGEN::MI_KEYGEN()
     : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 
 void MI_KEYGEN::click(IWindowMenu &) {
-    Screens::Access()->Get()->WindowEvent(nullptr, GUI_event_t::CHILD_CLICK, this);
+    const auto closing_callback = [this] {
+        if (!key_generation.is_active()) {
+            Screens::Access()->Close();
+        }
+        osDelay(1);
+    };
+
+    if (MsgBoxWarning(_("Are you sure you want to overwrite the encryption key? Previously encrypted G-Codes for this printer won't work."), Responses_YesNo) == Response::No) {
+        return;
+    }
+
+    key_generation.issue(&e2ee::generate_key);
+
+    const auto msgbox_builder = MsgBoxBuilder { .text = _("Generating encryption key..."), .responses = { Response::Abort }, .loop_callback = closing_callback };
+    if (msgbox_builder.exec() == Response::Abort) {
+        key_generation.discard();
+        return;
+    }
+
+    if (!key_generation.result()) {
+        MsgBoxWarning(_("Failed to generate the encryption key."), Responses_Ok);
+    }
 }
 
 MI_EXPORT::MI_EXPORT()
@@ -46,10 +63,9 @@ MI_EXPORT::MI_EXPORT()
 
 void MI_EXPORT::click(IWindowMenu &) {
     if (e2ee::export_key()) {
-        MsgBox(_("Exported"), Responses_Ok);
+        MsgBox(_("The public key (pubkey.der) was exported to the USB Flash disk."), Responses_Ok);
     } else {
-        // TODO: More details?
-        MsgBoxWarning(_("Failed to export"), Responses_Ok);
+        MsgBoxWarning(_("Failed to export the public key. Make sure USB Flash disk is inserted."), Responses_Ok);
     }
 }
 
@@ -61,43 +77,4 @@ ScreenMenuE2ee::ScreenMenuE2ee()
 
 ScreenMenuE2ee::~ScreenMenuE2ee() {
     // Intentionally left blank;
-}
-
-void ScreenMenuE2ee::update(bool generating) {
-    Item<detail_e2ee::MI_KEY>().update(generating);
-}
-
-void ScreenMenuE2ee::windowEvent(window_t *, GUI_event_t event, void *param) {
-    switch (event) {
-    case GUI_event_t::CHILD_CLICK: {
-        if (param == &Item<detail_e2ee::MI_KEYGEN>()) {
-            finished_handled = false;
-            // TODO: Ask about overwriting the already existing key
-            key_generation.issue(&e2ee::generate_key);
-            update(true);
-            return;
-        }
-        break;
-    }
-    case GUI_event_t::LOOP: {
-        switch (key_generation.state()) {
-        case AsyncJob::State::finished:
-            if (!key_generation.result() && !finished_handled) {
-                finished_handled = true;
-                MsgBoxWarning(_("Failed to generate key"), Responses_Ok);
-            }
-            update(false);
-            break;
-        case AsyncJob::State::running:
-        case AsyncJob::State::queued:
-            update(true);
-            break;
-        default:
-            update(false);
-            break;
-        }
-    }
-    default:
-        break;
-    }
 }
