@@ -30,6 +30,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/lib/WUI/nhttp/transfer_renderer.cpp
   ${CMAKE_SOURCE_DIR}/lib/WUI/nhttp/req_parser.cpp
   ${CMAKE_SOURCE_DIR}/lib/WUI/nhttp/handler.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/path_utils.cpp
   ${CMAKE_SOURCE_DIR}/src/common/crc32.cpp
   ${CMAKE_SOURCE_DIR}/src/common/directory.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/e2ee.cpp
