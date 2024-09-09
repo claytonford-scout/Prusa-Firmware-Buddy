@@ -17,7 +17,11 @@ namespace e2ee {
 struct Pk;
 class SHA256MultiuseHash;
 // FIXME: This is temporary location, for development only. Eventually, we'll "hide" it somewhere in the xflash.
-constexpr const char *const key_path = "/usb/e2ee.der";
+#ifdef UNITTESTS
+constexpr const char *const key_path = "printer_private_key.der";
+#else
+constexpr const char *const key_path = "/internal/e2ee/printer/pk.der";
+#endif
 constexpr const char *const pubkey_path = "/usb/pubkey.der";
 
 constexpr size_t HASH_SIZE = 32;

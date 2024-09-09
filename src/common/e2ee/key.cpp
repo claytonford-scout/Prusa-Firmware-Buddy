@@ -1,6 +1,8 @@
 #include "key.hpp"
 #include "e2ee.hpp"
 
+#include <path_utils.h>
+
 #include <unique_file_ptr.hpp>
 #include <raii/deleter.hpp>
 #include <heap.h>
@@ -85,6 +87,8 @@ void generate_key(AsyncJobExecutionControl &control, bool &result) {
         // We aborted the generation, so do not save the key
         return;
     }
+
+    make_dirs(key_path);
     unique_file_ptr fout(fopen(key_path, "wb"));
     if (!fout) {
         return;

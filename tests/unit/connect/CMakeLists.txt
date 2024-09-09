@@ -30,6 +30,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/random_common.cpp
   ${CMAKE_SOURCE_DIR}/src/common/random_sw.cpp
   ${CMAKE_SOURCE_DIR}/src/common/general_response.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/path_utils.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/e2ee.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/sha256_multiuse.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/movable_aes_context.cpp
