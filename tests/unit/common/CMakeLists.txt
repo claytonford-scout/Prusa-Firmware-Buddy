@@ -99,6 +99,7 @@ target_include_directories(
 add_executable(
   path_utils_tests
   ${CMAKE_SOURCE_DIR}/src/common/path_utils.cpp ${CMAKE_SOURCE_DIR}/src/common/stat_retry.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/path_utils.cpp ${CMAKE_SOURCE_DIR}/tests/stubs/strlcpy.c
   ${CMAKE_CURRENT_SOURCE_DIR}/path_utils.cpp
   )
 target_include_directories(path_utils_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/common)
