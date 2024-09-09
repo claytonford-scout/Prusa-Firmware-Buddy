@@ -77,6 +77,30 @@ PrinterPrivateKey::~PrinterPrivateKey() = default;
 PrinterPrivateKey::PrinterPrivateKey(PrinterPrivateKey &&other) = default;
 PrinterPrivateKey &PrinterPrivateKey::operator=(PrinterPrivateKey &&other) = default;
 
+mbedtls_pk_context *PrinterPrivateKey::get_printer_private_key() {
+    if (key_valid) {
+        return &key->pk;
+    }
+    std::unique_ptr<uint8_t[]> buffer(new uint8_t[e2ee::PRIVATE_KEY_BUFFER_SIZE]);
+    unique_file_ptr inf(fopen(e2ee::key_path, "rb"));
+    if (!inf) {
+        return nullptr;
+    }
+
+    const size_t ins = fread(buffer.get(), 1, e2ee::PRIVATE_KEY_BUFFER_SIZE, inf.get());
+    if (ins == 0 || ferror(inf.get()) || !feof(inf.get())) {
+        return nullptr;
+    }
+    inf.reset();
+
+    if (mbedtls_pk_parse_key(&key->pk, buffer.get(), ins, NULL /* No password */, 0) != 0) {
+        return nullptr;
+    }
+
+    key_valid = true;
+    return &key->pk;
+}
+
 bool rsa_sha256_sign_verify(mbedtls_pk_context &pk, const uint8_t *message, size_t message_size, const uint8_t *signature, size_t sig_size) {
     unsigned char hash[HASH_SIZE];
 

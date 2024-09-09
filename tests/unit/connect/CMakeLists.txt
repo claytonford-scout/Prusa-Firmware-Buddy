@@ -72,7 +72,6 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/tests/stubs/jsmn_impl.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/strlcpy.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/printer_type.cpp
-  ${CMAKE_SOURCE_DIR}/tests/stubs/e2ee/printer_private_key_mock.cpp
   ${CMAKE_SOURCE_DIR}/tests/unit/mock/bsod.cpp
   # LwIP parts
   # See reason why we do it this way in

@@ -19,7 +19,6 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/gcode/gcode_buffer.cpp
   ${CMAKE_SOURCE_DIR}/src/common/base64_stream_decoder.cpp
   ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
-  ${CMAKE_SOURCE_DIR}/tests/stubs/e2ee/printer_private_key_mock.cpp
   ${CMAKE_SOURCE_DIR}/tests/unit/mock/bsod.cpp
   missing_functions.c
   decryptor.cpp
