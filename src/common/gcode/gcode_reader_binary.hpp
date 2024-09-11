@@ -70,7 +70,7 @@ private:
 #if E2EE_SUPPORT()
         bool last_block = false;
         bgcode::core::BlockHeader current_encrypted_block_header;
-        e2ee::Decryptor decryptor;
+        std::unique_ptr<e2ee::Decryptor> decryptor;
 #endif
 
         struct HSDecoderDeleter {

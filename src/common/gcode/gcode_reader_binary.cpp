@@ -493,11 +493,11 @@ GcodeReaderCommon::Result_t PrusaPackGcodeReader::init_encrypted_block_streaming
     }
 
     // Note: This is the size of the EncryptedBlock, so it is the size of encrypted data + HMACs
-    stream.decryptor.setup_block(stream.current_encrypted_block_header.get_position(), block_header.uncompressed_size);
-    if (!read_encrypted_block_header(file.get(), stream.current_plain_block_header, stream.decryptor)) {
+    stream.decryptor->setup_block(stream.current_encrypted_block_header.get_position(), block_header.uncompressed_size);
+    if (!read_encrypted_block_header(file.get(), stream.current_plain_block_header, *stream.decryptor.get())) {
         return Result_t::RESULT_ERROR;
     }
-    if (!stream.decryptor.decrypt(file.get(), reinterpret_cast<uint8_t *>(&stream.encoding), sizeof(stream.encoding))) {
+    if (!stream.decryptor->decrypt(file.get(), reinterpret_cast<uint8_t *>(&stream.encoding), sizeof(stream.encoding))) {
         return Result_t::RESULT_ERROR;
     }
 
@@ -515,7 +515,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_getc_decrypted(char &out) {
             return Result_t::RESULT_EOF;
         }
     }
-    if (!stream.decryptor.decrypt(file.get(), reinterpret_cast<uint8_t *>(&out), sizeof(out))) {
+    if (!stream.decryptor->decrypt(file.get(), reinterpret_cast<uint8_t *>(&out), sizeof(out))) {
         return Result_t::RESULT_ERROR;
     }
 
@@ -524,7 +524,8 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_getc_decrypted(char &out) {
 }
 
 void PrusaPackGcodeReader::init_decryption() {
-    stream.decryptor.set_cipher_info(symmetric_info);
+    stream.decryptor = std::unique_ptr<e2ee::Decryptor>(new e2ee::Decryptor);
+    stream.decryptor->set_cipher_info(symmetric_info);
 }
 #endif
 
