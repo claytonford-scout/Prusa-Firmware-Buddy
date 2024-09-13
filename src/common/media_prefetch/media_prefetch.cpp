@@ -331,10 +331,13 @@ void MediaPrefetchManager::fetch_routine(AsyncJobExecutionControl &control) {
             s.gcode_reader = AnyGcodeFormatReader(filepath.data());
             if (!s.gcode_reader->valid_for_print(true)) {
                 log_debug(MediaPrefetch, "Gcode corrupted, not valid for print");
+                // Not valid with no error means we just don't have enough data yet
                 if (s.gcode_reader->has_error()) {
                     log_debug(MediaPrefetch, "reader error: %s", s.gcode_reader->error_str());
+                    fetch_handle_error(control, IGcodeReader::Result_t::RESULT_CORRUPT);
                 }
-                fetch_handle_error(control, IGcodeReader::Result_t::RESULT_CORRUPT);
+                // close the reader, so we try to initialize again next time
+                s.gcode_reader = {};
                 return;
             }
 
