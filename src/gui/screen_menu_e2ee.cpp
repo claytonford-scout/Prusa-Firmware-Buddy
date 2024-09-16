@@ -41,7 +41,7 @@ void MI_KEYGEN::click(IWindowMenu &) {
         osDelay(1);
     };
 
-    if (MsgBoxWarning(_("Are you sure you want to overwrite the encryption key? Previously encrypted G-Codes for this printer won't work."), Responses_YesNo) == Response::No) {
+    if (file_exists(e2ee::key_path) && MsgBoxWarning(_("Are you sure you want to overwrite the encryption key? Previously encrypted G-Codes for this printer won't work."), Responses_YesNo) == Response::No) {
         return;
     }
 
