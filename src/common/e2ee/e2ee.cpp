@@ -238,18 +238,20 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
     }
 
     if (encryption == ftrstd::to_underlying(EKeyBlockEncryption::RSA_ENC_SHA256_SIGN)) {
-        if (block_header.uncompressed_size != 512) {
+        // 256 for the encrypted data, 256 for signature
+        constexpr size_t KEY_BLOCK_ENC_SIZE = 512;
+        if (block_header.uncompressed_size != KEY_BLOCK_ENC_SIZE) {
             return std::nullopt;
         }
-        unique_ptr<uint8_t[]> buffer(new uint8_t[block_header.uncompressed_size]);
-        if (!read_from_file(buffer.get(), block_header.uncompressed_size, file)) {
+        std::array<uint8_t, KEY_BLOCK_ENC_SIZE> buffer;
+        if (!read_from_file(buffer.data(), buffer.size(), file)) {
             return std::nullopt;
         }
         if (hash) {
-            hash->update(buffer.get(), block_header.uncompressed_size);
+            hash->update(buffer.data(), buffer.size());
         }
-        string_view_u8 encrypted_block(buffer.get(), block_header.uncompressed_size - SIGN_SIZE);
-        string_view_u8 sign(buffer.get() + block_header.uncompressed_size - SIGN_SIZE, SIGN_SIZE);
+        string_view_u8 encrypted_block(buffer.data(), buffer.size() - SIGN_SIZE);
+        string_view_u8 sign(buffer.data() + buffer.size() - SIGN_SIZE, SIGN_SIZE);
         if (!rsa_sha256_sign_verify(identity_pk.pk, encrypted_block.data(), encrypted_block.size(), sign.data(), sign.size())) {
             return std::nullopt;
         }
@@ -262,19 +264,19 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
         if (decrypted_size != correct_decrypted_size) {
             return std::nullopt;
         }
-        auto ret = mbedtls_pk_write_pubkey_der(printer_private_key, buffer.get(), block_header.uncompressed_size);
+        auto ret = mbedtls_pk_write_pubkey_der(printer_private_key, buffer.data(), buffer.size());
         if (ret <= 0) {
             return std::nullopt;
         }
         uint8_t printer_public_key_hash[HASH_SIZE];
-        mbedtls_sha256_ret(buffer.get() + block_header.uncompressed_size - ret, ret, printer_public_key_hash, false);
+        mbedtls_sha256_ret(buffer.data() + buffer.size() - ret, ret, printer_public_key_hash, false);
 
-        ret = mbedtls_pk_write_pubkey_der(&identity_pk.pk, buffer.get(), block_header.uncompressed_size);
+        ret = mbedtls_pk_write_pubkey_der(&identity_pk.pk, buffer.data(), buffer.size());
         if (ret <= 0) {
             return std::nullopt;
         }
         uint8_t identity_public_key_hash[HASH_SIZE];
-        mbedtls_sha256_ret(buffer.get() + block_header.uncompressed_size - ret, ret, identity_public_key_hash, false);
+        mbedtls_sha256_ret(buffer.data() + buffer.size() - ret, ret, identity_public_key_hash, false);
 
         string_view_u8 identity_pub_key_hash_file(decrypted_key_block, HASH_SIZE);
         string_view_u8 printer_pub_key_hash_file(decrypted_key_block + HASH_SIZE, HASH_SIZE);
