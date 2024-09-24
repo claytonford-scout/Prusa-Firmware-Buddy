@@ -366,7 +366,7 @@ set_feature_for_printers(
   "MINI"
   )
 set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4")
-set_feature_for_printers_master_board(E2EE_SUPPORT "MK4" "MK3.5" "iX" "COREONE" "XL")
+set_feature_for_printers_master_board(HAS_E2EE_SUPPORT "MK4" "MK3.5" "iX" "COREONE" "XL")
 
 # Printers that support any form of backwards gcode compatibility modes
 set_feature_for_printers(HAS_GCODE_COMPATIBILITY "MK3.5" "MK4" "COREONE")

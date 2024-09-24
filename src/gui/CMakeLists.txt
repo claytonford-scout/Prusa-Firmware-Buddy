@@ -207,7 +207,7 @@ endif()
 if(HAS_PHASE_STEPPING_CALIBRATION)
   target_sources(firmware PRIVATE screen_phase_stepping_calibration.cpp)
 endif()
-if(E2EE_SUPPORT)
+if(HAS_E2EE_SUPPORT)
   target_sources(firmware PRIVATE screen_menu_e2ee.cpp)
 endif()
 

@@ -77,10 +77,10 @@
     #include <feature/tmc_util.h>
 #endif
 
-#include <option/e2ee_support.h>
-#if E2EE_SUPPORT()
+#include <option/has_e2ee_support.h>
+#if HAS_E2EE_SUPPORT()
     #include <e2ee/e2ee.hpp>
-#endif // E2EE_SUPPORT()
+#endif // HAS_E2EE_SUPPORT()
 
 namespace {
 void MsgBoxNonBlockInfo(const string_view_utf8 &txt) {
@@ -332,9 +332,9 @@ void MI_FACTORY_HARD_RESET::click(IWindowMenu & /*window_menu*/) {
     const string_view_utf8 str = _(txt_confirmation).formatted(params, PRINTER_MODEL, version::project_version);
 
     if (MsgBoxWarning(str, Responses_YesNo, 1) == Response::Yes) {
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         if (e2ee::is_private_key_present() && MsgBoxError(_("The printer's private key will be lost, making all G-codes previously encrypted for this printer permanently inaccessible."), Responses_ContinueAbort) == Response::Continue)
-#endif // E2EE_SUPPORT()
+#endif // HAS_E2EE_SUPPORT()
         {
             do_factory_reset(true);
         }

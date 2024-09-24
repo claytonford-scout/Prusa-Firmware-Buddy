@@ -12,7 +12,7 @@
 #include <option/has_translations.h>
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_mmu2.h>
-#include <option/e2ee_support.h>
+#include <option/has_e2ee_support.h>
 #include <img_resources.hpp>
 #include <ScreenFactory.hpp>
 
@@ -211,7 +211,7 @@ public:
 };
 #endif
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
 using MI_E2EE
     = MI_SCREEN<N_("Encryption"), class ScreenMenuE2ee>;
 #endif

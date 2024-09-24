@@ -15,7 +15,7 @@
 #include <type_traits>
 #include <config_store/store_instance.hpp>
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     #include <e2ee/sha256_multiuse.hpp>
     #include <e2ee/utils.hpp>
     #include <e2ee/hmac.hpp>
@@ -67,7 +67,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::read_block_header(BlockHeader &bloc
     auto res = read_next_block_header(*file, file_header, block_header, check_crc ? crc_buffer : nullptr, check_crc ? crc_buffer_size : 0);
     if (res == bgcode::core::EResult::ReadError && feof(file)) {
         // END of file reached, end
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         if (symmetric_info.valid && !stream.last_block) {
             log_info(PRUSA_PACK_READER, "No last block found, cropped bgcode file!");
             return Result_t::RESULT_CORRUPT;
@@ -285,7 +285,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     }
 
     stream.reset();
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     if (start_block.type == ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
         // This is called only on start and resume (not othat often), so we can afford to read the block
         // once more for the hmac check
@@ -336,7 +336,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
     auto file = this->file.get();
     const bool verify = config_store().verify_gcode.get();
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     const bool encrypted = symmetric_info.valid;
     BlockHeader &skip_block = encrypted ? stream.current_encrypted_block_header : stream.current_plain_block_header;
 #else
@@ -356,7 +356,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
         return res;
     }
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     if (stream.last_block) {
         log_info(PRUSA_PACK_READER, "Data found after last block, corrupted!");
         return Result_t::RESULT_CORRUPT;
@@ -410,7 +410,7 @@ void PrusaPackGcodeReader::store_restore_block() {
     // shift away oldest restore info
     stream_restore_info[0] = stream_restore_info[1];
     // and store new restore info
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     if (symmetric_info.valid) {
         stream_restore_info[1].block_file_pos = stream.current_encrypted_block_header.get_position();
     } else
@@ -478,7 +478,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::heatshrink_sink_data() {
     return Result_t::RESULT_OK;
 }
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
 GcodeReaderCommon::Result_t PrusaPackGcodeReader::init_encrypted_block_streaming(const bgcode::core::BlockHeader &block_header) {
     stream.current_encrypted_block_header = block_header;
     uint16_t encryption;
@@ -703,11 +703,11 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size_estimate() {
         } stats;
         // Have another decryptor for this, so we dont break any ongoing decryption by wiping cache,
         // iv and size
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         e2ee::Decryptor decryptor;
 #endif
     } estimate_context;
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     estimate_context.decryptor.set_cipher_info(symmetric_info);
 #endif
 
@@ -723,7 +723,7 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size_estimate() {
                 estimate_context.stats.first_gcode_block_pos = ftell(file);
             }
         }
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         else if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
             // seek over encrypted block params
             fseek(file, 3, SEEK_CUR);
@@ -761,12 +761,12 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size() {
     long pos = ftell(file); // store file position, so we don't break any running streams
     struct {
         uint32_t gcode_stream_size_uncompressed = 0;
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         e2ee::Decryptor decryptor;
 #endif
 
     } size_context;
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     size_context.decryptor.set_cipher_info(symmetric_info);
 #endif
 
@@ -774,7 +774,7 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size() {
         if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode) {
             size_context.gcode_stream_size_uncompressed += block_header.uncompressed_size;
         }
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         else if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
             // seek over encrypted block params
             fseek(file, 3, SEEK_CUR);
@@ -864,7 +864,7 @@ bool PrusaPackGcodeReader::init_decompression() {
     return true;
 }
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
 namespace {
 // So that we have just one pointer to capture in the in_place_function
 // and it fits the storage
@@ -1023,7 +1023,7 @@ bool PrusaPackGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {
 void PrusaPackGcodeReader::stream_t::reset() {
     multiblock = false;
     current_plain_block_header = bgcode::core::BlockHeader();
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     current_encrypted_block_header = bgcode::core::BlockHeader();
     last_block = false;
 #endif

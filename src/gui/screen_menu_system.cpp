@@ -4,7 +4,7 @@
 #include "screen_menu_system.hpp"
 #include "screen_move_z.hpp"
 
-#include <option/e2ee_support.h>
+#include <option/has_e2ee_support.h>
 
 void ScreenMenuSystem::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     if (event == GUI_event_t::HELD_RELEASED) {

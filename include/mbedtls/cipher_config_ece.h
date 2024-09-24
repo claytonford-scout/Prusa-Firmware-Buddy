@@ -1,5 +1,5 @@
 #pragma once
-#include <option/e2ee_support.h>
+#include <option/has_e2ee_support.h>
 
 /* System support */
 #define MBEDTLS_HAVE_ASM
@@ -47,7 +47,7 @@
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_C
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     #define MBEDTLS_RSA_C
     #define MBEDTLS_CIPHER_MODE_CBC
     #define MBEDTLS_PKCS1_V21

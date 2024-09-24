@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/core.hpp"
-#include <option/e2ee_support.h>
+#include <option/has_e2ee_support.h>
 #include "gcode_buffer.hpp"
 #include "gcode_reader_interface.hpp"
 #include "meatpack.h"
@@ -13,7 +13,7 @@ extern "C" {
 
 #include <inplace_function.hpp>
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     #include <e2ee/e2ee.hpp>
     #include <e2ee/decryptor.hpp>
     #include <e2ee/movable_aes_context.hpp>
@@ -67,7 +67,7 @@ private:
         uint32_t block_remaining_bytes_compressed = 0; //< remaining bytes in current block
         uint32_t uncompressed_offset = 0; //< offset of next char that will be outputted
         MeatPack meatpack;
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
         bool last_block = false;
         bgcode::core::BlockHeader current_encrypted_block_header;
         std::unique_ptr<e2ee::Decryptor> decryptor;
@@ -84,7 +84,7 @@ private:
     } stream;
 
     StreamRestoreInfo::PrusaPack stream_restore_info; //< Restore info for last two blocks
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     e2ee::IdentityBlockInfo identity_block_info;
     e2ee::SymmetricCipherInfo symmetric_info;
 #endif
@@ -116,7 +116,7 @@ private:
     /// Use heatshrink to decompress characted form current file (might still be encoded)
     Result_t stream_getc_decompressed_heatshrink(char &out);
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
     Result_t stream_getc_decrypted(char &out);
 
     Result_t init_encrypted_block_streaming(const bgcode::core::BlockHeader &block_header);

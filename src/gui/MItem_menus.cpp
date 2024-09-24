@@ -198,6 +198,6 @@ void MI_HW_MMU::click(IWindowMenu &) {
 }
 #endif
 
-#if E2EE_SUPPORT()
+#if HAS_E2EE_SUPPORT()
 template struct MI_SCREEN_CTOR<ScreenMenuE2ee>;
 #endif
