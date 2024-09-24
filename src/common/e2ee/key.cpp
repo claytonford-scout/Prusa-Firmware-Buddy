@@ -88,8 +88,8 @@ void generate_key(AsyncJobExecutionControl &control, bool &result) {
         return;
     }
 
-    make_dirs(key_path);
-    unique_file_ptr fout(fopen(key_path, "wb"));
+    make_dirs(private_key_path);
+    unique_file_ptr fout(fopen(private_key_path, "wb"));
     if (!fout) {
         return;
     }
@@ -109,7 +109,7 @@ bool export_key() {
         return false;
     }
 
-    unique_file_ptr inf(fopen(key_path, "rb"));
+    unique_file_ptr inf(fopen(private_key_path, "rb"));
     if (!inf) {
         return false;
     }
@@ -135,7 +135,7 @@ bool export_key() {
         }
     } // Destroy the pk
 
-    unique_file_ptr outf(fopen(pubkey_path, "wb"));
+    unique_file_ptr outf(fopen(public_key_path, "wb"));
     if (!outf) {
         return false;
     }
@@ -144,7 +144,7 @@ bool export_key() {
     if (fwrite(buffer.get() + PRIVATE_KEY_BUFFER_SIZE - ret, ret, 1, outf.get()) != 1) {
         outf.reset();
         // Result not checked - no way we can fail twice anyway.
-        remove(pubkey_path);
+        remove(public_key_path);
         return false;
     }
 

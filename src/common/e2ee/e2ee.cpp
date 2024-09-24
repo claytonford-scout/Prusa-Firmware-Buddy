@@ -77,12 +77,17 @@ PrinterPrivateKey::~PrinterPrivateKey() = default;
 PrinterPrivateKey::PrinterPrivateKey(PrinterPrivateKey &&other) = default;
 PrinterPrivateKey &PrinterPrivateKey::operator=(PrinterPrivateKey &&other) = default;
 
+bool is_private_key_present() {
+    struct stat st;
+    return stat_retry(private_key_path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
 mbedtls_pk_context *PrinterPrivateKey::get_printer_private_key() {
     if (key_valid) {
         return &key->pk;
     }
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[e2ee::PRIVATE_KEY_BUFFER_SIZE]);
-    unique_file_ptr inf(fopen(e2ee::key_path, "rb"));
+    unique_file_ptr inf(fopen(e2ee::private_key_path, "rb"));
     if (!inf) {
         return nullptr;
     }

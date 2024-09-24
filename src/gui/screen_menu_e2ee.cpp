@@ -9,14 +9,6 @@
 
 using e2ee::KeyGen;
 
-namespace {
-bool file_exists(const char *fname) {
-    struct stat st;
-    return stat_retry(fname, &st) == 0 && S_ISREG(st.st_mode);
-}
-
-} // namespace
-
 namespace detail_e2ee {
 
 MI_KEY::MI_KEY()
@@ -27,7 +19,7 @@ MI_KEY::MI_KEY()
 void MI_KEY::Loop() {
     // TODO: Shall we show some kind of fingerprint?
     // What _is_ even a fingerprint for a raw RSA key?
-    ChangeInformation(_(file_exists(e2ee::key_path) ? N_("Initialized") : N_("Uninitialized")));
+    ChangeInformation(_(e2ee::is_private_key_present() ? N_("Initialized") : N_("Uninitialized")));
 }
 
 MI_KEYGEN::MI_KEYGEN()
@@ -41,7 +33,7 @@ void MI_KEYGEN::click(IWindowMenu &) {
         osDelay(1);
     };
 
-    if (file_exists(e2ee::key_path) && MsgBoxWarning(_("Are you sure you want to overwrite the encryption key? Previously encrypted G-Codes for this printer won't work."), Responses_YesNo) == Response::No) {
+    if (e2ee::is_private_key_present() && MsgBoxWarning(_("Are you sure you want to overwrite the encryption key? Previously encrypted G-Codes for this printer won't work."), Responses_YesNo) == Response::No) {
         return;
     }
 

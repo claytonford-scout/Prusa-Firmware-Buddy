@@ -18,11 +18,11 @@ struct Pk;
 class SHA256MultiuseHash;
 // FIXME: This is temporary location, for development only. Eventually, we'll "hide" it somewhere in the xflash.
 #ifdef UNITTESTS
-constexpr const char *const key_path = "printer_private_key.der";
+constexpr const char *const private_key_path = "printer_private_key.der";
 #else
-constexpr const char *const key_path = "/internal/e2ee/printer/pk.der";
+constexpr const char *const private_key_path = "/internal/e2ee/printer/pk.der";
 #endif
-constexpr const char *const pubkey_path = "/usb/pubkey.der";
+constexpr const char *const public_key_path = "/usb/pubkey.der";
 
 constexpr size_t HASH_SIZE = 32;
 constexpr size_t HMAC_SIZE = 32;
@@ -79,6 +79,9 @@ private:
     bool key_valid = false;
     std::unique_ptr<Pk> key;
 };
+
+// Looks for private key at private_key_path
+bool is_private_key_present();
 
 // if computed_intro_hash is nullptr the hash is not checked
 const char *read_and_verify_identity_block(FILE *file, const bgcode::core::BlockHeader &block_header, uint8_t *computed_intro_hash, IdentityBlockInfo &info, bool verify_signature);
