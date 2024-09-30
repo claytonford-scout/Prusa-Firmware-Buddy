@@ -86,6 +86,10 @@ class IdentityBlockSign(IntEnum):
     RSA = 0
 
 
+class IdentityFlags(IntEnum):
+    ONE_TIME_IDENTITY = 0b1
+
+
 class KeyBlockEncryption(IntEnum):
     No = 0
     RSA_ENC_SHA256_SIGN = 1
@@ -115,7 +119,7 @@ def paramsSize(block_type: BlockType) -> int:
     if block_type == BlockType.Thumbnail:
         return 6
     elif block_type == BlockType.IdentityBlock:
-        return 2
+        return 3
     elif block_type == BlockType.EncryptedBlock:
         return 3
     else:
@@ -165,23 +169,27 @@ class IdentityBlock:
         self.key_bloks_hash = bytes()
         self.header = BlockHeader(BlockType.IdentityBlock, Compression.No,
                                   self.dataSize(), self.dataSize())
-        self.params = bytes()
+        self.enc_algo = IdentityBlockSign.RSA
+        self.identity_flags = 0
         self.sign = bytes()
 
-    def generate(self, slicer_pub_key, name, intro_hash, key_block_hash):
+    def generate(self, slicer_pub_key, name, intro_hash, key_block_hash,
+                 enc_algo, identity_flags):
+        self.enc_algo = enc_algo
+        self.identity_flags = identity_flags
         self.slicer_public_key_bytes = slicer_pub_key
         self.slicer_pub_key = crypto_serialization.load_der_public_key(
             self.slicer_public_key_bytes)
         self.identity_name = name
         self.intro_hash = intro_hash
         self.key_bloks_hash = key_block_hash
-        self.params = IdentityBlockSign.RSA.to_bytes(2, 'little')
         self.header = BlockHeader(BlockType.IdentityBlock, Compression.No,
                                   self.dataSize(), self.dataSize())
 
     def read(self, block: bytes):
         stream = io.BytesIO(block)
-        self.params = struct.unpack("<h", stream.read(2))[0]
+        enc_algo = struct.unpack("<h", stream.read(2))[0]
+        identity_flags = struct.unpack("B", stream.read(1))[0]
         slicer_pub_key_len = struct.unpack("<h", stream.read(2))[0]
         slicer_pub_key = stream.read(slicer_pub_key_len)
         identity_name_len = struct.unpack("<B", stream.read(1))[0]
@@ -190,12 +198,13 @@ class IdentityBlock:
         key_blocks_hash = stream.read(32)
         self.sign = stream.read(SIGN_SIZE)
         self.generate(slicer_pub_key, identity_name, intro_hash,
-                      key_blocks_hash)
+                      key_blocks_hash, enc_algo, identity_flags)
 
     def bytesToSign(self) -> bytes:
         buffer = bytearray()
         buffer.extend(self.header.bytes())
-        buffer.extend(self.params)
+        buffer.extend(self.enc_algo.to_bytes(2, "little"))
+        buffer.extend(self.identity_flags.to_bytes(1, "little"))
         buffer.extend(struct.pack("<h", len(self.slicer_public_key_bytes)))
         buffer.extend(self.slicer_public_key_bytes)
         buffer.extend(struct.pack("<B", len(self.identity_name)))
@@ -209,7 +218,7 @@ class IdentityBlock:
 
     def verify(self) -> None:
         assert (len(self.sign) == SIGN_SIZE)
-        if int.from_bytes(self.params, 'little') != IdentityBlockSign.RSA:
+        if self.enc_algo != IdentityBlockSign.RSA:
             sys.exit("Unsupported identity block sign algorithm")
         verify(self.slicer_pub_key, self.bytesToSign(), self.sign)
 
@@ -406,14 +415,18 @@ class KeyBlock:
 
 def generateIdentityBlock(key_blocks_hash: bytes,
                           slicer_private_key: PrivateKeyTypes,
-                          metadata_hash: bytes,
-                          identity_name: str) -> IdentityBlock:
+                          metadata_hash: bytes, identity_name: str,
+                          one_time_identity: bool) -> IdentityBlock:
     slicer_public_key_bytes = slicer_private_key.public_key().public_bytes(
         crypto_serialization.Encoding.DER,
         crypto_serialization.PublicFormat.SubjectPublicKeyInfo)
     identity_block = IdentityBlock()
+    identity_flags = 0
+    if one_time_identity:
+        identity_flags |= IdentityFlags.ONE_TIME_IDENTITY
     identity_block.generate(slicer_public_key_bytes, identity_name.encode(),
-                            metadata_hash, key_blocks_hash)
+                            metadata_hash, key_blocks_hash,
+                            IdentityBlockSign.RSA, identity_flags)
 
     return identity_block
 
@@ -448,7 +461,8 @@ def readEncryptAndWriteGcodeBlocks(out_file: io.BufferedWriter,
 
 
 def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
-                   slicer_private_key: PrivateKeyTypes, identity_name: str):
+                   slicer_private_key: PrivateKeyTypes, identity_name: str,
+                   one_time_identity: bool):
     print("Reading bgcode from:", in_filename)
     in_file = open(in_filename, mode='rb')
     print("Writing encrypted bgcode to:", out_filename)
@@ -469,7 +483,7 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
 
     identity_block = generateIdentityBlock(key_blocks_hash.digest(),
                                            slicer_private_key, metadata_hash,
-                                           identity_name)
+                                           identity_name, one_time_identity)
 
     out_file.write(
         identity_block.bytes(file_header.checksumType, slicer_private_key))
@@ -674,6 +688,10 @@ def main():
     parser.add_argument("-g",
                         "--generate-keys",
                         action=argparse.BooleanOptionalAction)
+    parser.add_argument("-oti",
+                        "--one-time-identity",
+                        action=argparse.BooleanOptionalAction,
+                        default=False)
     parser.add_argument("-in", "--input-file", type=Path)
     parser.add_argument("-out", "--output-file", type=Path)
     parser.add_argument("-spk", "--slicer-private-key", type=Path)
@@ -707,7 +725,8 @@ def main():
         printer_keys = []
         printer_keys.append(printer_public_key)
         encrypt_bgcode(args.input_file, args.output_file, printer_keys,
-                       slicer_private_key, args.identity_name)
+                       slicer_private_key, args.identity_name,
+                       args.one_time_identity)
 
     elif args.decrypt:
         with open(args.printer_private_key, "br") as key_file:
