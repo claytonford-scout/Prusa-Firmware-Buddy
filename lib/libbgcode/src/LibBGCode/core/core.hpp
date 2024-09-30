@@ -74,6 +74,11 @@ enum class EIdentityBlockSignCypher : uint16_t
     RSA
 };
 
+enum class EIdentityFlags : uint8_t
+{
+    ONE_TIME_IDENTITY = 1 << 0,
+};
+
 enum class EKeyBlockEncryption : uint16_t
 {
     None,

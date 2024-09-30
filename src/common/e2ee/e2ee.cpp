@@ -29,6 +29,7 @@ using bgcode::core::BlockHeader;
 using bgcode::core::EBlockType;
 using bgcode::core::ECompressionType;
 using bgcode::core::EIdentityBlockSignCypher;
+using bgcode::core::EIdentityFlags;
 using bgcode::core::EKeyBlockEncryption;
 using std::unique_ptr;
 
@@ -158,6 +159,11 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     if (algo != ftrstd::to_underlying(EIdentityBlockSignCypher::RSA)) {
         return unknown_identity_cypher;
     }
+    uint8_t flags;
+    if (!read_from_file(&flags, sizeof(flags), file)) {
+        return file_error;
+    }
+    info.one_time_identity = flags & ftrstd::to_underlying(EIdentityFlags::ONE_TIME_IDENTITY);
     if (block_header.compression != ftrstd::to_underlying(ECompressionType::None)) {
         return compressed_identity_block;
     }

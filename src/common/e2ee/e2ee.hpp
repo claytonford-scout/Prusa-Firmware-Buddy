@@ -56,6 +56,7 @@ struct IdentityBlockInfo {
     // TODO: how long sould we allow this to be??
     std::array<char, IDENTITY_NAME_LEN> identity_name;
     std::array<uint8_t, HASH_SIZE> key_block_hash;
+    bool one_time_identity;
 
     IdentityBlockInfo();
     ~IdentityBlockInfo();
