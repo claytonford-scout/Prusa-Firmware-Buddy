@@ -1,3 +1,4 @@
+#include <crash_dump/secret.hpp>
 #include <mbedtls/pk.h>
 
 #include <async_job/async_job_execution_control.hpp>

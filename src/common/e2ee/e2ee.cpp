@@ -74,9 +74,11 @@ IdentityBlockInfo &IdentityBlockInfo::operator=(IdentityBlockInfo &&other) = def
 PrinterPrivateKey::PrinterPrivateKey()
     : key(std::make_unique<Pk>()) {}
 
-PrinterPrivateKey::~PrinterPrivateKey() = default;
-PrinterPrivateKey::PrinterPrivateKey(PrinterPrivateKey &&other) = default;
-PrinterPrivateKey &PrinterPrivateKey::operator=(PrinterPrivateKey &&other) = default;
+PrinterPrivateKey::~PrinterPrivateKey() {
+    if (key_valid) {
+        crash_dump::privacy_protection.unreg(key->pk.pk_ctx);
+    }
+}
 
 bool is_private_key_present() {
     struct stat st;
@@ -88,6 +90,7 @@ mbedtls_pk_context *PrinterPrivateKey::get_printer_private_key() {
         return &key->pk;
     }
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[e2ee::PRIVATE_KEY_BUFFER_SIZE]);
+    crash_dump::ManualSecret secret(buffer.get(), e2ee::PRIVATE_KEY_BUFFER_SIZE);
     unique_file_ptr inf(fopen(e2ee::private_key_path, "rb"));
     if (!inf) {
         return nullptr;
@@ -102,6 +105,7 @@ mbedtls_pk_context *PrinterPrivateKey::get_printer_private_key() {
     if (mbedtls_pk_parse_key(&key->pk, buffer.get(), ins, NULL /* No password */, 0) != 0) {
         return nullptr;
     }
+    crash_dump::privacy_protection.reg(key->pk.pk_ctx, sizeof(mbedtls_rsa_context));
 
     key_valid = true;
     return &key->pk;
@@ -223,8 +227,8 @@ bool SymmetricCipherInfo::extract_keys(uint8_t *key_block, size_t size) {
     if (size != 2 * KEY_SIZE) {
         return false;
     }
-    memcpy(encryption_key, key_block, KEY_SIZE);
-    memcpy(sign_key, key_block + KEY_SIZE, KEY_SIZE);
+    memcpy(keys->encryption_key, key_block, KEY_SIZE);
+    memcpy(keys->sign_key, key_block + KEY_SIZE, KEY_SIZE);
     return true;
 }
 

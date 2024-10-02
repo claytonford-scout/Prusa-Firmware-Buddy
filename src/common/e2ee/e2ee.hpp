@@ -1,5 +1,6 @@
 #pragma once
 
+#include <crash_dump/secret.hpp>
 #include <async_job/async_job_execution_control.hpp>
 #include <optional>
 #include <memory>
@@ -72,8 +73,8 @@ public:
     ~PrinterPrivateKey();
     PrinterPrivateKey(const PrinterPrivateKey &) = delete;
     PrinterPrivateKey &operator=(const PrinterPrivateKey &) = delete;
-    PrinterPrivateKey(PrinterPrivateKey &&);
-    PrinterPrivateKey &operator=(PrinterPrivateKey &&);
+    PrinterPrivateKey(PrinterPrivateKey &&) = delete;
+    PrinterPrivateKey &operator=(PrinterPrivateKey &&) = delete;
     mbedtls_pk_context *get_printer_private_key();
 
 private:
@@ -89,8 +90,11 @@ const char *read_and_verify_identity_block(FILE *file, const bgcode::core::Block
 
 struct SymmetricCipherInfo {
     bool valid = false;
-    uint8_t encryption_key[KEY_SIZE];
-    uint8_t sign_key[KEY_SIZE];
+    struct Keys {
+        uint8_t encryption_key[KEY_SIZE];
+        uint8_t sign_key[KEY_SIZE];
+    };
+    crash_dump::Secret<Keys> keys;
     uint32_t num_of_hmacs = 0;
     uint32_t hmac_index = 0; // where our HMAC is
 

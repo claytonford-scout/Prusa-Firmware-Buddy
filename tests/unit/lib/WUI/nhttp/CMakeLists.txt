@@ -54,6 +54,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/gcode/gcode_buffer.cpp
   ${CMAKE_SOURCE_DIR}/src/common/gcode/meatpack.cpp
   ${CMAKE_SOURCE_DIR}/src/common/stat_retry.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/crash_dump/secret.cpp
   ${CMAKE_SOURCE_DIR}/src/transfers/monitor.cpp
   ${CMAKE_SOURCE_DIR}/src/transfers/changed_path.cpp
   ${CMAKE_SOURCE_DIR}/src/transfers/files.cpp

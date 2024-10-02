@@ -17,7 +17,6 @@ namespace {
 
 // So we get RAII for all the init-free contexts of mbedtls
 struct KeyGenContexts {
-    mbedtls_rsa_context rsa;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_pk_context pk;
@@ -25,19 +24,17 @@ struct KeyGenContexts {
     KeyGenContexts() {
         mbedtls_entropy_init(&entropy);
         mbedtls_ctr_drbg_init(&ctr_drbg);
-        mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
         mbedtls_pk_init(&pk);
         mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
-        pk.pk_ctx = &rsa;
+        crash_dump::privacy_protection.reg(pk.pk_ctx, sizeof(mbedtls_rsa_context));
     }
+    KeyGenContexts(const KeyGenContexts &) = delete;
+    KeyGenContexts(KeyGenContexts &&) = delete;
+    KeyGenContexts &operator=(const KeyGenContexts &) = delete;
+    KeyGenContexts &operator=(KeyGenContexts &&) = delete;
     ~KeyGenContexts() {
-        // For some reasons, the pk works fine when it is a result of reading
-        // it from somewhere. But when we "compose" it from parts, as above, it
-        // does weird things and corrupts the memory. Therefore, we have to
-        // decompose it before destruction.
-        pk.pk_ctx = nullptr;
+        crash_dump::privacy_protection.unreg(pk.pk_ctx);
         mbedtls_pk_free(&pk);
-        mbedtls_rsa_free(&rsa);
         mbedtls_ctr_drbg_free(&ctr_drbg);
         mbedtls_entropy_free(&entropy);
     }
@@ -108,6 +105,7 @@ bool export_key() {
     if (!buffer) {
         return false;
     }
+    crash_dump::ManualSecret secret(buffer.get(), PRIVATE_KEY_BUFFER_SIZE);
 
     unique_file_ptr inf(fopen(private_key_path, "rb"));
     if (!inf) {

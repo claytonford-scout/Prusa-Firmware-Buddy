@@ -18,6 +18,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/decryptor.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/utils.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/hmac.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/crash_dump/secret.cpp
   ${CMAKE_SOURCE_DIR}/lib/heatshrink/heatshrink_decoder.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
   ${CMAKE_SOURCE_DIR}/tests/unit/mock/bsod.cpp

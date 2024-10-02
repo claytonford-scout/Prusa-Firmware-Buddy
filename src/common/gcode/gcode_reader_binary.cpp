@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include <ranges>
 #include <optional>
-#include<bsod.h>
+#include <bsod.h>
 #include <type_traits>
 #include <config_store/store_instance.hpp>
 

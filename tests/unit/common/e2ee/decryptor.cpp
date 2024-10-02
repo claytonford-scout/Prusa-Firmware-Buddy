@@ -21,7 +21,7 @@ TEST_CASE("16 bytes encrypted") {
     e2ee::Decryptor decryptor;
     e2ee::SymmetricCipherInfo keys;
     keys.valid = true;
-    memcpy(keys.encryption_key, encryption_key, 16);
+    memcpy(keys.keys->encryption_key, encryption_key, 16);
     decryptor.set_cipher_info(keys);
     uint8_t original[] = {
         0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20,
@@ -63,7 +63,7 @@ TEST_CASE("20 bytes encrypted") {
     e2ee::Decryptor decryptor;
     e2ee::SymmetricCipherInfo keys;
     keys.valid = true;
-    memcpy(keys.encryption_key, encryption_key, 16);
+    memcpy(keys.keys->encryption_key, encryption_key, 16);
     decryptor.set_cipher_info(keys);
     uint8_t original[] = {
         0x54,

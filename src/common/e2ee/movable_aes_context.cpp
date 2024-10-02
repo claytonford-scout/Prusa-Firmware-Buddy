@@ -3,11 +3,11 @@
 #include <utility>
 
 MovableAesContext::MovableAesContext() {
-    mbedtls_aes_init(&context);
+    mbedtls_aes_init(context.get());
 }
 
 MovableAesContext::~MovableAesContext() {
-    mbedtls_aes_free(&context);
+    mbedtls_aes_free(context.get());
 }
 
 MovableAesContext::MovableAesContext(MovableAesContext &&other) {
@@ -20,11 +20,11 @@ MovableAesContext &MovableAesContext::operator=(MovableAesContext &&other) {
     // so if we ever upgrade, this will not be necessary. Also it will fail to
     // copile, because the rk is renamed to rk_offset.
     if (this != &other) {
-        mbedtls_aes_free(&context);
-        context.nr = other.context.nr;
-        memcpy(context.buf, other.context.buf, sizeof(context.buf));
-        size_t offset = other.context.rk - other.context.buf;
-        context.rk = context.buf + offset;
+        mbedtls_aes_free(context.get());
+        context->nr = other.context->nr;
+        memcpy(context->buf, other.context->buf, sizeof(context->buf));
+        size_t offset = other.context->rk - other.context->buf;
+        context->rk = context->buf + offset;
     }
     return *this;
 }

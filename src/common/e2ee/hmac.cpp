@@ -36,10 +36,10 @@ void HMAC::finish(uint8_t *output, [[maybe_unused]] size_t size) {
     mbedtls_md_hmac_finish(&md_ctx, output);
 }
 
-CheckResult check_hmac_and_crc(FILE *file, BlockHeader header, const e2ee::SymmetricCipherInfo &info, bool check_crc) {
+CheckResult check_hmac_and_crc(FILE *file, BlockHeader header, e2ee::SymmetricCipherInfo &info, bool check_crc) {
     const bool check_hmac = (EBlockType)header.type == EBlockType::EncryptedBlock;
     long pos = ftell(file);
-    HMAC hmac(info.sign_key, std::size(info.sign_key));
+    HMAC hmac(info.keys->sign_key, std::size(info.keys->sign_key));
     uint32_t crc = 0;
     if (check_hmac) {
         block_header_bytes_cb(header, [&hmac](uint8_t *data, size_t size) {

@@ -5,7 +5,7 @@
 
 namespace e2ee {
 void Decryptor::set_cipher_info(e2ee::SymmetricCipherInfo cipher_info) {
-    mbedtls_aes_setkey_dec(&aes_ctx.context, cipher_info.encryption_key, e2ee::KEY_SIZE * 8);
+    mbedtls_aes_setkey_dec(aes_ctx.context.get(), cipher_info.keys->encryption_key, e2ee::KEY_SIZE * 8);
     num_of_hmacs = cipher_info.num_of_hmacs;
 }
 
@@ -61,7 +61,7 @@ bool Decryptor::decrypt(FILE *file, uint8_t *buffer, size_t size) {
             return false;
         }
         size_t to_return = std::min(size, in.size());
-        auto ret = mbedtls_aes_crypt_cbc(&aes_ctx.context, MBEDTLS_AES_DECRYPT, cache.size(), iv.data(), in.data(), cache.data());
+        auto ret = mbedtls_aes_crypt_cbc(aes_ctx.context.get(), MBEDTLS_AES_DECRYPT, cache.size(), iv.data(), in.data(), cache.data());
         if (ret != 0) {
             return false;
         }

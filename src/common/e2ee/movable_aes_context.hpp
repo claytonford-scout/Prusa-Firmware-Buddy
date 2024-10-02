@@ -1,4 +1,5 @@
 #pragma once
+#include <crash_dump/secret.hpp>
 #include <mbedtls/aes.h>
 
 struct MovableAesContext {
@@ -8,5 +9,5 @@ struct MovableAesContext {
     MovableAesContext(MovableAesContext &&other);
     MovableAesContext &operator=(MovableAesContext &&other);
     ~MovableAesContext();
-    mbedtls_aes_context context;
+    crash_dump::Secret<mbedtls_aes_context> context;
 };

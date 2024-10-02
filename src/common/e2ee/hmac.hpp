@@ -36,6 +36,6 @@ enum class CheckResult {
 
 };
 
-CheckResult check_hmac_and_crc(FILE *file, bgcode::core::BlockHeader header, const e2ee::SymmetricCipherInfo &info, bool check_crc);
+CheckResult check_hmac_and_crc(FILE *file, bgcode::core::BlockHeader header, e2ee::SymmetricCipherInfo &info, bool check_crc);
 
 } // namespace e2ee

@@ -38,6 +38,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/decryptor.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/utils.cpp
   ${CMAKE_SOURCE_DIR}/src/common/e2ee/hmac.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/crash_dump/secret.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/background.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/render.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/command.cpp
