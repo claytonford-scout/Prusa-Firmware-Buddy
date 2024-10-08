@@ -3,6 +3,8 @@
 
 #include <utility_extensions.hpp>
 
+#include <cstring>
+
 using bgcode::core::BlockHeader;
 using bgcode::core::EBlockType;
 using bgcode::core::EChecksumType;

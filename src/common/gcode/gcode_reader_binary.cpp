@@ -19,6 +19,7 @@
     #include <e2ee/sha256_multiuse.hpp>
     #include <e2ee/utils.hpp>
     #include <e2ee/hmac.hpp>
+    #include <e2ee/key.hpp>
 #endif
 
 LOG_COMPONENT_DEF(PRUSA_PACK_READER, logging::Severity::info);
@@ -30,8 +31,18 @@ using bgcode::core::ECompressionType;
 using bgcode::core::EGCodeEncodingType;
 using bgcode::core::FileHeader;
 
-PrusaPackGcodeReader::PrusaPackGcodeReader(FILE &f, const struct stat &stat_info)
-    : GcodeReaderCommon(f) {
+PrusaPackGcodeReader::PrusaPackGcodeReader(FILE &f, const struct stat &stat_info, bool allow_decryption
+#if HAS_E2EE_SUPPORT()
+    ,
+    e2ee::IdentityCheckLevel identity_check_lvl
+#endif
+    )
+    : GcodeReaderCommon(f)
+    , allow_decryption(allow_decryption)
+#if HAS_E2EE_SUPPORT()
+    , identity_check_lvl(identity_check_lvl)
+#endif
+{
     file_size = stat_info.st_size;
 }
 
@@ -941,6 +952,23 @@ bool PrusaPackGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {
             }
             if (const char *err = e2ee::read_and_verify_identity_block(file.get(), block_header, valid_context.full_check ? intro_hash : nullptr, identity_block_info, valid_context.full_check); err != nullptr) {
                 return set_error_end(err);
+            } else {
+                std::array<char, e2ee::KEY_HASH_STR_BUFFER_LEN> key_hash;
+                e2ee::get_key_hash_string(key_hash.data(), e2ee::KEY_HASH_STR_BUFFER_LEN, identity_block_info.identity_pk.get());
+                e2ee::IdentityInfo info({ identity_block_info.identity_name, key_hash, identity_block_info.one_time_identity });
+                if (!e2ee::is_trusted_identity(info)) {
+                    switch (identity_check_lvl) {
+                    case e2ee::IdentityCheckLevel::KnownOnly:
+                        // TODO: text??!!
+                        return set_error_end("Unknown identity!!");
+                    case e2ee::IdentityCheckLevel::Ask:
+                        set_identity_info(info);
+                        break;
+                    case e2ee::IdentityCheckLevel::AnyIdentity:
+                        e2ee::save_identity_key_temporary(info);
+                        break;
+                    }
+                }
             }
         }
         if ((EBlockType)block_header.type == EBlockType::KeyBlock) {

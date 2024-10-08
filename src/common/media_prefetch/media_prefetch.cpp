@@ -5,6 +5,7 @@
 
 #include <logging/log.hpp>
 #include <utils/enum_array.hpp>
+#include <option/has_e2ee_support.h>
 
 #include "prefetch_compression.hpp"
 
@@ -328,7 +329,14 @@ void MediaPrefetchManager::fetch_routine(AsyncJobExecutionControl &control) {
                 return;
             }
 
-            s.gcode_reader = AnyGcodeFormatReader(filepath.data());
+            s.gcode_reader = AnyGcodeFormatReader(filepath.data(), /*allow_decryption=*/true
+#if HAS_E2EE_SUPPORT()
+                // If we are not starting from zero, the identity must always be trusted,
+                // at least temporarily
+                ,
+                s.gcode_reader_pos == 0 ? config_store().identity_check.get() : e2ee::IdentityCheckLevel::KnownOnly
+#endif
+            );
             if (!s.gcode_reader->valid_for_print(true)) {
                 log_debug(MediaPrefetch, "Gcode corrupted, not valid for print");
                 // Not valid with no error means we just don't have enough data yet

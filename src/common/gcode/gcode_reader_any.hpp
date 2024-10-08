@@ -13,7 +13,12 @@
 class AnyGcodeFormatReader {
 public:
     AnyGcodeFormatReader();
-    AnyGcodeFormatReader(const char *filename);
+    AnyGcodeFormatReader(const char *filename, bool allow_decryption = false
+#if HAS_E2EE_SUPPORT()
+        ,
+        e2ee::IdentityCheckLevel identity_check_lvl = config_store().identity_check.get()
+#endif
+    );
     AnyGcodeFormatReader(const AnyGcodeFormatReader &) = delete;
     AnyGcodeFormatReader &operator=(const AnyGcodeFormatReader &) = delete;
     AnyGcodeFormatReader(AnyGcodeFormatReader &&);

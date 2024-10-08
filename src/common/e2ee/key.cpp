@@ -1,8 +1,12 @@
 #include "key.hpp"
 #include "e2ee.hpp"
 
+#include <stat_retry.hpp>
 #include <path_utils.h>
+#include <resources/fileutils.hpp>
 
+#include <sys/stat.h>
+#include <sys/dirent.h>
 #include <unique_file_ptr.hpp>
 #include <raii/deleter.hpp>
 #include <heap.h>
@@ -10,8 +14,14 @@
 #include <mbedtls/ctr_drbg.h>
 #include <memory>
 #include <cstring>
+#include <cassert>
 
 using std::unique_ptr;
+
+extern "C" {
+size_t strlcpy(char *, const char *, size_t);
+size_t strlcat(char *, const char *, size_t);
+}
 
 namespace {
 
@@ -39,6 +49,33 @@ struct KeyGenContexts {
         mbedtls_entropy_free(&entropy);
     }
 };
+
+bool save_identity_key_impl(const e2ee::IdentityInfo &info, const char *folder) {
+    e2ee::IdentityKeyInfo key_info;
+    strlcpy(key_info.identity_name, info.identity_name.data(), e2ee::IDENTITY_NAME_LEN);
+    constexpr size_t buff_size = std::max(e2ee::IDENTITY_TMP_PATH_LEN, e2ee::IDENTITY_PATH_LEN);
+    [[maybe_unused]] char file_path[buff_size];
+    strlcpy(file_path, folder, buff_size);
+    make_dirs(file_path);
+    strlcat(file_path, info.key_hash_str_.data(), buff_size);
+
+    // check if it already exists
+    if (file_exists(file_path)) {
+        assert(false);
+        return false;
+    }
+
+    unique_file_ptr file(fopen(file_path, "w"));
+    if (!file) {
+        return false;
+    }
+
+    if (fwrite(&key_info, sizeof(key_info), 1, file.get()) != 1) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 namespace e2ee {
@@ -147,6 +184,78 @@ bool export_key() {
     }
 
     return true;
+}
+
+void get_key_hash_string(char *out, [[maybe_unused]] size_t size, e2ee::Pk *pk) {
+    assert(size >= e2ee::KEY_HASH_STR_BUFFER_LEN);
+    uint8_t key_hash[e2ee::HASH_SIZE];
+    std::array<uint8_t, e2ee::PUBLIC_KEY_BUFFER_SIZE> buffer;
+    int ret = mbedtls_pk_write_pubkey_der(&pk->pk, buffer.data(), e2ee::PUBLIC_KEY_BUFFER_SIZE);
+    mbedtls_sha256_context sha256_ctx;
+    mbedtls_sha256_init(&sha256_ctx);
+    mbedtls_sha256_starts_ret(&sha256_ctx, false);
+    mbedtls_sha256_update_ret(&sha256_ctx, buffer.data() + buffer.size() - ret, ret);
+    mbedtls_sha256_finish_ret(&sha256_ctx, key_hash);
+    mbedtls_sha256_free(&sha256_ctx);
+
+    for (size_t i = 0; i < e2ee::HASH_SIZE; i++) {
+        sprintf(&out[i * 2], "%02x", key_hash[i]);
+    }
+}
+
+bool save_identity_key(const IdentityInfo &info) {
+    return save_identity_key_impl(info, identities_folder);
+}
+
+bool save_identity_key_temporary(const IdentityInfo &info) {
+    return save_identity_key_impl(info, identities_tmp_folder);
+}
+
+void remove_trusted_identity(const IdentityInfo &info) {
+    char file_path[IDENTITY_PATH_LEN];
+    strlcpy(file_path, identities_folder, IDENTITY_PATH_LEN);
+    strlcat(file_path, info.key_hash_str_.data(), IDENTITY_PATH_LEN);
+    assert(file_exists(file_path));
+    remove(file_path);
+}
+
+void remove_temporary_identites() {
+    struct dirent *entry;
+    char path[IDENTITY_TMP_PATH_LEN];
+    std::unique_ptr<DIR, DIRDeleter> dir(opendir(identities_tmp_folder));
+    if (dir == nullptr) {
+        //????
+        return;
+    }
+
+    while ((entry = readdir(dir.get())) != nullptr) {
+        // Ignore "." and ".." (current and parent directories)
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        strlcpy(path, identities_tmp_folder, IDENTITY_TMP_PATH_LEN);
+        strlcat(path, entry->d_name, IDENTITY_TMP_PATH_LEN);
+
+        if (entry->d_type == DT_REG) {
+            remove(path);
+        }
+    }
+}
+
+bool is_trusted_identity(const IdentityInfo &info) {
+    constexpr size_t buff_size = std::max(IDENTITY_TMP_PATH_LEN, IDENTITY_PATH_LEN);
+    char file_path[buff_size];
+    // do we trust it permanently?
+    strlcpy(file_path, identities_folder, buff_size);
+    strlcat(file_path, info.key_hash_str_.data(), buff_size);
+    bool trusted = file_exists(file_path);
+    if (!trusted) {
+        // or at least temporarily
+        strlcpy(file_path, identities_tmp_folder, buff_size);
+        strlcat(file_path, info.key_hash_str_.data(), buff_size);
+        trusted = file_exists(file_path);
+    }
+    return trusted;
 }
 
 } // namespace e2ee

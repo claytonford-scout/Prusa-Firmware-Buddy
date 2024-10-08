@@ -150,6 +150,9 @@
 #if HAS_CHAMBER_API()
     #include <feature/chamber/chamber.hpp>
 #endif
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/key.hpp>
+#endif
 
 #include <option/has_chamber_filtration_api.h>
 #if HAS_CHAMBER_FILTRATION_API()
@@ -923,6 +926,9 @@ void static finalize_print(bool finished) {
 
     marlin_vars().print_end_time = time(nullptr);
     marlin_vars().add_job_result(job_id, finished ? marlin_vars_t::JobInfo::JobResult::finished : marlin_vars_t::JobInfo::JobResult::aborted);
+#if HAS_E2EE_SUPPORT()
+    e2ee::remove_temporary_identites();
+#endif
 
 #if HAS_CHAMBER_FILTRATION_API()
     buddy::chamber_filtration().check_filter_expiration();
@@ -1927,6 +1933,10 @@ static void _server_print_loop(void) {
         oProgressData.stealth_mode.percent_done.mSetValue(0, 0);
         PrintPreview::Instance().Init();
         server.print_state = State::PrintPreviewImage;
+#if HAS_E2EE_SUPPORT()
+        // remove any left over tmp trusted identities
+        e2ee::remove_temporary_identites();
+#endif
         break;
 
     case State::PrintPreviewImage:

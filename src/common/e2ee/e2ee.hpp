@@ -5,6 +5,7 @@
 #include <optional>
 #include <memory>
 #include <array>
+#include <cstring>
 
 namespace bgcode {
 namespace core {
@@ -17,21 +18,27 @@ namespace e2ee {
 
 struct Pk;
 class SHA256MultiuseHash;
-// FIXME: This is temporary location, for development only. Eventually, we'll "hide" it somewhere in the xflash.
+
+constexpr size_t HASH_SIZE = 32;
+constexpr size_t KEY_HASH_STR_BUFFER_LEN = 2 * HASH_SIZE + 1;
+constexpr size_t HMAC_SIZE = 32;
+constexpr size_t KEY_SIZE = 16;
+constexpr size_t SIGN_SIZE = 256;
+constexpr size_t IDENTITY_NAME_LEN = 32;
+// Size discovered by experimental means.
+// FIXME: the key is probably smaller, investigate the size more and maybe make this smaller
+constexpr size_t PRIVATE_KEY_BUFFER_SIZE = 2048;
+constexpr size_t PUBLIC_KEY_BUFFER_SIZE = 400;
 #ifdef UNITTESTS
 constexpr const char *const private_key_path = "printer_private_key.der";
 #else
 constexpr const char *const private_key_path = "/internal/e2ee/printer/pk.der";
 #endif
+constexpr const char *const identities_folder = "/internal/e2ee/identities/";
+constexpr const char *const identities_tmp_folder = "/internal/e2ee/tmp_identities/";
+constexpr size_t IDENTITY_PATH_LEN = strlen(identities_folder) + e2ee::HASH_SIZE * 2 + 1;
+constexpr size_t IDENTITY_TMP_PATH_LEN = strlen(identities_tmp_folder) + e2ee::HASH_SIZE * 2 + 1;
 constexpr const char *const public_key_path = "/usb/pubkey.der";
-
-constexpr size_t HASH_SIZE = 32;
-constexpr size_t HMAC_SIZE = 32;
-constexpr size_t KEY_SIZE = 16;
-constexpr size_t SIGN_SIZE = 256;
-// Size discovered by experimental means.
-// FIXME: the key is probably smaller, investigate the size more and maybe make this smaller
-constexpr size_t PRIVATE_KEY_BUFFER_SIZE = 2048;
 
 // Error texts
 constexpr const char *encrypted_for_different_printer = "Bgcode not encrypted for this printer!";
@@ -51,7 +58,6 @@ constexpr const char *identity_name_too_long = "Identity name too long";
 constexpr const char *corrupted_metadata = "File has corrupted metadata";
 
 struct IdentityBlockInfo {
-    static constexpr size_t IDENTITY_NAME_LEN = 32;
 
     std::unique_ptr<Pk> identity_pk;
     // TODO: how long sould we allow this to be??
@@ -65,6 +71,12 @@ struct IdentityBlockInfo {
     IdentityBlockInfo &operator=(const IdentityBlockInfo &) = delete;
     IdentityBlockInfo(IdentityBlockInfo &&);
     IdentityBlockInfo &operator=(IdentityBlockInfo &&);
+};
+
+struct IdentityInfo {
+    std::array<char, e2ee::IDENTITY_NAME_LEN> identity_name;
+    std::array<char, e2ee::KEY_HASH_STR_BUFFER_LEN> key_hash_str_;
+    bool one_time = false;
 };
 
 class PrinterPrivateKey {

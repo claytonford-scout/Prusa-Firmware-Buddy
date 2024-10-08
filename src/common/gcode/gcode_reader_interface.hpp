@@ -12,6 +12,10 @@
 #include "gcode_reader_restore_info.hpp"
 #include "gcode_reader_result.hpp"
 
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/e2ee.hpp>
+#endif
+
 class IGcodeReader {
 public:
     enum class Continuations {
@@ -156,6 +160,11 @@ public:
 
     /// Returns error message if has_error() is true
     virtual const char *error_str() const = 0;
+
+#if HAS_E2EE_SUPPORT()
+    virtual e2ee::IdentityInfo get_identity_info() const = 0;
+    virtual bool has_identity_info() const = 0;
+#endif
 };
 
 /**
@@ -200,11 +209,28 @@ public:
         return error_str_;
     }
 
+#if HAS_E2EE_SUPPORT()
+    bool has_identity_info() const override {
+        return has_identity_info_;
+    }
+
+    e2ee::IdentityInfo get_identity_info() const override {
+        return identity_info;
+    }
+#endif
+
 protected:
     inline void set_error(const char *msg) {
         assert(msg);
         error_str_ = msg;
     }
+
+#if HAS_E2EE_SUPPORT()
+    void set_identity_info(const e2ee::IdentityInfo &info) {
+        has_identity_info_ = true;
+        identity_info = info;
+    }
+#endif
 
     IGcodeReader::Result_t stream_get_line_common(GcodeBuffer &b, Continuations line_continuations);
 
@@ -247,4 +273,9 @@ protected:
 private:
     /// If set to not null, the reader is considered to be in an unrecoverable error state
     const char *error_str_ = nullptr;
+
+#if HAS_E2EE_SUPPORT()
+    e2ee::IdentityInfo identity_info;
+    bool has_identity_info_ = false;
+#endif
 };

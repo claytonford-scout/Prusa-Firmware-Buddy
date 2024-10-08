@@ -26,7 +26,12 @@ AnyGcodeFormatReader::AnyGcodeFormatReader()
     : storage { ClosedReader {} } {
 }
 
-AnyGcodeFormatReader::AnyGcodeFormatReader(const char *filename)
+AnyGcodeFormatReader::AnyGcodeFormatReader(const char *filename, bool allow_decryption
+#if HAS_E2EE_SUPPORT()
+    ,
+    e2ee::IdentityCheckLevel identity_check_lvl
+#endif
+    )
     : storage { ClosedReader {} } {
     transfers::Transfer::Path path(filename);
     struct stat info {};
@@ -52,7 +57,12 @@ AnyGcodeFormatReader::AnyGcodeFormatReader(const char *filename)
     }
 
     if (filename_is_bgcode(filename)) {
-        storage.emplace<PrusaPackGcodeReader>(*file, info);
+        storage.emplace<PrusaPackGcodeReader>(*file, info, allow_decryption
+#if HAS_E2EE_SUPPORT()
+            ,
+            identity_check_lvl
+#endif
+        );
     }
 
     else if (filename_is_plain_gcode(filename)) {

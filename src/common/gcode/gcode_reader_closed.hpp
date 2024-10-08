@@ -46,4 +46,14 @@ class ClosedReader final : public IGcodeReader {
     const char *error_str() const override {
         return "FIle is closed";
     }
+#if HAS_E2EE_SUPPORT()
+    bool has_identity_info() const override {
+        return false;
+    }
+
+    e2ee::IdentityInfo get_identity_info() const override {
+        return {};
+    }
+
+#endif
 };

@@ -24,7 +24,12 @@ extern "C" {
  */
 class PrusaPackGcodeReader final : public GcodeReaderCommon {
 public:
-    PrusaPackGcodeReader(FILE &f, const struct stat &stat_info);
+    PrusaPackGcodeReader(FILE &f, const struct stat &stat_info, bool allow_decryption = false
+#if HAS_E2EE_SUPPORT()
+        ,
+        e2ee::IdentityCheckLevel identity_check_lvl = e2ee::IdentityCheckLevel::AnyIdentity
+#endif
+    );
     PrusaPackGcodeReader(PrusaPackGcodeReader &&other) = default;
     PrusaPackGcodeReader &operator=(PrusaPackGcodeReader &&other) = default;
 
@@ -55,6 +60,10 @@ public:
 private:
     uint32_t file_size; ///< Size of PrusaPack file in bytes
     bgcode::core::FileHeader file_header; // cached header
+    bool allow_decryption;
+#if HAS_E2EE_SUPPORT()
+    e2ee::IdentityCheckLevel identity_check_lvl;
+#endif
 
     struct stream_t {
         stream_t() = default;

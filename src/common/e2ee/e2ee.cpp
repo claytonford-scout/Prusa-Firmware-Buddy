@@ -206,7 +206,7 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     uint8_t name_len;
     memcpy(&name_len, &bytes.get()[pos], sizeof(name_len));
     pos += sizeof(name_len);
-    if (name_len > IdentityBlockInfo::IDENTITY_NAME_LEN - 1) {
+    if (name_len > IDENTITY_NAME_LEN - 1) {
         return identity_name_too_long;
     }
     memcpy(info.identity_name.data(), &bytes.get()[pos], name_len);
