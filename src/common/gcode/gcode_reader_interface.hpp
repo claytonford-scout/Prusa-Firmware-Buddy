@@ -211,11 +211,12 @@ public:
 
 #if HAS_E2EE_SUPPORT()
     bool has_identity_info() const override {
-        return has_identity_info_;
+        return identity_info.has_value();
     }
 
     e2ee::IdentityInfo get_identity_info() const override {
-        return identity_info;
+        assert(identity_info.has_value());
+        return identity_info.value();
     }
 #endif
 
@@ -227,7 +228,6 @@ protected:
 
 #if HAS_E2EE_SUPPORT()
     void set_identity_info(const e2ee::IdentityInfo &info) {
-        has_identity_info_ = true;
         identity_info = info;
     }
 #endif
@@ -275,7 +275,6 @@ private:
     const char *error_str_ = nullptr;
 
 #if HAS_E2EE_SUPPORT()
-    e2ee::IdentityInfo identity_info;
-    bool has_identity_info_ = false;
+    std::optional<e2ee::IdentityInfo> identity_info;
 #endif
 };

@@ -57,7 +57,7 @@ bool save_identity_key_impl(const e2ee::IdentityInfo &info, const char *folder) 
     [[maybe_unused]] char file_path[buff_size];
     strlcpy(file_path, folder, buff_size);
     make_dirs(file_path);
-    strlcat(file_path, info.key_hash_str_.data(), buff_size);
+    strlcat(file_path, info.key_hash_str.data(), buff_size);
 
     // check if it already exists
     if (file_exists(file_path)) {
@@ -191,12 +191,7 @@ void get_key_hash_string(char *out, [[maybe_unused]] size_t size, e2ee::Pk *pk) 
     uint8_t key_hash[e2ee::HASH_SIZE];
     std::array<uint8_t, e2ee::PUBLIC_KEY_BUFFER_SIZE> buffer;
     int ret = mbedtls_pk_write_pubkey_der(&pk->pk, buffer.data(), e2ee::PUBLIC_KEY_BUFFER_SIZE);
-    mbedtls_sha256_context sha256_ctx;
-    mbedtls_sha256_init(&sha256_ctx);
-    mbedtls_sha256_starts_ret(&sha256_ctx, false);
-    mbedtls_sha256_update_ret(&sha256_ctx, buffer.data() + buffer.size() - ret, ret);
-    mbedtls_sha256_finish_ret(&sha256_ctx, key_hash);
-    mbedtls_sha256_free(&sha256_ctx);
+    mbedtls_sha256_ret(buffer.data() + buffer.size() - ret, ret, key_hash, false);
 
     for (size_t i = 0; i < e2ee::HASH_SIZE; i++) {
         sprintf(&out[i * 2], "%02x", key_hash[i]);
@@ -214,7 +209,7 @@ bool save_identity_key_temporary(const IdentityInfo &info) {
 void remove_trusted_identity(const IdentityInfo &info) {
     char file_path[IDENTITY_PATH_LEN];
     strlcpy(file_path, identities_folder, IDENTITY_PATH_LEN);
-    strlcat(file_path, info.key_hash_str_.data(), IDENTITY_PATH_LEN);
+    strlcat(file_path, info.key_hash_str.data(), IDENTITY_PATH_LEN);
     assert(file_exists(file_path));
     remove(file_path);
 }
@@ -247,12 +242,12 @@ bool is_trusted_identity(const IdentityInfo &info) {
     char file_path[buff_size];
     // do we trust it permanently?
     strlcpy(file_path, identities_folder, buff_size);
-    strlcat(file_path, info.key_hash_str_.data(), buff_size);
+    strlcat(file_path, info.key_hash_str.data(), buff_size);
     bool trusted = file_exists(file_path);
     if (!trusted) {
         // or at least temporarily
         strlcpy(file_path, identities_tmp_folder, buff_size);
-        strlcat(file_path, info.key_hash_str_.data(), buff_size);
+        strlcat(file_path, info.key_hash_str.data(), buff_size);
         trusted = file_exists(file_path);
     }
     return trusted;

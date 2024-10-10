@@ -174,8 +174,7 @@ void GCodeInfo::reset_info() {
     printing_time[0] = 0;
     error_str_ = {};
 #if HAS_E2EE_SUPPORT()
-    identity_info = {};
-    has_identity_info_ = false;
+    identity_info = std::nullopt;
 #endif
 }
 

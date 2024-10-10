@@ -140,9 +140,8 @@ private:
     std::atomic<const char *> error_str_ = nullptr; ///< If there is an error, this variable can be used to report the error string
 
 #if HAS_E2EE_SUPPORT()
-    mutable freertos::Mutex key_hash_mutex;
-    bool has_identity_info_ = false;
-    e2ee::IdentityInfo identity_info;
+    mutable freertos::Mutex identity_mutex;
+    std::optional<e2ee::IdentityInfo> identity_info;
 #endif
 
     time_buff printing_time; ///< Stores string representation of printing time left
@@ -178,17 +177,16 @@ public:
 
 #if HAS_E2EE_SUPPORT()
     bool has_identity_info() const {
-        std::unique_lock lock(key_hash_mutex);
-        return has_identity_info_;
+        std::unique_lock lock(identity_mutex);
+        return identity_info.has_value();
     }
     e2ee::IdentityInfo get_identity_info() const {
-        std::unique_lock lock(key_hash_mutex);
-        return identity_info;
+        std::unique_lock lock(identity_mutex);
+        return identity_info.value();
     }
 
     void set_identity_info(e2ee::IdentityInfo info) {
-        std::unique_lock lock(key_hash_mutex);
-        has_identity_info_ = true;
+        std::unique_lock lock(identity_mutex);
         identity_info = info;
     }
 #endif

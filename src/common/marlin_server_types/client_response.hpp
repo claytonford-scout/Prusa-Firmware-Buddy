@@ -50,6 +50,7 @@
 #endif
 
 #include <device/board.h>
+#include <option/has_e2ee_support.h>
 
 /// number of bits used to encode response
 // TODO: Make 2 everywhere: BFW-6028
@@ -239,6 +240,9 @@ enum class PhasesPrintPreview : PhaseUnderlyingType {
     tools_mapping,
 #endif
     wrong_filament,
+#if HAS_E2EE_SUPPORT()
+    untrusted_identity,
+#endif
     file_error, ///< Something is wrong with the gcode file
     _last = file_error
 };
@@ -786,6 +790,9 @@ class ClientResponses {
                                                       Response::Ok,
                                                       Response::Abort,
                                                   } },
+#if HAS_E2EE_SUPPORT()
+            { PhasesPrintPreview::untrusted_identity, { Response::Yes, Response::No, Response::Abort } },
+#endif
             { PhasesPrintPreview::file_error, {
                                                   Response::Abort,
                                               } },

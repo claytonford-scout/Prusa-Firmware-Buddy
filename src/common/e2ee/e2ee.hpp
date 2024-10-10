@@ -75,7 +75,7 @@ struct IdentityBlockInfo {
 
 struct IdentityInfo {
     std::array<char, e2ee::IDENTITY_NAME_LEN> identity_name;
-    std::array<char, e2ee::KEY_HASH_STR_BUFFER_LEN> key_hash_str_;
+    std::array<char, e2ee::KEY_HASH_STR_BUFFER_LEN> key_hash_str;
     bool one_time = false;
 };
 

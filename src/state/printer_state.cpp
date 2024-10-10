@@ -66,6 +66,10 @@ optional<ErrCode> attention_while_printpreview(const PhasesPrintPreview preview_
         return ErrCode::CONNECT_PRINT_PREVIEW_NO_FILAMENT;
     case PhasesPrintPreview::wrong_filament:
         return ErrCode::CONNECT_PRINT_PREVIEW_WRONG_FILAMENT;
+#if HAS_E2EE_SUPPORT()
+    case PhasesPrintPreview::untrusted_identity:
+        return ErrCode::CONNECT_UNTRUSTED_IDENTITY;
+#endif
     case PhasesPrintPreview::file_error:
         return ErrCode::CONNECT_PRINT_PREVIEW_FILE_ERROR;
 #if HAS_TOOLCHANGER() || HAS_MMU2()
