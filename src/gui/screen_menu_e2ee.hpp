@@ -2,6 +2,7 @@
 
 #include "screen_menu.hpp"
 #include <async_job/async_job.hpp>
+#include <e2ee/identity_check_levels.hpp>
 
 namespace e2ee {
 class KeyGen;
@@ -41,9 +42,21 @@ protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
 
+class MI_IDENTITY_CHECKING : public WI_SWITCH_t<3> {
+    constexpr static const char *const label = N_("Identity checking");
+
+    constexpr static const char *str_Known = N_("Known only");
+    constexpr static const char *str_Ask = N_("Ask");
+    constexpr static const char *str_All = N_("Accept all");
+
+public:
+    MI_IDENTITY_CHECKING();
+    virtual void OnChange(size_t old_index) override;
+};
+
 // TODO:
 // * Delete key? Do we need it?
-using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, MI_EXPORT>;
+using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, MI_EXPORT, MI_IDENTITY_CHECKING>;
 } // namespace detail_e2ee
 
 class ScreenMenuE2ee final : public detail_e2ee::Menu {
