@@ -3,10 +3,9 @@
 
 #include <stat_retry.hpp>
 #include <path_utils.h>
-#include <resources/fileutils.hpp>
+#include <unique_dir_ptr.hpp>
 
 #include <sys/stat.h>
-#include <sys/dirent.h>
 #include <unique_file_ptr.hpp>
 #include <raii/deleter.hpp>
 #include <heap.h>
@@ -217,7 +216,7 @@ void remove_trusted_identity(const IdentityInfo &info) {
 void remove_temporary_identites() {
     struct dirent *entry;
     char path[IDENTITY_TMP_PATH_LEN];
-    std::unique_ptr<DIR, DIRDeleter> dir(opendir(identities_tmp_folder));
+    unique_dir_ptr dir(opendir(identities_tmp_folder));
     if (dir == nullptr) {
         //????
         return;

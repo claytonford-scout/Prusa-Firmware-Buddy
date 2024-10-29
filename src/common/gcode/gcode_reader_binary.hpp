@@ -17,6 +17,7 @@ extern "C" {
     #include <e2ee/e2ee.hpp>
     #include <e2ee/decryptor.hpp>
     #include <e2ee/movable_aes_context.hpp>
+    #include <e2ee/identity_check_levels.hpp>
 #endif
 
 /**

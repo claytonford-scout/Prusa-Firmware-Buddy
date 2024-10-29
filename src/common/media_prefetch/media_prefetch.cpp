@@ -7,6 +7,8 @@
 #include <utils/enum_array.hpp>
 #include <option/has_e2ee_support.h>
 
+#include <config_store/store_instance.hpp>
+
 #include "prefetch_compression.hpp"
 
 #ifndef UNITTESTS

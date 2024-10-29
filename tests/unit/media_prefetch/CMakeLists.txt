@@ -12,8 +12,13 @@ add_executable(
 
 target_include_directories(
   media_prefetch_tests
-  PUBLIC . ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/stub
-         ${CMAKE_SOURCE_DIR}/tests/stubs ${CMAKE_SOURCE_DIR}/src/common/media_prefetch
+  PUBLIC .
+         ${CMAKE_CURRENT_SOURCE_DIR}
+         ${CMAKE_CURRENT_SOURCE_DIR}/stub
+         ${CMAKE_SOURCE_DIR}/tests/stubs
+         ${CMAKE_SOURCE_DIR}/src/common/media_prefetch
+         ${CMAKE_BINARY_DIR}/include
+         ${CMAKE_SOURCE_DIR}/src/common
   )
 
 file(

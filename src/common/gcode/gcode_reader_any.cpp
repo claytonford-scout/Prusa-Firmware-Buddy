@@ -8,6 +8,11 @@
 #include <sys/stat.h>
 #include <type_traits>
 
+#include <config_store/store_instance.hpp>
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/identity_check_levels.hpp>
+#endif
+
 AnyGcodeFormatReader::~AnyGcodeFormatReader() {
 }
 
