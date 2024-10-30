@@ -42,6 +42,10 @@ protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
 
+#if 0
+// Disabled for now, because the identity checking is not complete
+// having it disabled and the default being Accept all means, that
+// the feature is invisible for users.
 class MI_IDENTITY_CHECKING : public WI_SWITCH_t<3> {
     constexpr static const char *const label = N_("Identity checking");
 
@@ -53,10 +57,11 @@ public:
     MI_IDENTITY_CHECKING();
     virtual void OnChange(size_t old_index) override;
 };
+#endif
 
 // TODO:
 // * Delete key? Do we need it?
-using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, MI_EXPORT, MI_IDENTITY_CHECKING>;
+using Menu = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_KEY, MI_KEYGEN, MI_EXPORT>;
 } // namespace detail_e2ee
 
 class ScreenMenuE2ee final : public detail_e2ee::Menu {
