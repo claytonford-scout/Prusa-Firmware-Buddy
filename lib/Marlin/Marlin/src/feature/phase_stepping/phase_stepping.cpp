@@ -612,7 +612,7 @@ template <float breakpoint, float endpoint, int reduction_to>
     return regulate_current<6.f, 10.f, 150>(speed);
 #elif PRINTER_IS_PRUSA_iX() // TODO simple copy-paste of XL values. To be removed as soon as iX values are measured
     return regulate_current<6.f, 10.f, 150>(speed);
-#elif PRINTER_IS_PRUSA_COREONE()
+#elif PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
     return current_regulation_range_max;
 #elif PRINTER_IS_PRUSA_MK4()
     return current_regulation_range_max;

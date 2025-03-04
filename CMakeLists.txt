@@ -182,6 +182,9 @@ elseif(PRINTER STREQUAL "XL_DEV_KIT")
 elseif(PRINTER STREQUAL "COREONE")
   set(PRINTER_TYPE "7")
   set(PRINTER_CODE "31")
+elseif(PRINTER STREQUAL "COREONEL")
+  set(PRINTER_TYPE "8")
+  set(PRINTER_CODE "35")
 else()
   message(FATAL_ERROR "Unknown printer \"${PRINTER}\".")
 endif()
@@ -277,6 +280,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
      OR PRINTER STREQUAL "XL"
      OR PRINTER STREQUAL "iX"
      OR PRINTER STREQUAL "COREONE"
+     OR PRINTER STREQUAL "COREONEL"
      )
     add_compile_options(-Og -ggdb3)
   else()

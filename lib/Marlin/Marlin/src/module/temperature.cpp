@@ -1604,9 +1604,9 @@ void Temperature::manage_heater() {
     #elif HOTENDS
       #error "This is made for one hotend!"
     #endif /* HOTENDS */
-    #if HAS_HEATED_BED
+    #if HAS_LOCAL_BED()
       analogWrite_HEATER_BED(temp_bed.soft_pwm_amount);
-    #endif /* HAS_HEATED_BED */
+    #endif
   #endif
 
   #if HAS_FAN0
@@ -1721,7 +1721,7 @@ constexpr float compensate_bed_temperature(float celsius) {
   }
   return celsius;
 }
-#elif PRINTER_IS_PRUSA_MINI() || PRINTER_IS_PRUSA_XL() || PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_XL_DEV_KIT()
+#elif PRINTER_IS_PRUSA_MINI() || PRINTER_IS_PRUSA_XL() || PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_XL_DEV_KIT() || PRINTER_IS_PRUSA_COREONEL()
 constexpr float compensate_bed_temperature(float celsius) {
   return celsius;
 }

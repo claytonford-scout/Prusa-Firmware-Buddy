@@ -88,7 +88,7 @@ private:
     std::optional<Temperature> thermistor_temperature_;
     std::optional<Temperature> target_temperature_;
 
-#if PRINTER_IS_PRUSA_COREONE()
+#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
     enum class VentState {
         unknown,
         open,

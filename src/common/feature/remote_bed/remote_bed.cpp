@@ -17,4 +17,17 @@ void remote_bed::safe_state() {
     buddy::puppies::modular_bed.safe_state();
 }
 
+#else
+
+float remote_bed::get_heater_current() {
+    return 0;
+}
+
+uint16_t remote_bed::get_mcu_temperature() {
+    return 0;
+}
+
+void remote_bed::safe_state() {
+}
+
 #endif

@@ -522,7 +522,7 @@ public:
 class MI_SIDE_LEDS_MAX_BRIGTHNESS : public WiSpin {
 
     static constexpr const char *const label =
-    #if PRINTER_IS_PRUSA_COREONE()
+    #if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
         N_("Chamber Lights");
     #else
         N_("RGB Side Strip");
@@ -550,7 +550,7 @@ public:
 
 class MI_SIDE_LEDS_DIMMING_ENABLE : public MenuItemSwitch {
     static constexpr const char *const label =
-    #if PRINTER_IS_PRUSA_COREONE()
+    #if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
         N_("Chamber Dimming");
     #else
         N_("RGB Side Strip Dimming");

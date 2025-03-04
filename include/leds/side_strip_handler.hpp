@@ -29,7 +29,7 @@ public:
     }
 
     static constexpr bool has_white_led() {
-#if PRINTER_IS_PRUSA_COREONE()
+#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
         return true;
 #else
         return has_white_led_and_enclosure_on_second_driver();

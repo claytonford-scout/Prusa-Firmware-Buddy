@@ -84,6 +84,8 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
         return merge_hotends(tool, [&](const int8_t e) {
             return evaluate_results(sr.tools[e].fsensor);
         });
+    case Action::PhaseSteppingCalibration:
+        return evaluate_results(config_store().selftest_result_phase_stepping.get());
     case Action::_count:
         break;
     }
@@ -103,6 +105,7 @@ uint64_t get_test_mask(Action action) {
 #if HAS_PRECISE_HOMING_COREXY()
     case Action::PreciseHoming:
 #endif
+    case Action::PhaseSteppingCalibration:
         bsod("This should be gcode");
     case Action::YCheck:
         return stmYAxis;

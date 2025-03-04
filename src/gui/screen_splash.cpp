@@ -164,6 +164,9 @@ ScreenSplash::ScreenSplash()
 #elif PRINTER_IS_PRUSA_COREONE()
                 N_("Hi, this is your\nPrusa CORE One printer.\n"
                    "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_COREONEL()
+                N_("Hi, this is your\nPrusa CORE One L printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
 #else
     #error unknown config
 #endif
