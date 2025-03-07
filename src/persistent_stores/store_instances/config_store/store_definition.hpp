@@ -158,7 +158,9 @@ struct CurrentStore
 
     StoreItem<std::array<char, connect_host_size + 1>, defaults::connect_host, journal::hash("Connect Host")> connect_host;
     StoreItem<std::array<char, connect_token_size + 1>, defaults::connect_token, journal::hash("Connect Token")> connect_token;
+    StoreItem<std::array<char, connect_host_size + 1>, defaults::connect_proxy_host, journal::hash("Connect Proxy Host")> connect_proxy_host;
     StoreItem<uint16_t, defaults::connect_port, journal::hash("Connect Port")> connect_port;
+    StoreItem<uint16_t, 0, journal::hash("Connect proxy port")> connect_proxy_port;
     StoreItem<bool, true, journal::hash("Connect TLS")> connect_tls;
     StoreItem<bool, false, journal::hash("Connect Enabled")> connect_enabled;
     StoreItem<bool, false, journal::hash("Connect custom TLS certificate")> connect_custom_tls_cert;
