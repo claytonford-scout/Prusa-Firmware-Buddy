@@ -94,6 +94,7 @@ exclude: |
     lib/libbgcode/|
     lib/liblightmodbus/|
     lib/libsysbase/|
+    lib/o1heap/|
     lib/printf|
     lib/sfl-library|
     lib/tinyusb/|
