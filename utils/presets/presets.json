@@ -120,7 +120,7 @@
         },
         {
             "name": "ix",
-            "description": "Original Prusa iX with xBuddy 0.2.7c or newer, with 200-step motors",
+            "description": "Original Prusa iX",
             "cacheVariables": {
                 "PRINTER": "iX",
                 "BOARD": "XBUDDY",
@@ -218,6 +218,14 @@
             "cacheVariables": {
                 "PRINTER": "iX",
                 "BOARD": "MODULARBED"
+            }
+        },
+        {
+            "name": "ix-xbuddy-extension",
+            "description": "Original Prusa iX Extension Board",
+            "cacheVariables": {
+                "PRINTER": "iX",
+                "BOARD": "XBUDDY_EXTENSION"
             }
         },
         {
