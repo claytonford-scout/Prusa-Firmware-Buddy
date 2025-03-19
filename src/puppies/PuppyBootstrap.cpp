@@ -330,7 +330,7 @@ inline void write_dock_reset_pin(Dock dock, buddy::hw::Pin::State state) {
 #endif
 #if HAS_PUPPY_MODULARBED()
     case Dock::MODULAR_BED:
-        modularBedReset.write(state);
+        modular_bed_reset.write(state);
         break;
 #endif
 #if HAS_XBUDDY_EXTENSION()
