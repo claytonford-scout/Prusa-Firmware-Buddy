@@ -5,6 +5,8 @@
 #include <math.h>
 #include <cinttypes>
 
+#include <bsod.h>
+
 static word_buffer ram_word_buffer;
 
 ram_buffer::ram_buffer() {
@@ -224,6 +226,14 @@ void StringBuilder::init(char *buffer, size_t buffer_size) {
 
     // Make the resulting string valid from the go
     *current_pos_ = '\0';
+}
+
+const char *StringBuilder::str() const {
+    if (is_ok()) {
+        return str_nocheck();
+    } else {
+        bsod("StringBuilder overflow");
+    }
 }
 
 StringBuilder &StringBuilder::append_char(char ch) {
