@@ -24,7 +24,7 @@ protected:
     FilamentType filament_type;
 };
 
-class MI_FILAMENT_NAME final : public MI_COMMON<MI_FILAMENT_NAME, WI_INFO_t> {
+class MI_FILAMENT_NAME final : public MI_COMMON<MI_FILAMENT_NAME, WiInfo<32>> {
 public:
     MI_FILAMENT_NAME();
     void update();
