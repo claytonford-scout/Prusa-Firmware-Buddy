@@ -12,3 +12,12 @@ target_include_directories(
   )
 target_link_libraries(xbuddy_extension_modbus_tests xbuddy_extension)
 add_catch_test(xbuddy_extension_modbus_tests)
+
+add_executable(
+  xbuddy_extension_yet_another_circular_buffer_tests yet_another_circular_buffer_tests.cpp
+  )
+target_include_directories(
+  xbuddy_extension_yet_another_circular_buffer_tests
+  PRIVATE include ${CMAKE_SOURCE_DIR}/src/puppy/xbuddy_extension
+  )
+add_catch_test(xbuddy_extension_yet_another_circular_buffer_tests)
