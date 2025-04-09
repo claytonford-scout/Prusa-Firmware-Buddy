@@ -90,6 +90,7 @@ exclude: |
     lib/heatshrink/|
     lib/inih/|
     lib/jsmn/|
+    lib/libcanard/|
     lib/libbgcode/|
     lib/liblightmodbus/|
     lib/libsysbase/|
