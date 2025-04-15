@@ -1,8 +1,9 @@
 /// @file
 #include "hal.hpp"
 
-#include "hal_clock.hpp"
 #include "extension_variant.h"
+#include "hal_clock.hpp"
+#include "hal_pub.hpp"
 #include <bitset>
 #include <freertos/binary_semaphore.hpp>
 #include <freertos/stream_buffer.hpp>
@@ -578,25 +579,6 @@ void usb_pins_init() {
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
-static void pub_init() {
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    constexpr GPIO_InitTypeDef GPIO_InitStruct {
-        .Pin = GPIO_PIN_15,
-        .Mode = GPIO_MODE_OUTPUT_PP,
-        .Pull = GPIO_NOPULL,
-        .Speed = GPIO_SPEED_FREQ_LOW,
-        .Alternate = 0,
-    };
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-    // Initialize CAN to off state
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_SET);
-}
-
-static void pub_enable() {
-    // CAN enable is inverted
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_RESET);
-}
-
 static constexpr auto FSENSOR_PIN = EXTENSION_IS_IX() ? GPIO_PIN_9 : GPIO_PIN_5;
 
 static void filament_sensor_pins_init() {
@@ -629,8 +611,7 @@ void hal::init() {
     mmu_pins_init();
     mmu::nreset_pin_set(false);
     usb_pins_init();
-    pub_init();
-    pub_enable();
+    hal::pub::init();
     filament_sensor_pins_init();
 }
 
