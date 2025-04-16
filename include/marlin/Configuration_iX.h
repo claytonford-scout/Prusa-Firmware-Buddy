@@ -372,15 +372,13 @@
 
 #if ENABLED(PIDTEMPHEATBREAK)
     //#define PID_HEATBREAK_DEBUG // enable debug output for heatbreak fan PID regulator
-    #define MAX_HEATBREAK_POWER 255 // limits duty cycle to heatbreak fan; 255=full current
-    #define MIN_START_HEATBREAK_POWER 255 // Minimum PWM needed to start fan spinning reliably
-    #define MIN_STOP_HEATBREAK_POWER 55 // Minimum PWM needed to keep fan spinning reliably
+    #define MAX_HEATBREAK_POWER 153 // limits duty cycle to heatbreak fan; 255=full current
+    #define MIN_START_HEATBREAK_POWER 63 // Minimum PWM needed to start fan spinning reliably
+    #define MIN_STOP_HEATBREAK_POWER MIN_START_HEATBREAK_POWER // Minimum PWM needed to keep fan spinning reliably
     #define HEATBREAK_FAN_KICK_CYCLES -1 // Output at least MIN_START_HEATBREAK_POWER once per cycles, -1 to deliver starting pulse just once
     #define HEATBREAK_FAN_ALWAYS_ON_NOZZLE_TEMPERATURE 45 // Never switch off heatbreak fan when nozzle temperature is over
     #define DEFAULT_HEATBREAK_TEMPERATURE 45
     #define HEATBREAK_FAN_ID 1  //fan id for autocontroll
-    #define MAX_HEATBREAK_TURBINE_POWER 60 // [%] maximum turbine power
-    #define MIN_HEATBREAK_TURBINE_POWER 25 // [%] minimum turbine power to get it spinning reliably
     #define HEATBREAK_PID_K1 0.995
     #define DEFAULT_heatbreakKp 25.50
     #define DEFAULT_heatbreakKi 5.00

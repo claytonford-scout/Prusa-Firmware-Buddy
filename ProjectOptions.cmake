@@ -334,6 +334,7 @@ set_feature_for_printers_master_board(HAS_PUPPY_MODULARBED "iX" "XL" "XL_DEV_KIT
 
 set_feature_for_printers_master_board(HAS_XBUDDY_EXTENSION "COREONE" "iX")
 set_feature_for_printers_master_board(XBUDDY_EXTENSION_VARIANT_STANDARD "COREONE")
+set_feature_for_printers_master_board(XBUDDY_EXTENSION_VARIANT_IX "iX")
 
 # MK4 technically doesn't have door sensor but needs to check valid FW-HW
 set_feature_for_printers_master_board(HAS_DOOR_SENSOR "COREONE" "MK4")

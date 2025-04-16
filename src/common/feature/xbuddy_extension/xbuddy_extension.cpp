@@ -300,6 +300,13 @@ void XBuddyExtension::set_usb_power(bool enabled) {
 bool XBuddyExtension::usb_power() const {
     return config_store().xbe_usb_power.get();
 }
+
+#elif XBUDDY_EXTENSION_VARIANT_IX()
+void XBuddyExtension::set_heatbreak_fan_pwm(uint32_t value) {
+    // Fan 1 and Fan 2 on xbe share PWM, but the interface is schizophrenic, we need to set both
+    buddy::puppies::xbuddy_extension.set_fan_pwm(0, value);
+    buddy::puppies::xbuddy_extension.set_fan_pwm(1, value);
+}
 #endif
 
 std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::filament_sensor() {

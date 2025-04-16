@@ -12,6 +12,7 @@
 
 #include <xbuddy_extension/shared_enums.hpp>
 #include <option/xbuddy_extension_variant_standard.h>
+#include <option/xbuddy_extension_variant_ix.h>
 
 namespace buddy {
 
@@ -134,6 +135,9 @@ public: // USB
 public: // Other
     /// \returns chamber temperature measured through the thermistor connected to the board, in degrees Celsius
     std::optional<Temperature> chamber_temperature();
+
+#elif XBUDDY_EXTENSION_VARIANT_IX()
+    void set_heatbreak_fan_pwm(uint32_t value);
 #endif
 
     /// \returns state of the filament sensor
