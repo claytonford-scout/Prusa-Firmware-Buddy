@@ -517,7 +517,7 @@ void Pause::await_filament_process([[maybe_unused]] Response response) {
     }
 }
 
-void Pause::runout_during_load() {
+void Pause::runout_during_load_process([[maybe_unused]] Response response) {
     setPhase(PhasesLoadUnload::Ejecting_unstoppable);
     // unload immediately - we even cannot perform ramming as it would have consumed even more filament
     std::ignore = do_e_move_notify_progress_coldextrude(-std::abs(settings.unload_length), (FILAMENT_CHANGE_UNLOAD_FEEDRATE), 51, 99, StopConditions::Accomplished);
@@ -581,7 +581,7 @@ void Pause::load_to_gears_process([[maybe_unused]] Response response) { // slow 
     const auto result = do_e_move_notify_progress_coldextrude(settings.slow_load_length, FILAMENT_CHANGE_SLOW_LOAD_FEEDRATE, 10, 30, StopConditions::All);
 
     if (result == StopConditions::SideFilamentSensorRunout) { // TODO method without param using actual phase
-        runout_during_load();
+        set(LoadState::runout_during_load);
         return;
     }
 
@@ -637,7 +637,7 @@ void Pause::long_load_process([[maybe_unused]] Response response) {
     }
 
     if (move_e_progress == StopConditions::SideFilamentSensorRunout) {
-        runout_during_load();
+        set(LoadState::runout_during_load);
         return;
     }
 
@@ -660,7 +660,7 @@ void Pause::purge_process([[maybe_unused]] Response response) {
     planner.synchronize(); // Finish any pending moves before starting the purge
     const auto purge_result = do_e_move_notify_progress_hotextrude(settings.purge_length(), ADVANCED_PAUSE_PURGE_FEEDRATE, 70, 98, StopConditions::All);
     if (purge_result == StopConditions::SideFilamentSensorRunout) {
-        runout_during_load();
+        set(LoadState::runout_during_load);
         return;
     }
     // Skip retraction on UserStopped or Failed
