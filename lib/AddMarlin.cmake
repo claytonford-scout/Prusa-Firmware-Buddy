@@ -245,6 +245,10 @@ target_link_libraries(
   )
 target_link_libraries(Marlin PRIVATE CppStdExtensions logging freertos)
 
+if(HAS_AC_CONTROLLER)
+  target_link_libraries(Marlin PRIVATE ac_controller)
+endif()
+
 if(HAS_XBUDDY_EXTENSION)
   target_link_libraries(Marlin PUBLIC xbuddy_extension)
 endif()

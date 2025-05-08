@@ -84,12 +84,17 @@
   #include <feature/safety_timer/safety_timer.hpp>
 #endif
 
+#include <option/has_ac_controller.h>
 #include <option/has_dwarf.h>
 #include <option/has_local_bed.h>
 #include <option/has_remote_bed.h>
 #include <option/has_modular_bed.h>
 #include <utils/serial_logging_disabler.hpp>
 #include <raii/scope_guard.hpp>
+
+#if HAS_AC_CONTROLLER()
+    #include <puppies/ac_controller.hpp>
+#endif
 
 LOG_COMPONENT_REF(MarlinServer);
 
@@ -1791,6 +1796,58 @@ constexpr float compensate_bed_temperature(float celsius) {
   }
 #endif // HAS_TEMP_BOARD
 
+#if HAS_AC_CONTROLLER()
+
+static void translate_ac_controller_faults(const char* pubby_name, ac_controller::Faults faults) {
+  if (!faults) return;
+
+  // Some faults are intentionally missing, because they shouldn't occur in normal printer operation.
+  // We might as well BSOD when they do. No need to waste FLASH for them and error page would be pointless too.
+
+  if (faults & ac_controller::Faults::RCD_TRIPPED) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_RCD_TRIPPED);
+  if (faults & ac_controller::Faults::POWERPANIC) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_POWERPANIC);
+  // ac_controller::Faults::OVERHEAT intentionally missing
+  // Neither PSU NTC nor triac NTC are physically present on CORE One L version of AC controller
+  if (faults & ac_controller::Faults::PSU_FAN_NOK) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_PSU_FAN_NOK);
+  // ac_controller::Faults::PSU_NTC_DISCONNECT intentionally missing
+  // ac_controller::Faults::PSU_NTC_SHORT intentionally missing
+  // PSU NTC is not physically present on CORE One L version of AC controller
+  if (faults & ac_controller::Faults::BED_NTC_DISCONNECT) return fatal_error(ErrCode::ERR_TEMPERATURE_AC_CONTROLLER_BED_NTC_DISCONNECT);
+  if (faults & ac_controller::Faults::BED_NTC_SHORT) return fatal_error(ErrCode::ERR_TEMPERATURE_AC_CONTROLLER_BED_NTC_SHORT);
+  // ac_controller::Faults::TRIAC_NTC_DISCONNECT intentionally missing
+  // ac_controller::Faults::TRIAC_NTC_SHORT intentionally missing
+  // Triac NTC is not physically present on CORE One L version of AC controller
+  if (faults & ac_controller::Faults::BED_FAN0_NOK) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_BED_FAN0_NOK);
+  if (faults & ac_controller::Faults::BED_FAN1_NOK) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_BED_FAN1_NOK);
+  // ac_controller::Faults::TRIAC_FAN_NOK intentionally missing
+  // Triac fan is not physically present on CORE One L version of AC controller
+  if (faults & ac_controller::Faults::GRID_NOK) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_GRID_NOK);
+  // ac_controller::Faults::CHAMBER_LOAD_NOK intentionally missing
+  // Chamber heater is not physically present on CORE One L version of AC controller
+  if (faults & ac_controller::Faults::BED_LOAD_NOK) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_BED_LOAD_NOK);
+  if (faults & ac_controller::Faults::PSU_NOK) return fatal_error(ErrCode::ERR_ELECTRO_AC_CONTROLLER_PSU_NOK);
+  if (faults & ac_controller::Faults::BED_RUNAWAY) return fatal_error(ErrCode::ERR_TEMPERATURE_BED_THERMAL_RUNAWAY);
+  if (faults & ac_controller::Faults::MCU_OVERHEAT) return fatal_error(ErrCode::ERR_TEMPERATURE_PUBBY_MCU_OVERHEAT, pubby_name);
+  if (faults & ac_controller::Faults::PCB_OVERHEAT) return fatal_error(ErrCode::ERR_TEMPERATURE_PUBBY_PCB_OVERHEAT, pubby_name);
+  if (faults & ac_controller::Faults::DATA_TIMEOUT) return fatal_error(ErrCode::ERR_ELECTRO_PUBBY_DATA_TIMEOUT, pubby_name);
+  if (faults & ac_controller::Faults::HEARTBEAT_MISSING) return fatal_error(ErrCode::ERR_ELECTRO_PUBBY_HEARTBEAT_MISSING, pubby_name);
+  // ac_controller::Faults::UNKNOWN intentionally missing
+  // This fault is only ever triggered by development version of the AC controller
+
+  // We still want to provide some details if the fault slips to production.
+  bsod("%s faults=%" PRIu32, pubby_name, static_cast<uint32_t>(faults));
+}
+
+void translate_ac_controller_faults() {
+  static constexpr const char* pubby_name = "AC controller";
+  if (const auto faults = buddy::puppies::ac_controller.get_faults()) {
+    translate_ac_controller_faults(pubby_name, *faults);
+  } else {
+    fatal_error(ErrCode::ERR_SYSTEM_PUPPY_NOT_RESPONDING, pubby_name);
+  }
+}
+#endif
+
 /**
  * Get the raw values into the actual temperatures.
  * The raw values are created in interrupt context,
@@ -1808,6 +1865,9 @@ void Temperature::updateTemperaturesFromRawValues() {
   #if HAS_HEATED_BED
     #if HAS_MODULAR_BED()
       updateModularBedTemperature();
+    #elif HAS_AC_CONTROLLER()
+      translate_ac_controller_faults();
+      temp_bed.celsius = buddy::puppies::ac_controller.get_bed_temp().value_or(0);
     #else
       temp_bed.celsius = analog_to_celsius_bed(temp_bed.raw);
     #endif
@@ -3110,6 +3170,10 @@ void Temperature::isr() {
             }
         }
         advanced_modular_bed->update_bedlet_temps(temp_bed.enabled_mask, temp_bed.target);
+    #endif
+
+    #if HAS_AC_CONTROLLER()
+        buddy::puppies::ac_controller.set_bed_target_temp(temp_bed.target);
     #endif
 
         start_watching_bed();

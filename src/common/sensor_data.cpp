@@ -1,6 +1,7 @@
 #include <common/sensor_data.hpp>
 #include <printers.h>
 
+#include <option/has_ac_controller.h>
 #include <option/has_door_sensor.h>
 #include <option/has_mmu2.h>
 #include <option/has_advanced_power.h>
@@ -11,6 +12,10 @@
 #include <adc.hpp>
 #include "../Marlin/src/module/temperature.h"
 #include <timing.h>
+
+#if HAS_AC_CONTROLLER()
+    #include <puppies/ac_controller.hpp>
+#endif
 
 #if BOARD_IS_XLBUDDY()
     #include <Marlin/src/module/prusa/toolchanger.h>
@@ -66,7 +71,12 @@ void SensorData::update() {
 
 #if BOARD_IS_XBUDDY()
 
+    #if HAS_AC_CONTROLLER()
+    bedMCUTemperature = buddy::puppies::ac_controller.get_mcu_temp().value_or(0.0f);
+    bed_voltage = buddy::puppies::ac_controller.get_bed_voltage().value_or(0.0f);
+    #else
     bed_voltage = advancedpower.bed_voltage();
+    #endif
     heater_voltage = advancedpower.heater_voltage();
     heater_current = advancedpower.heater_current();
     input_current = advancedpower.input_current();
