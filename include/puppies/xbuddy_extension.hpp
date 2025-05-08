@@ -6,6 +6,7 @@
 #include <atomic>
 #include <freertos/mutex.hpp>
 #include <xbuddy_extension/mmu_bridge.hpp>
+#include <xbuddy_extension/modbus.hpp>
 #include <xbuddy_extension/shared_enums.hpp>
 
 namespace buddy::puppies {
@@ -138,45 +139,11 @@ private:
     // nullopt for queries.
     bool valid = false;
 
-    // TODO: More registers?
+    using Config = xbuddy_extension::modbus::Config;
+    ModbusHoldingRegisterBlock<Config::address, Config> config;
 
-    MODBUS_REGISTER Requiremnt {
-        // 0-255
-        std::array<uint16_t, FAN_CNT> fan_pwm = { 0, 0, 0 };
-
-        // 0-255
-        uint16_t white_led = 0;
-        // Split into components, each 0-255, for convenience.
-        std::array<uint16_t, 4> rgbw_led = { 0, 0, 0, 0 };
-
-        // technicaly a boolean - enables power for usb port
-        uint16_t usb_power_enable = true;
-
-        // technicaly a boolean - enables power for the MMU port
-        uint16_t mmu_power_enable = false;
-        // technicaly a boolean - sets the MMU port non-reset pin
-        uint16_t mmu_nreset = true;
-        // Frequency of the white led PWM.
-        //
-        // 0 = default left to discretion of the extension board.
-        // Is the frequency of the full cycle, in Hz.
-        //
-        // Can be used to implement a "strobe"
-        //
-        // Warning: PWM timer shared with some fans.
-        uint16_t white_led_freq = 0;
-    };
-    ModbusHoldingRegisterBlock<0x9000, Requiremnt> requirement;
-
-    MODBUS_REGISTER Status {
-        std::array<uint16_t, FAN_CNT> fan_rpm = { 0, 0, 0 };
-        // In degrees * 10 (eg. 23.5°C = 235 in the register)
-        uint16_t chamber_temp = 0;
-        uint16_t mmu_power_enable = false;
-        uint16_t mmu_nreset = true;
-        uint16_t filament_sensor_state = 0;
-    };
-    ModbusInputRegisterBlock<0x8000, Status> status;
+    using Status = xbuddy_extension::modbus::Status;
+    ModbusInputRegisterBlock<Status::address, Status> status;
 
     CommunicationStatus refresh_holding();
     CommunicationStatus refresh_input(uint32_t max_age);

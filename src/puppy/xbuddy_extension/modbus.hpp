@@ -49,6 +49,8 @@ public:
         IllegalAddress = 2,
         // Value that makes no sense (eg. setting fan PWM to 1024 while its only 0-255).
         IllegalValue = 3,
+        // Generic error code.
+        SlaveDeviceFailure = 4,
         // We proxy some other device and it's not there.
         //
         // (Eg. in the case of MMU).
@@ -61,20 +63,23 @@ public:
         Ignore = 255,
     };
 
-    virtual Status read_register(uint8_t device, uint16_t address, uint16_t &out) = 0;
-    virtual Status write_register(uint8_t device, uint16_t address, uint16_t value) = 0;
+    virtual Status read_registers(uint8_t device, uint16_t first_address, std::span<uint16_t> out) = 0;
+    virtual Status write_registers(uint8_t device, uint16_t first_address, std::span<const uint16_t> in) = 0;
 };
 
 /**
  * Handle MODBUS transaction.
  * @param callbacks Callbacks to call while handling transaction
  * @param request Request ADU
+ *   Note: Needs to be aligned to uint16_t.
+ *   Note: This function uses it as a scratch buffer too and will modify the buffer, even though it is "input".
  * @param response_buffer Buffer for constructing response ADU, must be large enough
+ *   Note: Needs to be aligned to uint16_t.
  * @return Response ADU, which is a view into response_buffer, possibly empty
  */
 std::span<std::byte> handle_transaction(
     Callbacks &callbacks,
-    std::span<const std::byte> request,
+    std::span<std::byte> request,
     std::span<std::byte> response_buffer);
 
 /// Computes the CRC based on modbus.
