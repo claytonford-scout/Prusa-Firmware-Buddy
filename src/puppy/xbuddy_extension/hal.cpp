@@ -838,6 +838,13 @@ std::span<std::byte> hal::rs485::receive() {
     return { rx_buf_rs485, rx_len_rs485 };
 }
 
+std::span<std::byte> hal::rs485::receive_timeout(uint32_t timeout_ms) {
+    if (tx_semaphore_rs485.try_acquire_for(timeout_ms)) {
+        return { rx_buf_rs485, rx_len_rs485 };
+    }
+    return {};
+}
+
 void hal::rs485::transmit_and_then_start_receiving(std::span<std::byte> payload) {
     HAL_UART_Transmit_IT(&huart_rs485, (uint8_t *)payload.data(), payload.size());
 }

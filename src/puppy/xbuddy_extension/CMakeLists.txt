@@ -23,10 +23,14 @@ target_sources(
   firmware
   PRIVATE app.cpp
           cmsis.cpp
+          cyphal_application.cpp
+          cyphal_presentation.cpp
+          cyphal_transport.cpp
           hal.cpp
           hal_clock.cpp
           hal_pub.cpp
           main.cpp
+          master_activity.cpp
           mmu.cpp
           modbus.cpp
           stdlib.c
@@ -42,6 +46,10 @@ target_link_libraries(
           xbuddy_extension
           mmu_protocol
           buddy_utils
+          options
+          canard
+          o1heap
+          ac_controller
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using
@@ -66,3 +74,27 @@ target_compile_definitions(
   firmware PRIVATE EXTENSION_STANDARD=${EXTENSION_STANDARD} EXTENSION_IX=${EXTENSION_IX}
                    EXTENSION_VARIANT=${EXTENSION_VARIANT}
   )
+
+set(NUNAVUT_STAMP ${CMAKE_CURRENT_BINARY_DIR}/nunavut-stamp)
+add_custom_command(
+  OUTPUT ${NUNAVUT_STAMP}
+  COMMAND
+    "${Python3_EXECUTABLE}" ARGS -m nunavut --outdir ${CMAKE_CURRENT_BINARY_DIR}/nunavut
+    --target-language c --target-endianness little
+    ${CMAKE_SOURCE_DIR}/src/can/data_types/public_regulated_data_types/uavcan/
+  )
+add_custom_target(nunavut DEPENDS ${NUNAVUT_STAMP})
+
+set(NUNAVUT_STAMP2 ${CMAKE_CURRENT_BINARY_DIR}/nunavut-stamp2)
+add_custom_command(
+  OUTPUT ${NUNAVUT_STAMP2}
+  COMMAND
+    "${Python3_EXECUTABLE}" ARGS -m nunavut --outdir ${CMAKE_CURRENT_BINARY_DIR}/nunavut
+    --target-language c --target-endianness little --lookup-dir
+    ${CMAKE_SOURCE_DIR}/src/can/data_types/public_regulated_data_types/uavcan/
+    ${CMAKE_SOURCE_DIR}/src/can/data_types/prusa3d/
+  )
+add_custom_target(nunavut2 DEPENDS ${NUNAVUT_STAMP2})
+
+add_dependencies(firmware nunavut nunavut2)
+target_include_directories(firmware PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/nunavut)
