@@ -13,10 +13,15 @@
 #include "Marlin/src/module/stepper.h"
 #include "Marlin/src/module/prusa/toolchanger.h"
 #include <tasks.hpp>
+#include <option/has_ac_controller.h>
 #include <option/has_dwarf.h>
 #include <option/has_puppy_modularbed.h>
 #include <buddy/ccm_thread.hpp>
 #include "bsod.h"
+
+#if HAS_AC_CONTROLLER()
+    #include <puppies/ac_controller.hpp>
+#endif
 
 #if HAS_PUPPY_MODULARBED()
     #include <puppies/modular_bed.hpp>
@@ -75,6 +80,8 @@ static void verify_puppies_running() {
 #else
         const bool xbuddy_extension_ok = true;
 #endif
+
+        // Note: We don't ping AC controller. It's not a separate device from modbus point of view, that one is virtual & proxied by extension board.
 
         if (num_dwarfs_dead == 0 && modular_bed_ok && xbuddy_extension_ok) {
             log_info(Puppies, "All puppies are reacheable. Continuing");
@@ -188,6 +195,16 @@ static void puppy_task_loop() {
                 worked |= status == CommunicationStatus::OK;
             }
 #endif
+#if HAS_AC_CONTROLLER()
+            {
+                CommunicationStatus status = ac_controller.refresh();
+                if (status == CommunicationStatus::ERROR) {
+                    return;
+                }
+
+                worked |= status == CommunicationStatus::OK;
+            }
+#endif
 #if ENABLED(PRUSA_TOOLCHANGER)
         } while (!worked && slow_stage != orig_stage); // End if we did some work or if no stage has anything to do
 #endif
@@ -217,6 +234,12 @@ static bool puppy_initial_scan() {
     // TODO: Eventually, there'll be printers that have the extension as
     // optional at runtime - we'll have to deal with that somehow.
     if (xbuddy_extension.initial_scan() == CommunicationStatus::ERROR) {
+        return false;
+    }
+#endif
+
+#if HAS_AC_CONTROLLER()
+    if (ac_controller.initial_scan() == CommunicationStatus::ERROR) {
         return false;
     }
 #endif
