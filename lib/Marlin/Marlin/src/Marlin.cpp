@@ -70,7 +70,6 @@
 #include "feature/motordriver_util.h"
 
 #include <math.h>
-#include "libs/nozzle.h"
 
 #include "gcode/gcode.h"
 #include "gcode/parser.h"
