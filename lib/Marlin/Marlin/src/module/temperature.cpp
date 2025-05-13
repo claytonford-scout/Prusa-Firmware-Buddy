@@ -1839,7 +1839,7 @@ constexpr float compensate_bed_temperature(float celsius) {
   float Temperature::analog_to_celsius_heatbreak(const int raw) {
     #if ENABLED(HEATBREAK_USES_THERMISTOR)
       #if (BOARD_IS_XBUDDY())
-          uint8_t loveboard_bom = hwio_get_loveboard_bomid();
+          uint8_t loveboard_bom = buddy::hw::Configuration::Instance().get_love_board().bomID;
           if ((loveboard_bom < 33 && loveboard_bom != 0) // error -> expect more common variant
               || loveboard_bom == 0xff) { // error when run in simulator -> simulator uses table 5
               SCAN_THERMISTOR_TABLE((TT_NAME(5)), (COUNT(TT_NAME(5))));
