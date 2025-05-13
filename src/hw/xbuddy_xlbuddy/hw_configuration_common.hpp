@@ -13,7 +13,8 @@ namespace buddy::hw {
 class ConfigurationCommon {
     ConfigurationCommon(const ConfigurationCommon &) = delete;
 
-    std::pair<XlcdEeprom, OtpStatus> xlcd;
+    XlcdEeprom xlcd_eeprom;
+    OtpStatus xlcd_status;
 
     uint8_t bom_id { 0 };
     uint8_t bom_id_xlcd { 0 };
@@ -25,9 +26,9 @@ public:
 
     bool has_display_backlight_control() const { return bom_id_xlcd >= 29; }
 
-    const LoveBoardEeprom &get_xlcd() const { return std::get<XlcdEeprom>(xlcd); }
+    const LoveBoardEeprom &get_xlcd() const { return xlcd_eeprom; }
 
-    const OtpStatus &get_xlcd_status() const { return std::get<OtpStatus>(xlcd); }
+    const OtpStatus &get_xlcd_status() const { return xlcd_status; }
 
     uint8_t get_board_bom_id() const { return bom_id; }
 };
