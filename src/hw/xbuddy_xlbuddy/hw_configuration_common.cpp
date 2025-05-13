@@ -10,10 +10,9 @@
 
 namespace buddy::hw {
 
-ConfigurationCommon::ConfigurationCommon()
-    : xlcd_eeprom { data_exchange::get_xlcd_eeprom() } {
+ConfigurationCommon::ConfigurationCommon() {
     bom_id = otp_get_bom_id().value_or(0);
-    bom_id_xlcd = xlcd_eeprom.bomID;
+    bom_id_xlcd = data_exchange::get_xlcd_eeprom().bomID;
 }
 
 } // namespace buddy::hw
