@@ -11,8 +11,7 @@
 namespace buddy::hw {
 
 ConfigurationCommon::ConfigurationCommon()
-    : xlcd_eeprom { data_exchange::get_xlcd_eeprom() }
-    , xlcd_status { data_exchange::get_xlcd_status() } {
+    : xlcd_eeprom { data_exchange::get_xlcd_eeprom() } {
     bom_id = otp_get_bom_id().value_or(0);
     bom_id_xlcd = otp_parse_bom_id(reinterpret_cast<uint8_t *>(&xlcd_eeprom), sizeof(XlcdEeprom)).value_or(0);
 }

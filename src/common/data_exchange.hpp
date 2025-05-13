@@ -16,8 +16,6 @@ bool running_in_tester_mode();
 namespace data_exchange {
 
 #if HAS_XLCD()
-OtpStatus get_xlcd_status();
-
 XlcdEeprom get_xlcd_eeprom();
 #endif
 

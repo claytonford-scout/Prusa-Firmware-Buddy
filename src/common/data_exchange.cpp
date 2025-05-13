@@ -141,10 +141,6 @@ static FwAutoUpdate get_auto_update_flag(void) {
 namespace data_exchange {
 
 #if HAS_XLCD()
-OtpStatus get_xlcd_status() {
-    return ram_data_exchange.xlcd_status;
-}
-
 XlcdEeprom get_xlcd_eeprom() {
     return ram_data_exchange.xlcd_eeprom;
 }
