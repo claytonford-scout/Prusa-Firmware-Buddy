@@ -50,6 +50,7 @@ static StateAnimation marlin_to_anim_state() {
         // Loading filament
         case PhasesLoadUnload::Loading_stoppable:
         case PhasesLoadUnload::Loading_unstoppable:
+        case PhasesLoadUnload::AutoRetracting:
         case PhasesLoadUnload::Purging_stoppable:
         case PhasesLoadUnload::Purging_unstoppable:
         case PhasesLoadUnload::LoadNozzleCleaning:

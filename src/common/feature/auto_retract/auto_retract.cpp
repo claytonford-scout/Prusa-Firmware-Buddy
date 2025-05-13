@@ -15,10 +15,6 @@
     #include <Marlin/src/feature/prusa/MMU2/mmu2_mk4.h>
 #endif
 
-// Auto retract functionality collides with the nozzle cleaner
-#include <option/has_nozzle_cleaner.h>
-static_assert(!HAS_NOZZLE_CLEANER());
-
 LOG_COMPONENT_REF(MarlinServer);
 
 using namespace buddy;

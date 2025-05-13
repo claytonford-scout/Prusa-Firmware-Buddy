@@ -70,6 +70,23 @@ LOG_COMPONENT_REF(MarlinServer);
 
 #if HAS_NOZZLE_CLEANER()
 GCodeLoader nozzle_cleaner_gcode_loader;
+
+static void nozzle_cleaner_load_or_runout_load_gcode(Pause::LoadType load_type) {
+    switch (load_type) {
+    case Pause::LoadType::load:
+    case Pause::LoadType::autoload:
+    case Pause::LoadType::load_to_gears:
+    case Pause::LoadType::load_purge:
+        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::load_filename, nozzle_cleaner::load_sequence);
+        break;
+    case Pause::LoadType::filament_change:
+    case Pause::LoadType::filament_stuck:
+        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::runout_filename, nozzle_cleaner::runout_sequence);
+        break;
+    default:
+        break;
+    }
+}
 #endif
 
 // private:
@@ -893,7 +910,6 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
         return;
     }
 #endif
-
     if (load_type == LoadType::filament_change || load_type == LoadType::filament_stuck) {
         // Feed a little bit of filament to stabilize pressure in nozzle
 
@@ -910,21 +926,7 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
     }
 
 #if HAS_NOZZLE_CLEANER()
-    switch (load_type) {
-    case LoadType::load:
-    case LoadType::autoload:
-    case LoadType::load_to_gears:
-    case LoadType::load_purge:
-        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::load_filename, nozzle_cleaner::load_sequence);
-        break;
-    case LoadType::filament_change:
-    case LoadType::filament_stuck:
-        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::runout_filename, nozzle_cleaner::runout_sequence);
-        break;
-    default:
-        break;
-    }
-
+    nozzle_cleaner_load_or_runout_load_gcode(load_type);
     set(LoadState::load_nozzle_clean);
     return;
 #endif
@@ -1028,6 +1030,13 @@ void Pause::auto_retract_process([[maybe_unused]] Response response) {
     setPhase(PhasesLoadUnload::AutoRetracting);
     PauseFsmDurationNotifier progress_notifier(*this, standard_ramming_sequence(StandardRammingSequence::auto_retract, marlin_vars().active_hotend_id()).duration_estimate_ms());
     auto_retract().maybe_retract_from_nozzle();
+
+    #if HAS_NOZZLE_CLEANER()
+    nozzle_cleaner_load_or_runout_load_gcode(load_type);
+    set(LoadState::load_nozzle_clean);
+    return;
+    #endif
+
     set(LoadState::_finished);
 }
 #endif
