@@ -49,8 +49,8 @@ class Configuration : public ConfigurationCommon {
     Configuration();
     Configuration(const Configuration &) = delete;
 
-    LoveBoardEeprom loveboard_eeprom;
-    OtpStatus loveboard_status;
+    uint8_t loveboard_bom_id;
+    bool loveboard_present;
 
 public:
     /**
@@ -58,10 +58,6 @@ public:
      * @return Configuration&
      */
     static Configuration &Instance();
-
-    const LoveBoardEeprom &get_love_board() const { return loveboard_eeprom; }
-
-    const OtpStatus &get_loveboard_status() const { return loveboard_status; }
 
     bool has_inverted_fans() const { return get_board_bom_id() < 37; }
 

@@ -19,8 +19,8 @@ Configuration &Configuration::Instance() {
 }
 
 Configuration::Configuration() {
-    loveboard_eeprom = data_exchange::get_loveboard_eeprom();
-    loveboard_status = data_exchange::get_loveboard_status();
+    loveboard_bom_id = data_exchange::get_loveboard_eeprom().bomID;
+    loveboard_present = data_exchange::get_loveboard_status().data_valid;
 }
 
 float Configuration::curr_measurement_voltage_to_current(float voltage) const {
@@ -41,7 +41,7 @@ bool Configuration::is_fw_incompatible_with_hw() {
         return true;
     }
 
-    if (get_loveboard_status().data_valid) {
+    if (loveboard_present) {
         return false; // valid data, fw compatible
     }
 
@@ -73,7 +73,6 @@ bool Configuration::is_fw_incompatible_with_hw() {
 }
 
 bool Configuration::needs_heatbreak_thermistor_table_5() const {
-    const uint8_t loveboard_bom_id = loveboard_eeprom.bomID;
     return (loveboard_bom_id < 33 && loveboard_bom_id != 0) // error -> expect more common variant
         || loveboard_bom_id == 0xff; // error when run in simulator -> simulator uses table 5
 }
