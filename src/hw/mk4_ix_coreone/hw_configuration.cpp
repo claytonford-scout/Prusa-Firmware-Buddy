@@ -72,4 +72,10 @@ bool Configuration::is_fw_incompatible_with_hw() {
     return false;
 }
 
+bool Configuration::needs_heatbreak_thermistor_table_5() const {
+    const uint8_t loveboard_bom_id = loveboard_eeprom.bomID;
+    return (loveboard_bom_id < 33 && loveboard_bom_id != 0) // error -> expect more common variant
+        || loveboard_bom_id == 0xff; // error when run in simulator -> simulator uses table 5
+}
+
 } // namespace buddy::hw

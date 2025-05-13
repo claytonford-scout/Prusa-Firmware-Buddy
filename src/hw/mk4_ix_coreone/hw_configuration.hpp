@@ -89,6 +89,8 @@ public:
     float curr_measurement_voltage_to_current(float voltage) const;
 
     bool is_fw_incompatible_with_hw(); // not incompatible does not mean compatible!
+
+    bool needs_heatbreak_thermistor_table_5() const;
 };
 
 } // namespace buddy::hw
