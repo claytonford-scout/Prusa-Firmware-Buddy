@@ -323,8 +323,9 @@
 #define TEMP_BED_RESIDENCY_TIME 5 // (seconds) Time to wait for bed to "settle" in M190
 #define TEMP_BED_WINDOW 1 // (°C) Temperature proximity for the "temperature reached" timer
 #define TEMP_BED_HYSTERESIS 3 // (°C) Temperature proximity considered "close enough" to the target
-
 #define TEMP_CHAMBER_HYSTERESIS 3 // (°C) Temperature proximity considered "close enough" to the target
+
+#define HEATBREAK_MAXTEMP_OFFSET 10 // (°C) Temperature offset (that is considered still safe) from the target temperature on the heatbreak
 
 // Below this temperature the heater will be switched off
 // because it probably indicates a broken thermistor wire.
@@ -494,6 +495,7 @@
 
 #define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
 //#define THERMAL_PROTECTION_BED // Enable thermal protection for the heated bed
+#define THERMAL_PROTECTION_HEATBREAK // Enable thermal protection for the heatbreak
 //#define THERMAL_PROTECTION_CHAMBER // Enable thermal protection for the heated chamber
 
 //===========================================================================

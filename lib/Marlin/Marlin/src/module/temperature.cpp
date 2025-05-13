@@ -249,9 +249,9 @@ Temperature thermalManager;
   #endif
 
   #if WATCH_HEATBREAK
-      heater_watch_t Temperature::watch_heatbreak[HOTENDS] = {0};
-    #endif
-    millis_t Temperature::next_heatbreak_check_ms;
+    heater_watch_t Temperature::watch_heatbreak[HOTENDS] = {0};
+  #endif
+  millis_t Temperature::next_heatbreak_check_ms;
 
 #endif
 
@@ -1638,19 +1638,14 @@ void Temperature::manage_heater() {
       #define HEATBREAK_CHECK_INTERVAL 1000UL
     #endif
 
-    #if ENABLED(THERMAL_PROTECTION_HEATBREAK)
-      #error TODO: this is not implemented properly, fix if you want to use THERMAL_PROTECTION_HEATBREAK
-      if (degChamber() > CHAMBER_MAXTEMP)
-        _temp_error(H_CHAMBER, PSTR(MSG_T_THERMAL_RUNAWAY), GET_TEXT(MSG_THERMAL_RUNAWAY));
-    #endif
-
     #if WATCH_HEATBREAK
-      // Make sure temperature is increasing
-      if (watch_heatbreak.elapsed(ms)) {              // Time to check the chamber?
-        if (degChamber() < watch_heatbreak.target)    // Failed to increase enough?
-          _temp_error(H_HEATBREAK, PSTR(MSG_T_HEATING_FAILED), GET_TEXT(MSG_HEATING_FAILED_LCD));
-        else
-          start_watching_heatbreak();                 // Start again if the target is still far off
+    static_assert(HOTENDS == 1, "Multiple hotends not implemented" );
+    if (watch_heatbreak[0].elapsed(ms)) { // Time to check the heatbreak?
+        if (degHeatbreak(0) > watch_heatbreak[0].target) { // Failed to cool down enough
+          fatal_error(ErrCode::ERR_TEMPERATURE_HEATBREAK_COOLING_TOO_SLOW); // Red screen
+        } else {
+          start_watching_heatbreak(0); // Start again if the target still was not reached
+        }
       }
     #endif
 
@@ -1681,14 +1676,14 @@ void Temperature::manage_heater() {
             set_fan_speed(HEATBREAK_FAN_ID, temp_heatbreak[0].soft_pwm_amount);
           #endif
         } else {
+          #if WATCH_HEATBREAK
+          if(watch_heatbreak[0].next_ms == 0) { // if we are not watching heatbreak (not in process of cooling down)
+            fatal_error(ErrCode::ERR_TEMPERATURE_HEATBREAK_MAXTEMP_ERR); // Red screen
+          }
+          #endif
           temp_heatbreak[0].soft_pwm_amount = 255;
           set_fan_speed(HEATBREAK_FAN_ID, temp_heatbreak[0].soft_pwm_amount);
         }
-      #endif
-
-      #if ENABLED(THERMAL_PROTECTION_HEATBREAK)
-        #error TODO: this is not implemented properly, fix if you want to use THERMAL_PROTECTION_HEATBREAK
-        thermal_runaway_protection(tr_state_machine_heatbreak, temp_heatbreak.celsius, temp_heatbreak.target, H_HEATBREAK, THERMAL_PROTECTION_HEATBREAK_PERIOD, THERMAL_PROTECTION_HEATBREAK_HYSTERESIS);
       #endif
     }
   #endif // HAS_TEMP_HEATBREAK
@@ -2197,6 +2192,28 @@ void Temperature::init() {
     else
       watch_chamber.next_ms = 0;
   }
+#endif
+
+#if WATCH_HEATBREAK
+  /**
+   * Start cooling check for heatbreak that is above
+   * its target temperature by a configurable margin.
+   * This is called when the target temperature for heatbreak is set. 
+   */
+  void Temperature::start_watching_heatbreak(const uint8_t E_NAME) {
+    const uint8_t ee = HOTEND_INDEX;
+
+    // If the target temperature is set and the heatbreak is above the target + offset, keep watching the cooling
+    if (degTargetHeatbreak(ee) > 0 && degHeatbreak(ee) > degTargetHeatbreak(ee) + HEATBREAK_MAXTEMP_OFFSET) {
+      watch_heatbreak[ee].target = degHeatbreak(ee) - WATCH_HEATBREAK_TEMP_DECREASE;
+      watch_heatbreak[ee].next_ms = millis() + (WATCH_HEATBREAK_TEMP_PERIOD) * 1000UL;
+    }
+    else {
+      // We have reached the target temperature or the target temperature is not set -> stop watching
+      watch_heatbreak[ee].next_ms = 0;
+    }
+  }
+
 #endif
 
 #if HAS_THERMAL_PROTECTION

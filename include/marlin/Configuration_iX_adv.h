@@ -27,6 +27,7 @@
 #include <option/has_crash_detection.h>
 #include <option/has_pause.h>
 #include <option/has_power_panic.h>
+#include <Marlin/src/core/macros.h>
 
 /**
  * Configuration_adv.h
@@ -115,6 +116,18 @@
     #define WATCH_CHAMBER_TEMP_PERIOD 60 // Seconds
     #define WATCH_CHAMBER_TEMP_INCREASE 2 // Degrees Celsius
 #endif
+
+/**
+ * Thermal Protection parameters for the heatbreak.
+ */
+ #if ENABLED(THERMAL_PROTECTION_HEATBREAK)
+    /**
+   * Heatbreak watch settings.
+   */
+    #define WATCH_HEATBREAK_TEMP_PERIOD 30 // Seconds
+    #define WATCH_HEATBREAK_TEMP_DECREASE 2 // Degrees Celsius per WATCH_HEATBREAK_TEMP_PERIOD
+#endif
+
 
 #if ENABLED(PIDTEMP)
     // this adds an experimental additional term to the heating power, proportional to the extrusion speed.
