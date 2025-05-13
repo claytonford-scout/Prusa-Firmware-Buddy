@@ -1664,7 +1664,13 @@ void Temperature::manage_heater() {
         #if HOTENDS > 1
           #error not supported
         #endif
-        if (WITHIN(temp_heatbreak[0].celsius, HEATBREAK_MINTEMP, HEATBREAK_MAXTEMP)) {
+        // iX has a non-constant maxtemp for the heatbreak, so we need to explicitly set it
+        #if PRINTER_IS_PRUSA_iX()
+        int16_t heatbreak_maxtemp = degTargetHeatbreak(active_extruder) + HEATBREAK_MAXTEMP_OFFSET;
+        #else
+        int16_t heatbreak_maxtemp = HEATBREAK_MAXTEMP;
+        #endif
+        if (WITHIN(temp_heatbreak[0].celsius, HEATBREAK_MINTEMP, heatbreak_maxtemp)) {
           #if ENABLED(HEATBREAK_LIMIT_SWITCHING)
             if (temp_heatbreak[0].celsius >= temp_heatbreak[0].target + TEMP_HEATBREAK_HYSTERESIS)
               temp_heatbreak[0].soft_pwm_amount = 0;
