@@ -27,6 +27,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/http/connection.cpp
   ${CMAKE_SOURCE_DIR}/src/common/http/socket_connection_factory.cpp
   ${CMAKE_SOURCE_DIR}/src/common/stat_retry.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/random_common.cpp
   ${CMAKE_SOURCE_DIR}/src/common/random_sw.cpp
   ${CMAKE_SOURCE_DIR}/src/common/general_response.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/background.cpp
@@ -152,6 +153,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/http/connection.cpp
   ${CMAKE_SOURCE_DIR}/src/common/http/socket_connection_factory.cpp
   ${CMAKE_SOURCE_DIR}/src/common/stat_retry.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/random_common.cpp
   ${CMAKE_SOURCE_DIR}/src/common/random_sw.cpp
   ${CMAKE_SOURCE_DIR}/src/common/general_response.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/background.cpp
@@ -255,6 +257,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/printer_model.cpp
   ${CMAKE_SOURCE_DIR}/src/common/stat_retry.cpp
   ${CMAKE_SOURCE_DIR}/src/common/segmented_json.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/random_common.cpp
   ${CMAKE_SOURCE_DIR}/src/common/random_sw.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/background.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/json_out.cpp

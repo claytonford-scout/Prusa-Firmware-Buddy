@@ -58,6 +58,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             print_utils.cpp
             printer_model.cpp
             probe_analysis.cpp
+            random_common.cpp
             random_hw.cpp
             ring_allocator.cpp
             rw_mutex.cpp
@@ -104,6 +105,7 @@ elseif(BOARD STREQUAL "DWARF")
             marlin_log_component.cpp
             otp.cpp
             Pin.cpp
+            random_common.cpp
             random_sw.cpp
             safe_state.cpp
     )
@@ -138,6 +140,7 @@ elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
             Pin.cpp
             print_utils.cpp
             probe_analysis.cpp
+            random_common.cpp
             random_sw.cpp
             safe_state.cpp
             serial_printing.cpp
