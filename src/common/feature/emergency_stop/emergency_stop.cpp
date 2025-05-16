@@ -7,8 +7,8 @@
 #include <Configuration.h>
 
 #include <logging/log.hpp>
-#include <RAII.hpp>
-#include <scope_guard.hpp>
+#include <raii/auto_restore.hpp>
+#include <raii/scope_guard.hpp>
 
 LOG_COMPONENT_DEF(EmergencyStop, logging::Severity::debug);
 

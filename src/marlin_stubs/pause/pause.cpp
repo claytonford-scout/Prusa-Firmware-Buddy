@@ -38,12 +38,12 @@
 #include "filament.hpp"
 #include "client_response.hpp"
 #include "fsm_loadunload_type.hpp"
-#include "RAII.hpp"
+#include <raii/auto_restore.hpp>
 #include "mapi/motion.hpp"
 #include <cmath>
 #include <logging/log.hpp>
 #include <config_store/store_instance.hpp>
-#include <scope_guard.hpp>
+#include <raii/scope_guard.hpp>
 #include <filament_to_load.hpp>
 #include <common/marlin_client.hpp>
 #include <common/mapi/parking.hpp>
