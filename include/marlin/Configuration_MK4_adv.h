@@ -883,7 +883,7 @@
 
     /**
    * Position to park head during tool change.
-   * Doesn't apply to DUAL_X_CARRIAGE, or PARKING_EXTRUDER
+   * Doesn't apply to DUAL_X_CARRIAGE
    */
     //#define TOOLCHANGE_PARK
     #if ENABLED(TOOLCHANGE_PARK)

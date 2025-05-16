@@ -144,7 +144,7 @@
   #include "feature/fanmux.h"
 #endif
 
-#if DO_SWITCH_EXTRUDER || ANY(SWITCHING_NOZZLE, PARKING_EXTRUDER, MAGNETIC_PARKING_EXTRUDER)
+#if DO_SWITCH_EXTRUDER || ANY(SWITCHING_NOZZLE)
   #include "module/tool_change.h"
 #endif
 
@@ -918,15 +918,6 @@ void setup() {
       move_nozzle_servo(0);
     #endif
   #endif
-
-  #if ENABLED(MAGNETIC_PARKING_EXTRUDER)
-    mpe_settings_init();
-  #endif
-
-  #if ENABLED(PARKING_EXTRUDER)
-    pe_solenoid_init();
-  #endif
-
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
   #endif

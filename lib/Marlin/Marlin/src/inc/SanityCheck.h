@@ -290,8 +290,6 @@
   #error "SINGLENOZZLE_TOOLCHANGE_XY is now TOOLCHANGE_PARK_XY. Please update your configuration."
 #elif defined(SINGLENOZZLE_PARK_XY_FEEDRATE)
   #error "SINGLENOZZLE_PARK_XY_FEEDRATE is now TOOLCHANGE_PARK_XY_FEEDRATE. Please update your configuration."
-#elif defined(PARKING_EXTRUDER_SECURITY_RAISE)
-  #error "PARKING_EXTRUDER_SECURITY_RAISE is now TOOLCHANGE_ZRAISE. Please update your configuration."
 #elif defined(G0_FEEDRATE) && G0_FEEDRATE == 0
   #error "G0_FEEDRATE is now used to set the G0 feedrate. Please update your configuration."
 #elif defined(MBL_Z_STEP)
@@ -760,35 +758,8 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  */
 #if 1 < 0 \
   + ENABLED(SINGLENOZZLE) \
-  + ENABLED(DUAL_X_CARRIAGE) \
-  + ENABLED(PARKING_EXTRUDER) \
-  + ENABLED(MAGNETIC_PARKING_EXTRUDER)
-  #error "Please select only one of SINGLENOZZLE, DUAL_X_CARRIAGE, PARKING_EXTRUDER."
-#endif
-
-/**
- * (Magnetic) Parking Extruder requirements
- */
-#if ANY(PARKING_EXTRUDER, MAGNETIC_PARKING_EXTRUDER)
-  #if ENABLED(EXT_SOLENOID)
-    #error "(MAGNETIC_)PARKING_EXTRUDER and EXT_SOLENOID are incompatible. (Pins are used twice.)"
-  #elif EXTRUDERS != 2
-    #error "(MAGNETIC_)PARKING_EXTRUDER requires exactly 2 EXTRUDERS."
-  #elif !defined(PARKING_EXTRUDER_PARKING_X)
-    #error "(MAGNETIC_)PARKING_EXTRUDER requires PARKING_EXTRUDER_PARKING_X."
-  #elif !defined(TOOLCHANGE_ZRAISE)
-    #error "(MAGNETIC_)PARKING_EXTRUDER requires TOOLCHANGE_ZRAISE."
-  #elif TOOLCHANGE_ZRAISE < 0
-    #error "TOOLCHANGE_ZRAISE must be 0 or higher."
-  #elif ENABLED(PARKING_EXTRUDER)
-    #if !PIN_EXISTS(SOL0, SOL1)
-      #error "PARKING_EXTRUDER requires SOL0_PIN and SOL1_PIN."
-    #elif !defined(PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE) || !WITHIN(PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE, LOW, HIGH)
-      #error "PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE must be defined as HIGH or LOW."
-    #elif !defined(PARKING_EXTRUDER_SOLENOIDS_DELAY) || !WITHIN(PARKING_EXTRUDER_SOLENOIDS_DELAY, 0, 2000)
-      #error "PARKING_EXTRUDER_SOLENOIDS_DELAY must be between 0 and 2000 (ms)."
-    #endif
-  #endif
+  + ENABLED(DUAL_X_CARRIAGE)
+  #error "Please select only one of SINGLENOZZLE, DUAL_X_CARRIAGE."
 #endif
 
 #if HAS_REMOTE_ACCELEROMETER() && !HAS_TOOLCHANGER()

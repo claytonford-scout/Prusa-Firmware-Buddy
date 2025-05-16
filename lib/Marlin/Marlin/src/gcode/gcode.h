@@ -233,7 +233,6 @@
  * M912 - Clear stepper driver overtemperature pre-warn condition flag. (Requires at least one _DRIVER_TYPE defined as TMC2130/2160/5130/5160/2208/2209/2660)
  * M913 - Set HYBRID_THRESHOLD speed. (Requires HYBRID_THRESHOLD)
  * M914 - Set StallGuard sensitivity. (Requires SENSORLESS_HOMING or SENSORLESS_PROBING)
- * M951 - Set Magnetic Parking Extruder parameters. (Requires MAGNETIC_PARKING_EXTRUDER)
  * M7219 - Control Max7219 Matrix LEDs. (Requires MAX7219_GCODE)
  *
  * M360 - SCARA calibration: Move to cal-position ThetaA (0 deg calibration)
@@ -903,10 +902,6 @@ private:
     #if USE_SENSORLESS
       static void M914();
     #endif
-  #endif
-
-  #if ENABLED(MAGNETIC_PARKING_EXTRUDER)
-    static void M951();
   #endif
 
 #if HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER()
