@@ -194,6 +194,11 @@
     #include <nozzle_cleaner.hpp>
 #endif
 
+#include "option/has_bed_fan.h"
+#if HAS_BED_FAN()
+    #include <feature/bed_fan/controller.hpp>
+#endif
+
 using namespace ExtUI;
 
 using ClientQueue = marlin_client::ClientQueue;
@@ -806,6 +811,10 @@ static void cycle() {
     // Although the timeout should never trigger within idle() (= when a gcode is run),
     // We still need to run the step() there to prevent "sampling bias" so that the timer could reset itself during movements and single-injected gcodes
     buddy::stepper_timeout().step();
+
+#if HAS_BED_FAN()
+    bed_fan::controller().step();
+#endif
 
     record_fanctl_metrics();
 
