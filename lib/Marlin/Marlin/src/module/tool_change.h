@@ -93,10 +93,6 @@
   #endif
 #endif
 
-#if ENABLED(ELECTROMAGNETIC_SWITCHING_TOOLHEAD)
-  void est_init();
-#endif
-
 enum class tool_return_t {
   no_return, // lift and/or retract as needed, but don't return to any position after toolchange
   to_current, // return to the current position

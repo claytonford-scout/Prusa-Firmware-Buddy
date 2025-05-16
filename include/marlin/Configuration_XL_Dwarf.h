@@ -251,24 +251,6 @@
  */
 #define PRUSA_DWARF
 
-/**
- * Switching Toolhead
- *
- * Support for swappable and dockable toolheads, such as
- * the E3D Tool Changer. Toolheads are locked with a servo.
- */
-//#define SWITCHING_TOOLHEAD
-#if ENABLED(SWITCHING_TOOLHEAD)
-    #define SWITCHING_TOOLHEAD_SERVO_NR 2 // Index of the servo connector
-    #define SWITCHING_TOOLHEAD_SERVO_ANGLES \
-        { 0, 180 } // (degrees) Angles for Lock, Unlock
-    #define SWITCHING_TOOLHEAD_Y_POS 235 // (mm) Y position of the toolhead dock
-    #define SWITCHING_TOOLHEAD_Y_SECURITY 10 // (mm) Security distance Y axis
-    #define SWITCHING_TOOLHEAD_Y_CLEAR 60 // (mm) Minimum distance from dock for unobstructed X axis
-    #define SWITCHING_TOOLHEAD_X_POS \
-        { 215, 0 } // (mm) X positions for parking the extruders
-#endif
-
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
 // For the other hotends it is their distance from the extruder 0 hotend.
