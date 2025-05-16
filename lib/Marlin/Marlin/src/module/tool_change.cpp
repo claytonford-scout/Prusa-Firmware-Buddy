@@ -135,66 +135,6 @@ inline void fast_line_to_current(const AxisEnum fr_axis) { _line_to_current(fr_a
   }
 #endif
 
-#if ENABLED(DUAL_X_CARRIAGE)
-
-  inline void dualx_tool_change(const uint8_t new_tool, bool &no_move) {
-    if (DEBUGGING(LEVELING)) {
-      DEBUG_ECHOPGM("Dual X Carriage Mode ");
-      switch (dual_x_carriage_mode) {
-        case DXC_FULL_CONTROL_MODE: DEBUG_ECHOLNPGM("FULL_CONTROL"); break;
-        case DXC_AUTO_PARK_MODE:    DEBUG_ECHOLNPGM("AUTO_PARK");    break;
-        case DXC_DUPLICATION_MODE:  DEBUG_ECHOLNPGM("DUPLICATION");  break;
-        case DXC_MIRRORED_MODE:     DEBUG_ECHOLNPGM("MIRRORED");     break;
-      }
-    }
-
-    const float xhome = x_home_pos(active_extruder);
-    if (dual_x_carriage_mode == DXC_AUTO_PARK_MODE
-        && IsRunning() && !no_move
-        && (delayed_move_time || current_position.x != xhome)
-    ) {
-
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("MoveX to ", xhome);
-
-      // Park old head
-      current_position.x = xhome;
-      line_to_current_position(planner.settings.max_feedrate_mm_s[X_AXIS]);
-      planner.synchronize();
-    }
-
-    // Activate the new extruder ahead of calling set_axis_is_at_home!
-    active_extruder = new_tool;
-
-    // This function resets the max/min values - the current position may be overwritten below.
-    set_axis_is_at_home(X_AXIS);
-
-    if (DEBUGGING(LEVELING)) DEBUG_POS("New Extruder", current_position);
-
-    switch (dual_x_carriage_mode) {
-      case DXC_FULL_CONTROL_MODE:
-        // New current position is the position of the activated extruder
-        current_position.x = inactive_extruder_x_pos;
-        // Save the inactive extruder's position (from the old current_position)
-        inactive_extruder_x_pos = destination.x;
-        break;
-      case DXC_AUTO_PARK_MODE:
-        // record current raised toolhead position for use by unpark
-        raised_parked_position = current_position;
-        active_extruder_parked = true;
-        delayed_move_time = 0;
-        break;
-      default:
-        break;
-    }
-
-    if (DEBUGGING(LEVELING)) {
-      DEBUG_ECHOLNPAIR("Active extruder parked: ", active_extruder_parked ? "yes" : "no");
-      DEBUG_POS("New extruder (parked)", current_position);
-    }
-  }
-
-#endif // DUAL_X_CARRIAGE
-
 /**
  * Perform a tool-change, which may result in moving the
  * previous tool out of the way and the new tool into place.

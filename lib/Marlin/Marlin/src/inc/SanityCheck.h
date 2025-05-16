@@ -421,9 +421,7 @@
 /**
  * Dual / Triple Stepper Drivers
  */
-#if BOTH(X_DUAL_STEPPER_DRIVERS, DUAL_X_CARRIAGE)
-  #error "DUAL_X_CARRIAGE is not compatible with X_DUAL_STEPPER_DRIVERS."
-#elif ENABLED(X_DUAL_STEPPER_DRIVERS) && !(HAS_X2_ENABLE && HAS_X2_STEP && HAS_X2_DIR)
+#if ENABLED(X_DUAL_STEPPER_DRIVERS) && !(HAS_X2_ENABLE && HAS_X2_STEP && HAS_X2_DIR)
   #error "X_DUAL_STEPPER_DRIVERS requires X2 pins (and an extra E plug)."
 #elif ENABLED(Y_DUAL_STEPPER_DRIVERS) && !(HAS_Y2_ENABLE && HAS_Y2_STEP && HAS_Y2_DIR)
   #error "Y_DUAL_STEPPER_DRIVERS requires Y2 pins (and an extra E plug)."
@@ -684,9 +682,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * A Dual Nozzle carriage with switching servo
  */
 #if ENABLED(SWITCHING_NOZZLE)
-  #if ENABLED(DUAL_X_CARRIAGE)
-    #error "SWITCHING_NOZZLE and DUAL_X_CARRIAGE are incompatible."
-  #elif ENABLED(SINGLENOZZLE)
+  #if ENABLED(SINGLENOZZLE)
     #error "SWITCHING_NOZZLE and SINGLENOZZLE are incompatible."
   #elif EXTRUDERS != 2
     #error "SWITCHING_NOZZLE requires exactly 2 EXTRUDERS."
@@ -751,15 +747,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
       #error "SWITCHING_EXTRUDER_E23_SERVO_NR should be a different extruder from SWITCHING_EXTRUDER_SERVO_NR."
     #endif
   #endif
-#endif
-
-/**
- * Special tool-changing options
- */
-#if 1 < 0 \
-  + ENABLED(SINGLENOZZLE) \
-  + ENABLED(DUAL_X_CARRIAGE)
-  #error "Please select only one of SINGLENOZZLE, DUAL_X_CARRIAGE."
 #endif
 
 #if HAS_REMOTE_ACCELEROMETER() && !HAS_TOOLCHANGER()
@@ -1077,25 +1064,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #endif
 
 /**
- * Dual X Carriage requirements
- */
-#if ENABLED(DUAL_X_CARRIAGE)
-  #if EXTRUDERS < 2
-    #error "DUAL_X_CARRIAGE requires 2 (or more) extruders."
-  #elif CORE_IS_XY || CORE_IS_XZ
-    #error "DUAL_X_CARRIAGE cannot be used with COREXY, COREYX, COREXZ, or COREZX."
-  #elif !(HAS_X2_ENABLE && HAS_X2_STEP && HAS_X2_DIR)
-    #error "DUAL_X_CARRIAGE requires X2 stepper pins to be defined."
-  #elif !HAS_X_MAX
-    #error "DUAL_X_CARRIAGE requires USE_XMAX_PLUG and an X Max Endstop."
-  #elif !defined(X2_HOME_POS) || !defined(X2_MIN_POS) || !defined(X2_MAX_POS)
-    #error "DUAL_X_CARRIAGE requires X2_HOME_POS, X2_MIN_POS, and X2_MAX_POS."
-  #elif X_HOME_DIR != -1 || X2_HOME_DIR != 1
-    #error "DUAL_X_CARRIAGE requires X_HOME_DIR -1 and X2_HOME_DIR 1."
-  #endif
-#endif
-
-/**
  * Make sure auto fan pins don't conflict with the fan pin
  */
 #if HAS_AUTO_FAN
@@ -1223,8 +1191,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #if ENABLED(MULTI_NOZZLE_DUPLICATION)
   #if HOTENDS < 2
     #error "MULTI_NOZZLE_DUPLICATION requires 2 or more hotends."
-  #elif ENABLED(DUAL_X_CARRIAGE)
-    #error "MULTI_NOZZLE_DUPLICATION is incompatible with DUAL_X_CARRIAGE."
   #elif ENABLED(SINGLENOZZLE)
     #error "MULTI_NOZZLE_DUPLICATION is incompatible with SINGLENOZZLE."
   #elif ENABLED(SWITCHING_EXTRUDER)
@@ -2005,9 +1971,7 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
  * Require soft endstops for certain setups
  */
 #if !BOTH(MIN_SOFTWARE_ENDSTOPS, MAX_SOFTWARE_ENDSTOPS)
-  #if ENABLED(DUAL_X_CARRIAGE)
-    #error "DUAL_X_CARRIAGE requires both MIN_ and MAX_SOFTWARE_ENDSTOPS."
-  #elif HAS_HOTEND_OFFSET
+  #if HAS_HOTEND_OFFSET
     #error "MIN_ and MAX_SOFTWARE_ENDSTOPS are both required with offset hotends."
   #endif
 #endif

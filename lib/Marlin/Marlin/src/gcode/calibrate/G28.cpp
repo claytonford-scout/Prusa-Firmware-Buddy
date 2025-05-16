@@ -94,7 +94,7 @@
 
 #include <option/has_nozzle_cleaner.h>
 
-#if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(AXEL_TPARA) || ENABLED(DUAL_X_CARRIAGE) || ENABLED(FOAMCUTTER_XYUV)
+#if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(AXEL_TPARA) || ENABLED(FOAMCUTTER_XYUV)
   #error These babies are no longer welcome here. The relevants ifdefs were removed.
 #endif
 
@@ -899,7 +899,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // Restore the active tool after homing
   #if HAS_MULTI_HOTEND && DISABLED(PRUSA_TOOLCHANGER)
-    tool_change(old_tool_index, DISABLED(DUAL_X_CARRIAGE));   // Do move if one of these
+    tool_change(old_tool_index, true);   // Do move if one of these
   #endif
 
   #if HAS_HOMING_CURRENT
