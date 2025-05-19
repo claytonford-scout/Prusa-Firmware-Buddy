@@ -70,6 +70,8 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   endif()
 
   add_subdirectory(semihosting)
+
+  target_link_libraries(firmware PRIVATE FreeRTOS::CMSIS)
 elseif(BOARD STREQUAL "DWARF")
   target_include_directories(firmware PRIVATE .)
 
@@ -82,6 +84,8 @@ elseif(BOARD STREQUAL "DWARF")
   add_subdirectory(freertos)
   add_subdirectory(puppy/dwarf)
   add_subdirectory(puppy/shared)
+
+  target_link_libraries(firmware PRIVATE FreeRTOS::CMSIS)
 elseif(BOARD STREQUAL "MODULARBED")
   target_include_directories(firmware PRIVATE .)
 
@@ -94,6 +98,8 @@ elseif(BOARD STREQUAL "MODULARBED")
   add_subdirectory(freertos)
   add_subdirectory(puppy/modularbed)
   add_subdirectory(puppy/shared)
+
+  target_link_libraries(firmware PRIVATE FreeRTOS::CMSIS)
 elseif(BOARD STREQUAL "XBUDDY_EXTENSION")
   add_subdirectory(freertos)
   add_subdirectory(puppy/xbuddy_extension_shared)
