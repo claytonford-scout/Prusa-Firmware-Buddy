@@ -23,8 +23,9 @@
 #include "hwio_pindef.h"
 #include <device/board.h>
 
+static_assert(BOARD_IS_DWARF());
+
 #define DEFAULT_MACHINE_NAME "Prusa-Dwarf"
-#define BOARD_NAME "Dwarf"
 
 //#define I2C_EEPROM
 

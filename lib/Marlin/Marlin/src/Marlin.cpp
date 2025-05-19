@@ -746,10 +746,6 @@ void setup() {
   motor_driver_init();
   motor_driver_check_connections();
 
-  #ifdef BOARD_INIT
-    BOARD_INIT();
-  #endif
-
   // Check startup - does nothing if bootloader sets MCUSR to 0
   byte mcu = HAL_get_reset_source();
   if (mcu &  1) SERIAL_ECHOLNPGM(MSG_POWERUP);

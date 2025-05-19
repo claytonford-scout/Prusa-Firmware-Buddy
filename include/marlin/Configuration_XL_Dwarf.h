@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#define MOTHERBOARD BOARD_DWARF_V1
-
 // clang-format off
 
 /**

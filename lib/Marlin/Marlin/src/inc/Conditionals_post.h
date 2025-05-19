@@ -29,23 +29,6 @@
  * Defines that depend on configuration but are not editable.
  */
 
-#define AVR_ATmega2560_FAMILY_PLUS_70 ( \
-     MB(BQ_ZUM_MEGA_3D)                 \
-  || MB(MIGHTYBOARD_REVE)               \
-  || MB(MINIRAMBO)                      \
-  || MB(SCOOVO_X9H)                     \
-)
-
-#ifdef TEENSYDUINO
-  #undef max
-  #define max(a,b) ((a)>(b)?(a):(b))
-  #undef min
-  #define min(a,b) ((a)<(b)?(a):(b))
-
-  #undef NOT_A_PIN    // Override Teensyduino legacy CapSense define work-around
-  #define NOT_A_PIN 0 // For PINS_DEBUGGING
-#endif
-
 #if (ENABLED(CLASSIC_JERK))
   #define HAS_CLASSIC_JERK 1
 #endif

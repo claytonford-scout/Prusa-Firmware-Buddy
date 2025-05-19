@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#define MOTHERBOARD BOARD_BUDDY_2209_02
-
 // clang-format off
 
 /**

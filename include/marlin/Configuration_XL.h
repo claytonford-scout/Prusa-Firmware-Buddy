@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#define MOTHERBOARD BOARD_XLBUDDY_V1
-
 #include <option/has_loadcell.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_precise_homing.h>

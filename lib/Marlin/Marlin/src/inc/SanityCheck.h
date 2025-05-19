@@ -58,9 +58,7 @@
 /**
  * Warnings for old configurations
  */
-#ifndef MOTHERBOARD
-  #error "MOTHERBOARD is required. Please update your configuration."
-#elif !defined(X_BED_SIZE) || !defined(Y_BED_SIZE)
+#if !defined(X_BED_SIZE) || !defined(Y_BED_SIZE)
   #error "X_BED_SIZE and Y_BED_SIZE are now required! Please update your configuration."
 #elif WATCH_TEMP_PERIOD > 500
   #error "WATCH_TEMP_PERIOD now uses seconds instead of milliseconds."
@@ -339,40 +337,6 @@
 #elif defined(JUNCTION_DEVIATION)
   #error "JUNCTION_DEVIATION is no longer required. (See CLASSIC_JERK). Please remove it from Configuration.h."
 #endif
-
-#define BOARD_MKS_13        -1000
-#define BOARD_TRIGORILLA    -1001
-#define BOARD_RURAMPS4D     -1002
-#define BOARD_FORMBOT_TREX2 -1003
-#define BOARD_BIQU_SKR_V1_1 -1004
-#define BOARD_STM32F1R      -1005
-#define BOARD_STM32F103R    -1006
-#define BOARD_ESP32         -1007
-#if MB(MKS_13)
-  #error "BOARD_MKS_13 has been renamed BOARD_MKS_GEN_13. Please update your configuration."
-#elif MB(TRIGORILLA)
-  #error "BOARD_TRIGORILLA has been renamed BOARD_TRIGORILLA_13. Please update your configuration."
-#elif MB(RURAMPS4D)
-  #error "BOARD_RURAMPS4D has been renamed BOARD_RURAMPS4D_11. Please update your configuration."
-#elif MB(FORMBOT_TREX2)
-  #error "FORMBOT_TREX2 has been renamed BOARD_FORMBOT_TREX2PLUS. Please update your configuration."
-#elif MB(BIQU_SKR_V1_1)
-  #error "BOARD_BIQU_SKR_V1_1 has been renamed BOARD_BIGTREE_SKR_V1_1. Please update your configuration."
-#elif MB(STM32F1R)
-  #error "BOARD_STM32F1R has been renamed BOARD_STM32F103RE. Please update your configuration."
-#elif MB(STM32F103R)
-  #error "BOARD_STM32F103R has been renamed BOARD_STM32F103RE. Please update your configuration."
-#elif MOTHERBOARD == BOARD_ESP32
-  #error "BOARD_ESP32 has been renamed BOARD_ESPRESSIF_ESP32. Please update your configuration."
-#endif
-#undef BOARD_MKS_13
-#undef BOARD_TRIGORILLA
-#undef BOARD_RURAMPS4D
-#undef BOARD_FORMBOT_TREX2
-#undef BOARD_BIQU_SKR_V1_1
-#undef BOARD_STM32F1R
-#undef BOARD_STM32F103R
-#undef BOARD_ESP32
 
 /**
  * Marlin release, version and default string

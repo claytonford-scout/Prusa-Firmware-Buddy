@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#define MOTHERBOARD BOARD_BUDDY_2209_02
-
 #include "hw_configuration.hpp"
 #include <Marlin/src/core/macros.h>
 #include <option/has_loadcell.h>
