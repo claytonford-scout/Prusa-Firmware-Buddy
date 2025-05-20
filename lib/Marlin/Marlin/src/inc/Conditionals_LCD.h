@@ -176,7 +176,6 @@
   #undef EXTRUDERS
   #define EXTRUDERS 0
   #undef SINGLENOZZLE
-  #undef SWITCHING_EXTRUDER
   #undef HOTEND_IDLE_TIMEOUT
   #undef DISABLE_E
 #endif
@@ -189,17 +188,6 @@
 
   #define E_STEPPERS      2
   #define E_MANUAL        1
-
-#elif ENABLED(SWITCHING_EXTRUDER)   // One stepper for every two EXTRUDERS
-
-  #if EXTRUDERS > 4
-    #define E_STEPPERS    3
-  #elif EXTRUDERS > 2
-    #define E_STEPPERS    2
-  #else
-    #define E_STEPPERS    1
-  #endif
-  #define HOTENDS       E_STEPPERS
 
 #elif HAS_PRUSA_MMU2                // Průša Multi-Material Unit v2
 

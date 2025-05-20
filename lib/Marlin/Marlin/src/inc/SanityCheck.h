@@ -642,38 +642,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #error "SNMM is now MK2_MULTIPLEXER. Please update your configuration."
 #endif
 
-/**
- * Single Stepper Dual Extruder with switching servo
- */
-#if ENABLED(SWITCHING_EXTRUDER)
-  #if NUM_SERVOS < 1
-    #error "SWITCHING_EXTRUDER requires NUM_SERVOS >= 1."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-    #error "SERVO0_PIN must be defined for your SWITCHING_EXTRUDER."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-    #error "SERVO1_PIN must be defined for your SWITCHING_EXTRUDER."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-    #error "SERVO2_PIN must be defined for your SWITCHING_EXTRUDER."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-    #error "SERVO3_PIN must be defined for your SWITCHING_EXTRUDER."
-  #endif
-  #if EXTRUDERS > 3
-    #if NUM_SERVOS < 2
-      #error "SWITCHING_EXTRUDER with 4 extruders requires NUM_SERVOS >= 2."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-      #error "SERVO0_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-      #error "SERVO1_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-      #error "SERVO2_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-      #error "SERVO3_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == SWITCHING_EXTRUDER_SERVO_NR
-      #error "SWITCHING_EXTRUDER_E23_SERVO_NR should be a different extruder from SWITCHING_EXTRUDER_SERVO_NR."
-    #endif
-  #endif
-#endif
-
 #if HAS_REMOTE_ACCELEROMETER() && !HAS_TOOLCHANGER()
   #error "REMOTE_ACCELEROMETER requires PRUSA_TOOLCHANGER"
 #endif
@@ -699,7 +667,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 /**
  * Servo deactivation depends on servo endstops, switching nozzle, or switching extruder
  */
-#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_EXTRUDER_SERVO_NR)
+#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE
   #error "Z_PROBE_SERVO_NR, switching nozzle, switching toolhead or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
 #endif
 
@@ -1118,8 +1086,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     #error "MULTI_NOZZLE_DUPLICATION requires 2 or more hotends."
   #elif ENABLED(SINGLENOZZLE)
     #error "MULTI_NOZZLE_DUPLICATION is incompatible with SINGLENOZZLE."
-  #elif ENABLED(SWITCHING_EXTRUDER)
-    #error "MULTI_NOZZLE_DUPLICATION is incompatible with SWITCHING_EXTRUDER."
   #endif
 #endif
 

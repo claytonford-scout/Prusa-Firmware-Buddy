@@ -45,10 +45,6 @@
   #endif
 #endif
 
-#if ANY(SWITCHING_EXTRUDER)
-  #include "servo.h"
-#endif
-
 #if ENABLED(EXT_SOLENOID)
   #include "../feature/solenoid.h"
 #endif

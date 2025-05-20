@@ -775,12 +775,7 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_HEADING("Servo Angles:");
       for (uint8_t i = 0; i < NUM_SERVOS; i++) {
         switch (i) {
-          #if ENABLED(SWITCHING_EXTRUDER)
-            case SWITCHING_EXTRUDER_SERVO_NR:
-            #if EXTRUDERS > 3
-              case SWITCHING_EXTRUDER_E23_SERVO_NR:
-            #endif
-          #elif (ENABLED(BLTOUCH) && defined(BLTOUCH_ANGLES)) || (defined(Z_SERVO_ANGLES) && defined(Z_PROBE_SERVO_NR))
+          #if (ENABLED(BLTOUCH) && defined(BLTOUCH_ANGLES)) || (defined(Z_SERVO_ANGLES) && defined(Z_PROBE_SERVO_NR))
             case Z_PROBE_SERVO_NR:
           #endif
             CONFIG_ECHO_START();
