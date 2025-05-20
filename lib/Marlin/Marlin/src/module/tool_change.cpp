@@ -34,6 +34,11 @@
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../core/debug_out.h"
 
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+  #include <module/prusa/toolchanger.h>
+#endif
+
 #if EXTRUDERS > 1
   toolchange_settings_t toolchange_settings;  // Initialized by settings.load()
 #endif
@@ -109,6 +114,9 @@ void tool_change(const uint8_t new_tool,
 
     if (new_tool) invalid_extruder_error(new_tool);
     return;
+
+  #elif HAS_TOOLCHANGER()
+    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(new_tool, return_type, current_position, z_lift, z_return);
 
   #else // EXTRUDERS > 1
 

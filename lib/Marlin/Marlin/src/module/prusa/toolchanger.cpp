@@ -26,12 +26,6 @@
 
 LOG_COMPONENT_REF(PrusaToolChanger);
 
-/**
- * @brief Marlin global toolchange settings structure.
- * Initialized by settings.load()
- */
-toolchange_settings_t toolchange_settings;
-
 PrusaToolChanger prusa_toolchanger;
 
 using namespace buddy::puppies;
@@ -179,18 +173,6 @@ bool PrusaToolChanger::check_emergency_stop() {
     }
     #endif /*ENABLED(CRASH_RECOVERY)*/
     return false;
-}
-
-/**
- * Link from Marlin tool_change() to prusa_toolchanger.tool_change()
- */
-void tool_change(const uint8_t new_tool,
-    tool_return_t return_type /*= tool_return_t::to_current*/,
-    tool_change_lift_t z_lift /*= tool_change_lift_t::full_lift*/,
-    bool z_return /*= true*/) {
-
-    // Change tool, ignore return as Marlin doesn't care
-    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(new_tool, return_type, current_position, z_lift, z_return);
 }
 
 bool PrusaToolChanger::tool_change(const uint8_t new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool z_return) {
