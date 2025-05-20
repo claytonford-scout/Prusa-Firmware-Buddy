@@ -177,7 +177,6 @@
   #define EXTRUDERS 0
   #undef SINGLENOZZLE
   #undef SWITCHING_EXTRUDER
-  #undef SWITCHING_NOZZLE
   #undef HOTEND_IDLE_TIMEOUT
   #undef DISABLE_E
 #endif
@@ -200,9 +199,7 @@
   #else
     #define E_STEPPERS    1
   #endif
-  #if DISABLED(SWITCHING_NOZZLE)
-    #define HOTENDS       E_STEPPERS
-  #endif
+  #define HOTENDS       E_STEPPERS
 
 #elif HAS_PRUSA_MMU2                // Průša Multi-Material Unit v2
 
@@ -213,8 +210,8 @@
   #define E_MANUAL        EXTRUDERS
 #endif
 
-// No inactive extruders with SWITCHING_NOZZLE or Průša MMU1
-#if ENABLED(SWITCHING_NOZZLE) || HAS_PRUSA_MMU1
+// No inactive extruders with Průša MMU1
+#if HAS_PRUSA_MMU1
   #undef DISABLE_INACTIVE_EXTRUDER
 #endif
 

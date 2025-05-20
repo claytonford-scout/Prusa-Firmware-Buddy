@@ -45,7 +45,7 @@
   #endif
 #endif
 
-#if ANY(SWITCHING_EXTRUDER, SWITCHING_NOZZLE)
+#if ANY(SWITCHING_EXTRUDER)
   #include "servo.h"
 #endif
 
@@ -72,33 +72,6 @@
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   #include "../feature/pause.h"
 #endif
-
-#if ENABLED(SWITCHING_NOZZLE)
-
-  #if SWITCHING_NOZZLE_TWO_SERVOS
-
-    inline void _move_nozzle_servo(const uint8_t e, const uint8_t angle_index) {
-      constexpr int8_t  sns_index[2] = { SWITCHING_NOZZLE_SERVO_NR, SWITCHING_NOZZLE_E1_SERVO_NR };
-      constexpr int16_t sns_angles[2] = SWITCHING_NOZZLE_SERVO_ANGLES;
-      planner.synchronize();
-      MOVE_SERVO(sns_index[e], sns_angles[angle_index]);
-      safe_delay(500);
-    }
-
-    void lower_nozzle(const uint8_t e) { _move_nozzle_servo(e, 0); }
-    void raise_nozzle(const uint8_t e) { _move_nozzle_servo(e, 1); }
-
-  #else
-
-    void move_nozzle_servo(const uint8_t angle_index) {
-      planner.synchronize();
-      MOVE_SERVO(SWITCHING_NOZZLE_SERVO_NR, servo_angles[SWITCHING_NOZZLE_SERVO_NR][angle_index]);
-      safe_delay(500);
-    }
-
-  #endif
-
-#endif // SWITCHING_NOZZLE
 
 inline void _line_to_current(const AxisEnum fr_axis, const float fscale=1) {
   line_to_current_position(planner.settings.max_feedrate_mm_s[fr_axis] * fscale);
@@ -210,10 +183,6 @@ void tool_change(const uint8_t new_tool,
         TEMPORARY_BED_LEVELING_STATE(false);
       #endif
 
-      #if SWITCHING_NOZZLE_TWO_SERVOS
-        raise_nozzle(old_tool);
-      #endif
-
       REMEMBER(fr, feedrate_mm_s, XY_PROBE_FEEDRATE_MM_S);
 
       #if HAS_SOFTWARE_ENDSTOPS
@@ -229,7 +198,7 @@ void tool_change(const uint8_t new_tool,
         #endif
       #endif
 
-      #if DISABLED(SWITCHING_NOZZLE)
+      #if 1
         if (can_move_away) {
           // Do a small lift to avoid the workpiece for parking
           current_position.z += toolchange_settings.z_raise;
@@ -270,15 +239,6 @@ void tool_change(const uint8_t new_tool,
         magnetic_switching_toolhead_tool_change(new_tool, no_move);
       #elif ENABLED(ELECTROMAGNETIC_SWITCHING_TOOLHEAD)                 // Magnetic Switching ToolChanger
         em_switching_toolhead_tool_change(new_tool, no_move);
-      #elif ENABLED(SWITCHING_NOZZLE) && !SWITCHING_NOZZLE_TWO_SERVOS   // Switching Nozzle (single servo)
-        // Raise by a configured distance to avoid workpiece, except with
-        // SWITCHING_NOZZLE_TWO_SERVOS, as both nozzles will lift instead.
-        current_position.z += _MAX(-diff.z, 0.0) + toolchange_settings.z_raise;
-        #if HAS_SOFTWARE_ENDSTOPS
-          NOMORE(current_position.z, soft_endstop.max.z);
-        #endif
-        if (!no_move) fast_line_to_current(Z_AXIS);
-        move_nozzle_servo(new_tool);
       #endif
 
       #if DISABLED(DUAL_X_CARRIAGE)
@@ -368,19 +328,9 @@ void tool_change(const uint8_t new_tool,
           active_extruder_parked = false;
         #endif
       }
-      #if ENABLED(SWITCHING_NOZZLE)
-        else {
-          // Move back down. (Including when the new tool is higher.)
-          do_blocking_move_to_z(return_position.z, planner.settings.max_feedrate_mm_s[Z_AXIS]);
-        }
-      #endif
 
       #if ENABLED(PRUSA_MMU2)
         mmu2.tool_change(new_tool);
-      #endif
-
-      #if SWITCHING_NOZZLE_TWO_SERVOS
-        lower_nozzle(new_tool);
       #endif
 
     } // (new_tool != old_tool)

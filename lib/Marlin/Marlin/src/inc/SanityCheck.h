@@ -643,45 +643,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #endif
 
 /**
- * A Dual Nozzle carriage with switching servo
- */
-#if ENABLED(SWITCHING_NOZZLE)
-  #if ENABLED(SINGLENOZZLE)
-    #error "SWITCHING_NOZZLE and SINGLENOZZLE are incompatible."
-  #elif EXTRUDERS != 2
-    #error "SWITCHING_NOZZLE requires exactly 2 EXTRUDERS."
-  #elif NUM_SERVOS < 1
-    #error "SWITCHING_NOZZLE requires NUM_SERVOS >= 1."
-  #endif
-
-  #ifndef SWITCHING_NOZZLE_SERVO_NR
-    #error "SWITCHING_NOZZLE requires SWITCHING_NOZZLE_SERVO_NR."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-    #error "SERVO0_PIN must be defined for your SWITCHING_NOZZLE."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-    #error "SERVO1_PIN must be defined for your SWITCHING_NOZZLE."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-    #error "SERVO2_PIN must be defined for your SWITCHING_NOZZLE."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-    #error "SERVO3_PIN must be defined for your SWITCHING_NOZZLE."
-  #endif
-
-  #ifdef SWITCHING_NOZZLE_E1_SERVO_NR
-    #if SWITCHING_NOZZLE_E1_SERVO_NR == SWITCHING_NOZZLE_SERVO_NR
-      #error "SWITCHING_NOZZLE_E1_SERVO_NR must be different from SWITCHING_NOZZLE_SERVO_NR."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-      #error "SERVO0_PIN must be defined for your SWITCHING_NOZZLE."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-      #error "SERVO1_PIN must be defined for your SWITCHING_NOZZLE."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-      #error "SERVO2_PIN must be defined for your SWITCHING_NOZZLE."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-      #error "SERVO3_PIN must be defined for your SWITCHING_NOZZLE."
-    #endif
-  #endif
-#endif
-
-/**
  * Single Stepper Dual Extruder with switching servo
  */
 #if ENABLED(SWITCHING_EXTRUDER)
@@ -738,7 +699,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 /**
  * Servo deactivation depends on servo endstops, switching nozzle, or switching extruder
  */
-#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR)
+#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_EXTRUDER_SERVO_NR)
   #error "Z_PROBE_SERVO_NR, switching nozzle, switching toolhead or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
 #endif
 

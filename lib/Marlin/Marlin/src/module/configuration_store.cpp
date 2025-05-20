@@ -780,8 +780,6 @@ void MarlinSettings::reset() {
             #if EXTRUDERS > 3
               case SWITCHING_EXTRUDER_E23_SERVO_NR:
             #endif
-          #elif ENABLED(SWITCHING_NOZZLE)
-            case SWITCHING_NOZZLE_SERVO_NR:
           #elif (ENABLED(BLTOUCH) && defined(BLTOUCH_ANGLES)) || (defined(Z_SERVO_ANGLES) && defined(Z_PROBE_SERVO_NR))
             case Z_PROBE_SERVO_NR:
           #endif

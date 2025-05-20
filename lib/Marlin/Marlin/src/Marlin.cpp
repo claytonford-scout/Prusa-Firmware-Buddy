@@ -144,10 +144,6 @@
   #include "feature/fanmux.h"
 #endif
 
-#if ANY(SWITCHING_NOZZLE)
-  #include "module/tool_change.h"
-#endif
-
 #if ENABLED(PRUSA_MMU2)
   #include "feature/prusa/MMU2/mmu2_mk4.h"
 #endif
@@ -891,15 +887,6 @@ void setup() {
     I2CPEM.init();
   #endif
 
-  #if ENABLED(SWITCHING_NOZZLE)
-    // Initialize nozzle servo(s)
-    #if SWITCHING_NOZZLE_TWO_SERVOS
-      lower_nozzle(0);
-      raise_nozzle(1);
-    #else
-      move_nozzle_servo(0);
-    #endif
-  #endif
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
   #endif

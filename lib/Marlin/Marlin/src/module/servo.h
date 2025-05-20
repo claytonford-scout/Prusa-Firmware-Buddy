@@ -41,9 +41,6 @@
     #endif
     #define SADATA    SWITCHING_EXTRUDER_SERVO_ANGLES
     #define ASRC(N,E) (SWITCHING_EXTRUDER_SERVO_NR == N ? asrc[E] : SWITCHING_EXTRUDER_E23_SERVO_NR == N ? asrc[E+2] : 0)
-  #elif ENABLED(SWITCHING_NOZZLE)
-    #define SADATA    SWITCHING_NOZZLE_SERVO_ANGLES
-    #define ASRC(N,E) (SWITCHING_NOZZLE_SERVO_NR == N ? asrc[E] : 0)
   #elif defined(Z_PROBE_SERVO_NR)
     #define ASRC(N,E) (Z_PROBE_SERVO_NR == N ? asrc[E] : 0)
     #if ENABLED(BLTOUCH)

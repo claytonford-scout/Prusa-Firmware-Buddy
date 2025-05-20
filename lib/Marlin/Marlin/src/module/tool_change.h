@@ -41,15 +41,6 @@
 
 #endif
 
-#if ENABLED(SWITCHING_NOZZLE)
-  #if SWITCHING_NOZZLE_TWO_SERVOS
-    void lower_nozzle(const uint8_t e);
-    void raise_nozzle(const uint8_t e);
-  #else
-    void move_nozzle_servo(const uint8_t angle_index);
-  #endif
-#endif
-
 #if ENABLED(SINGLENOZZLE)
   extern uint16_t singlenozzle_temp[EXTRUDERS];
   #if FAN_COUNT > 0
