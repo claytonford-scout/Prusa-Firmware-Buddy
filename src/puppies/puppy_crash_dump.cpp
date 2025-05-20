@@ -123,31 +123,6 @@ bool save_dumps_to_usb() {
     return rc;
 }
 
-bool upload_dumps_to_server() {
-    bool rc { false };
-    for (const auto dock : DOCKS) {
-        // for (const auto &info : buddy::puppies::dock_info) {
-        const auto &info = get_dock_info(dock);
-
-        struct stat fs;
-        if (stat(info.crash_dump_path, &fs) != 0) {
-            continue;
-        }
-
-        std::array<char, ::crash_dump::url_buff_size> url_buff;
-        std::array<char, ::crash_dump::url_buff_size> escaped_url_string;
-
-        ::crash_dump::create_url_string(url_buff, escaped_url_string);
-        http::PostFile req(info.crash_dump_path, escaped_url_string.data(), fs.st_size);
-        if (!::crash_dump::upload_dump_to_server(req)) {
-            continue;
-        }
-
-        rc = true;
-    }
-    return rc;
-}
-
 bool remove_dumps_from_filesystem() {
     bool rc { false };
     for (const auto &info : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_dock_info)) {
