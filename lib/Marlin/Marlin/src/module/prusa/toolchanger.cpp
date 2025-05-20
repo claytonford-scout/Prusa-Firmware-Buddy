@@ -189,8 +189,14 @@ void tool_change(const uint8_t new_tool,
     tool_change_lift_t z_lift /*= tool_change_lift_t::full_lift*/,
     bool z_return /*= true*/) {
 
+    // Change tool, ignore return as Marlin doesn't care
+    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(new_tool, return_type, current_position, z_lift, z_return);
+}
+
+bool PrusaToolChanger::tool_change(const uint8_t new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool z_return) {
+    // WARNING: called from default(marlin) task
+
     // Check where we should return to
-    xyz_pos_t return_position = current_position;
     if (return_type == tool_return_t::to_destination || return_type == tool_return_t::purge_and_to_destination) {
         return_position = destination;
     }
@@ -199,13 +205,6 @@ void tool_change(const uint8_t new_tool,
     if (return_type == tool_return_t::to_current && !all_axes_known()) {
         return_type = tool_return_t::no_return;
     }
-
-    // Change tool, ignore return as Marlin doesn't care
-    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(new_tool, return_type, return_position, z_lift, z_return);
-}
-
-bool PrusaToolChanger::tool_change(const uint8_t new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool z_return) {
-    // WARNING: called from default(marlin) task
 
     quick_stopped = false;
 
