@@ -467,27 +467,25 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
       && ELAPSED(ms, gcode.previous_move_ms + (EXTRUDER_RUNOUT_SECONDS) * 1000UL)
       && !planner.busy()
     ) {
-      #if 1
-        bool oldstatus;
-        switch (active_extruder) {
-          default: oldstatus = E0_ENABLE_READ(); enable_E0(); break;
-          #if E_STEPPERS > 1
-            case 1: oldstatus = E1_ENABLE_READ(); enable_E1(); break;
-            #if E_STEPPERS > 2
-              case 2: oldstatus = E2_ENABLE_READ(); enable_E2(); break;
-              #if E_STEPPERS > 3
-                case 3: oldstatus = E3_ENABLE_READ(); enable_E3(); break;
-                #if E_STEPPERS > 4
-                  case 4: oldstatus = E4_ENABLE_READ(); enable_E4(); break;
-                  #if E_STEPPERS > 5
-                    case 5: oldstatus = E5_ENABLE_READ(); enable_E5(); break;
-                  #endif // E_STEPPERS > 5
-                #endif // E_STEPPERS > 4
-              #endif // E_STEPPERS > 3
-            #endif // E_STEPPERS > 2
-          #endif // E_STEPPERS > 1
-        }
-      #endif
+      bool oldstatus;
+      switch (active_extruder) {
+        default: oldstatus = E0_ENABLE_READ(); enable_E0(); break;
+        #if E_STEPPERS > 1
+          case 1: oldstatus = E1_ENABLE_READ(); enable_E1(); break;
+          #if E_STEPPERS > 2
+            case 2: oldstatus = E2_ENABLE_READ(); enable_E2(); break;
+            #if E_STEPPERS > 3
+              case 3: oldstatus = E3_ENABLE_READ(); enable_E3(); break;
+              #if E_STEPPERS > 4
+                case 4: oldstatus = E4_ENABLE_READ(); enable_E4(); break;
+                #if E_STEPPERS > 5
+                  case 5: oldstatus = E5_ENABLE_READ(); enable_E5(); break;
+                #endif // E_STEPPERS > 5
+              #endif // E_STEPPERS > 4
+            #endif // E_STEPPERS > 3
+          #endif // E_STEPPERS > 2
+        #endif // E_STEPPERS > 1
+      }
 
       const float olde = current_position.e;
       current_position.e += EXTRUDER_RUNOUT_EXTRUDE;
@@ -496,26 +494,24 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
       planner.set_e_position_mm(olde);
       planner.synchronize();
 
-      #if 1
-        switch (active_extruder) {
-          case 0: E0_ENABLE_WRITE(oldstatus); break;
-          #if E_STEPPERS > 1
-            case 1: E1_ENABLE_WRITE(oldstatus); break;
-            #if E_STEPPERS > 2
-              case 2: E2_ENABLE_WRITE(oldstatus); break;
-              #if E_STEPPERS > 3
-                case 3: E3_ENABLE_WRITE(oldstatus); break;
-                #if E_STEPPERS > 4
-                  case 4: E4_ENABLE_WRITE(oldstatus); break;
-                  #if E_STEPPERS > 5
-                    case 5: E5_ENABLE_WRITE(oldstatus); break;
-                  #endif // E_STEPPERS > 5
-                #endif // E_STEPPERS > 4
-              #endif // E_STEPPERS > 3
-            #endif // E_STEPPERS > 2
-          #endif // E_STEPPERS > 1
-        }
-      #endif
+      switch (active_extruder) {
+        case 0: E0_ENABLE_WRITE(oldstatus); break;
+        #if E_STEPPERS > 1
+          case 1: E1_ENABLE_WRITE(oldstatus); break;
+          #if E_STEPPERS > 2
+            case 2: E2_ENABLE_WRITE(oldstatus); break;
+            #if E_STEPPERS > 3
+              case 3: E3_ENABLE_WRITE(oldstatus); break;
+              #if E_STEPPERS > 4
+                case 4: E4_ENABLE_WRITE(oldstatus); break;
+                #if E_STEPPERS > 5
+                  case 5: E5_ENABLE_WRITE(oldstatus); break;
+                #endif // E_STEPPERS > 5
+              #endif // E_STEPPERS > 4
+            #endif // E_STEPPERS > 3
+          #endif // E_STEPPERS > 2
+        #endif // E_STEPPERS > 1
+      }
 
       gcode.reset_stepper_timeout();
     }

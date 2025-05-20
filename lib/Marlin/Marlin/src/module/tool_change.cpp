@@ -194,27 +194,25 @@ void tool_change(const uint8_t new_tool,
         #endif
       #endif
 
-      #if 1
-        if (can_move_away) {
-          // Do a small lift to avoid the workpiece for parking
-          current_position.z += toolchange_settings.z_raise;
-          if (return_type > tool_return_t::no_return && return_delta_z > 0) {
-            // also immediately account for clearance in the return move
-            // TODO: this might not cover the entire plane as MBL is turned off!
-            current_position.z += return_delta_z;
-          }
-
-          #if HAS_SOFTWARE_ENDSTOPS
-            NOMORE(current_position.z, soft_endstop.max.z);
-          #endif
-          fast_line_to_current(Z_AXIS);
-          #if ENABLED(TOOLCHANGE_PARK)
-            current_position = toolchange_settings.change_point;
-          #endif
-          planner.buffer_line(current_position, feedrate_mm_s, old_tool);
-          planner.synchronize();
+      if (can_move_away) {
+        // Do a small lift to avoid the workpiece for parking
+        current_position.z += toolchange_settings.z_raise;
+        if (return_type > tool_return_t::no_return && return_delta_z > 0) {
+          // also immediately account for clearance in the return move
+          // TODO: this might not cover the entire plane as MBL is turned off!
+          current_position.z += return_delta_z;
         }
-      #endif
+
+        #if HAS_SOFTWARE_ENDSTOPS
+          NOMORE(current_position.z, soft_endstop.max.z);
+        #endif
+        fast_line_to_current(Z_AXIS);
+        #if ENABLED(TOOLCHANGE_PARK)
+          current_position = toolchange_settings.change_point;
+        #endif
+        planner.buffer_line(current_position, feedrate_mm_s, old_tool);
+        planner.synchronize();
+      }
 
       #if HAS_HOTEND_OFFSET
         xyz_pos_t diff = hotend_offset[new_tool] - hotend_currently_applied_offset;
