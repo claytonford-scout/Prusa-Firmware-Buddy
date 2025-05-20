@@ -142,11 +142,7 @@ void WindowBlinkingText::unconditionalDraw() {
 
 void WindowBlinkingText::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     const uint8_t prev_blink_phase = blink_phase;
-    if (blink_enable) {
-        blink_phase = (gui::GetTick() / uint32_t(500)) & 0b1;
-    } else {
-        blink_phase = 0;
-    }
+    blink_phase = blink_enable && ((gui::GetTick() / uint32_t(500)) & 0b1);
 
     if (blink_phase != prev_blink_phase) {
         Invalidate();
