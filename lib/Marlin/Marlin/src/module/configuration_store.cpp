@@ -283,16 +283,6 @@ void MarlinSettings::reset() {
   //
 
   #if EXTRUDERS > 1
-    #if ENABLED(TOOLCHANGE_FILAMENT_SWAP)
-      toolchange_settings.swap_length = TOOLCHANGE_FIL_SWAP_LENGTH;
-      toolchange_settings.extra_prime = TOOLCHANGE_FIL_EXTRA_PRIME;
-      toolchange_settings.prime_speed = TOOLCHANGE_FIL_SWAP_PRIME_SPEED;
-      toolchange_settings.retract_speed = TOOLCHANGE_FIL_SWAP_RETRACT_SPEED;
-    #endif
-    #if ENABLED(TOOLCHANGE_PARK)
-      constexpr xyz_pos_t tpxy = TOOLCHANGE_PARK_XY;
-      toolchange_settings.change_point = tpxy;
-    #endif
     toolchange_settings.z_raise = TOOLCHANGE_ZRAISE;
   #endif
 
