@@ -41,10 +41,6 @@
 
 #endif
 
-#if DO_SWITCH_EXTRUDER
-  void move_extruder_servo(const uint8_t e);
-#endif
-
 #if ENABLED(SWITCHING_NOZZLE)
   #if SWITCHING_NOZZLE_TWO_SERVOS
     void lower_nozzle(const uint8_t e);

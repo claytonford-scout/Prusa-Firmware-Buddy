@@ -144,7 +144,7 @@
   #include "feature/fanmux.h"
 #endif
 
-#if DO_SWITCH_EXTRUDER || ANY(SWITCHING_NOZZLE)
+#if ANY(SWITCHING_NOZZLE)
   #include "module/tool_change.h"
 #endif
 
@@ -889,10 +889,6 @@ void setup() {
 
   #if ENABLED(I2C_POSITION_ENCODERS)
     I2CPEM.init();
-  #endif
-
-  #if DO_SWITCH_EXTRUDER
-    move_extruder_servo(0);   // Initialize extruder servo
   #endif
 
   #if ENABLED(SWITCHING_NOZZLE)

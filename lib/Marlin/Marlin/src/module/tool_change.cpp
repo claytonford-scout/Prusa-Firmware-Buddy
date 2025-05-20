@@ -73,27 +73,6 @@
   #include "../feature/pause.h"
 #endif
 
-#if DO_SWITCH_EXTRUDER
-
-  #if EXTRUDERS > 3
-    #define _SERVO_NR(E) ((E) < 2 ? SWITCHING_EXTRUDER_SERVO_NR : SWITCHING_EXTRUDER_E23_SERVO_NR)
-  #else
-    #define _SERVO_NR(E) SWITCHING_EXTRUDER_SERVO_NR
-  #endif
-
-  void move_extruder_servo(const uint8_t e) {
-    planner.synchronize();
-    #if EXTRUDERS & 1
-      if (e < EXTRUDERS - 1)
-    #endif
-    {
-      MOVE_SERVO(_SERVO_NR(e), servo_angles[_SERVO_NR(e)][e]);
-      safe_delay(500);
-    }
-  }
-
-#endif // DO_SWITCH_EXTRUDER
-
 #if ENABLED(SWITCHING_NOZZLE)
 
   #if SWITCHING_NOZZLE_TWO_SERVOS
@@ -420,11 +399,6 @@ void tool_change(const uint8_t new_tool,
     #if ENABLED(MK2_MULTIPLEXER)
       if (new_tool >= E_STEPPERS) return invalid_extruder_error(new_tool);
       select_multiplexed_stepper(new_tool);
-    #endif
-
-    #if DO_SWITCH_EXTRUDER
-      planner.synchronize();
-      move_extruder_servo(active_extruder);
     #endif
 
     #if HAS_FANMUX
