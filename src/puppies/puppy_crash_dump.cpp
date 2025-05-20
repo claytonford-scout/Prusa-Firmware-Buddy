@@ -137,7 +137,7 @@ bool upload_dumps_to_server() {
         std::array<char, ::crash_dump::url_buff_size> url_buff;
         std::array<char, ::crash_dump::url_buff_size> escaped_url_string;
 
-        ::crash_dump::create_url_string(url_buff, escaped_url_string, get_puppy_info(to_puppy_type(dock)).name);
+        ::crash_dump::create_url_string(url_buff, escaped_url_string);
         http::PostFile req(info.crash_dump_path, escaped_url_string.data(), fs.st_size);
         if (!::crash_dump::upload_dump_to_server(req)) {
             continue;
