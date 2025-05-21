@@ -56,7 +56,7 @@
 #include "module/probe.h"
 #include "module/temperature.h"
 #include "module/configuration_store.h"
-#include "module/printcounter.h" // PrintCounter or Stopwatch
+#include "module/printcounter.h"
 #include "feature/closedloop.h"
 #include "feature/safety_timer.h"
 #include "feature/bed_preheat.hpp"
@@ -573,10 +573,6 @@ void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
 
   #if HAS_HEATED_BED
     bed_preheat.update();
-  #endif
-
-  #if ENABLED(PRINTCOUNTER)
-    print_job_timer.tick();
   #endif
 
   #if USE_BEEPER

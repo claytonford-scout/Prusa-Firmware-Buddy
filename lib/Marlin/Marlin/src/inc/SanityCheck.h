@@ -1770,10 +1770,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 
 #endif
 
-#if ENABLED(PRINTCOUNTER)
-  #error "PRINTCOUNTER requires EEPROM_SETTINGS. Please update your Configuration."
-#endif
-
 #if ENABLED(GCODE_MACROS) && !WITHIN(GCODE_MACROS_SLOTS, 1, 10)
   #error "GCODE_MACROS_SLOTS must be a number from 1 to 10."
 #endif
@@ -1842,19 +1838,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
     #error "PRUSA_MMU2 requires EXTRUDERS = 5."
   #elif DISABLED(ADVANCED_PAUSE_FEATURE)
     static_assert(nullptr == strstr(MMU2_FILAMENT_RUNOUT_SCRIPT, "M600"), "ADVANCED_PAUSE_FEATURE is required to use M600 with PRUSA_MMU2.");
-  #endif
-#endif
-
-/**
- * Advanced PRINTCOUNTER settings
- */
-#if ENABLED(PRINTCOUNTER)
-  #if defined(SERVICE_INTERVAL_1) != defined(SERVICE_NAME_1)
-    #error "Both SERVICE_NAME_1 and SERVICE_INTERVAL_1 are required."
-  #elif defined(SERVICE_INTERVAL_2) != defined(SERVICE_NAME_2)
-    #error "Both SERVICE_NAME_2 and SERVICE_INTERVAL_2 are required."
-  #elif defined(SERVICE_INTERVAL_3) != defined(SERVICE_NAME_3)
-    #error "Both SERVICE_NAME_3 and SERVICE_INTERVAL_3 are required."
   #endif
 #endif
 
