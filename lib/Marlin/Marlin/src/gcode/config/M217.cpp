@@ -27,9 +27,7 @@
 #include "../gcode.h"
 #include "../../module/tool_change.h"
 
-void M217_report(const bool eeprom=false) {
-  UNUSED(eeprom);
-
+void M217_report() {
   SERIAL_ECHOPAIR(" Z", LINEAR_UNIT(toolchange_settings.z_raise));
   SERIAL_EOL();
 }

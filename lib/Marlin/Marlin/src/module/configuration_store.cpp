@@ -93,7 +93,7 @@
 
 #if EXTRUDERS > 1
   #include "tool_change.h"
-  void M217_report(const bool eeprom);
+  void M217_report();
 #endif
 
 #if ENABLED(BLTOUCH)
@@ -1194,7 +1194,7 @@ void MarlinSettings::reset() {
     #if EXTRUDERS > 1
       CONFIG_ECHO_HEADING("Tool-changing:");
       CONFIG_ECHO_START();
-      M217_report(true);
+      M217_report();
     #endif
 
     #if ENABLED(BACKLASH_GCODE)
