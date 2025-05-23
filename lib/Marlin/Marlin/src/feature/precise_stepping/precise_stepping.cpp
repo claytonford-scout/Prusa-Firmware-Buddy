@@ -762,10 +762,6 @@ void PreciseStepping::step_isr() {
     static_assert(max_time_increment < STEPPER_ISR_MAX_TICKS);
     static_assert(max_time_increment > min_reserve);
 
-    // maximum number of steps ticked in a single iteration, for debugging purposes
-    uint8_t steps_merged = 0; // current call
-    static uint8_t max_steps_merged = 0; // overall
-
     const auto timer_handle = &TimerHandle[STEP_TIMER_NUM].handle;
     const uint32_t compare = __HAL_TIM_GET_COMPARE(timer_handle, TIM_CHANNEL_1);
 
@@ -775,7 +771,9 @@ void PreciseStepping::step_isr() {
     uint16_t tim_counter = 0;
     int32_t diff = 0;
 
-    for (;;) {
+    // maximum number of steps ticked in a single iteration
+    constexpr uint8_t limit_steps_merged = 5;
+    for (uint8_t steps_merged = 0;; steps_merged++) {
         if (stop_pending)
             [[unlikely]] {
             buddy::InterruptDisabler _;
@@ -825,7 +823,11 @@ void PreciseStepping::step_isr() {
             // will be incorrect.
             tim_counter = __HAL_TIM_GET_COUNTER(timer_handle);
             diff = counter_signed_diff(adjusted_next, tim_counter);
-            if (diff > 0) {
+
+            // in case we are behind with steps planning, we allow only limit_steps_merged to be merged
+            // and then leave the interrupt for min_reserve[us] in order to give some processing power
+            // also to other tasks or interrupts
+            if ((diff > 0) || (steps_merged == (limit_steps_merged - 1))) {
                 last_step_isr_delay = 0;
 
                 if (diff < min_reserve) {
@@ -838,10 +840,6 @@ void PreciseStepping::step_isr() {
                 break;
             }
         }
-
-        // iterate again to process the next event immediately
-        ++steps_merged;
-
         // we are late with step execution, so we will speed up the next step
         last_step_isr_delay = -diff;
 
@@ -853,11 +851,6 @@ void PreciseStepping::step_isr() {
     // is a big negative number, the difference between 'adjusted_next' and 'tim_counter'
     // is bigger than (UINT16_MAX / 2), or something interrupts the stepper routine for a very long time.
     assert(diff >= -STEPPER_ISR_MAX_TICKS && diff <= STEPPER_ISR_MAX_TICKS);
-
-    // keep some stats for debugging purposes
-    if (steps_merged > max_steps_merged) {
-        max_steps_merged = steps_merged;
-    }
 }
 
 FORCE_INLINE move_t *append_beginning_empty_move() {
