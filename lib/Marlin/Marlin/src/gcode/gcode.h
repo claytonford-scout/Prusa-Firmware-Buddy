@@ -139,7 +139,6 @@
  * M129 - EtoP Closed. (Requires BARICUDA)
  * M140 - Set bed target temp. S<temp>
  * M141 - Set heated chamber target temp. S<temp> (Requires a chamber heater)
- * M149 - Set temperature units. (Requires TEMPERATURE_UNITS_SUPPORT)
  * M150 - Set Status LED Color as R<red> U<green> B<blue> P<bright>. Values 0-255.
  * M155 - Auto-report temperatures with interval of S<seconds>. (Requires AUTO_REPORT_TEMPERATURES)
  * M190 - S<temp> Wait for bed current temp to reach target temp. ** Wait only when heating! **
@@ -644,10 +643,6 @@ private:
 
   #if HAS_TEMP_HEATBREAK_CONTROL
     static void M142();
-  #endif
-
-  #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
-    static void M149();
   #endif
 
   #if ENABLED(AUTO_REPORT_TEMPERATURES) && HAS_TEMP_SENSOR

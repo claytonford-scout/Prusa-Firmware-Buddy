@@ -34,10 +34,6 @@
   #include "../libs/hex_print_routines.h"
 #endif
 
-#if ENABLED(TEMPERATURE_UNITS_SUPPORT)
-  typedef enum : uint8_t { TEMPUNIT_C, TEMPUNIT_K, TEMPUNIT_F } TempUnit;
-#endif
-
 /**
  * GCode parser
  *
@@ -67,10 +63,6 @@ public:
   // Global states for GCode-level units features
 
   static bool volumetric_enabled;
-
-  #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
-    static TempUnit input_temp_units;
-  #endif
 
   // Command line state
   static char *command_ptr,               // The command, so it can be echoed
@@ -267,44 +259,10 @@ public:
   static inline float value_axis_units(const AxisEnum axis)     { return axis_value_to_mm(axis, value_float()); }
   static inline float value_per_axis_units(const AxisEnum axis) { return per_axis_value(axis, value_float()); }
 
-  #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
-
-    static inline void set_input_temp_units(const TempUnit units) { input_temp_units = units; }
-
-    static inline float value_celsius() {
-      const float f = value_float();
-      switch (input_temp_units) {
-        case TEMPUNIT_F:
-          return (f - 32) * 0.5555555556f;
-        case TEMPUNIT_K:
-          return f - 273.15f;
-        case TEMPUNIT_C:
-        default:
-          return f;
-      }
-    }
-
-    static inline float value_celsius_diff() {
-      switch (input_temp_units) {
-        case TEMPUNIT_F:
-          return value_float() * 0.5555555556f;
-        case TEMPUNIT_C:
-        case TEMPUNIT_K:
-        default:
-          return value_float();
-      }
-    }
-
-    #define TEMP_UNIT(N) parser.to_temp_units(N)
-
-  #else // !TEMPERATURE_UNITS_SUPPORT
-
     static inline float value_celsius()      { return value_float(); }
     static inline float value_celsius_diff() { return value_float(); }
 
     #define TEMP_UNIT(N) (N)
-
-  #endif // !TEMPERATURE_UNITS_SUPPORT
 
   static inline feedRate_t value_feedrate() { return MMM_TO_MMS(value_linear_units()); }
 

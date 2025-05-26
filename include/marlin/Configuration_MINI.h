@@ -1205,11 +1205,6 @@
 #define DEFAULT_KEEPALIVE_INTERVAL 2 // Number of seconds between "busy" messages. Set with M113.
 #define BUSY_WHILE_HEATING // Some hosts require "busy" messages even during heating
 
-//
-// M149 Set temperature units support
-//
-//#define TEMPERATURE_UNITS_SUPPORT
-
 // @section temperature
 
 // Preheat Constants

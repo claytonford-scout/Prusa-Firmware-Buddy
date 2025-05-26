@@ -37,10 +37,6 @@
 
 bool GCodeParser::volumetric_enabled;
 
-#if ENABLED(TEMPERATURE_UNITS_SUPPORT)
-  TempUnit GCodeParser::input_temp_units = TEMPUNIT_C;
-#endif
-
 char *GCodeParser::command_ptr,
      *GCodeParser::string_arg,
      *GCodeParser::value_ptr;
