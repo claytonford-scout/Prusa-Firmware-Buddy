@@ -37,10 +37,6 @@
 
 bool GCodeParser::volumetric_enabled;
 
-#if ENABLED(INCH_MODE_SUPPORT)
-  float GCodeParser::linear_unit_factor, GCodeParser::volumetric_unit_factor;
-#endif
-
 #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
   TempUnit GCodeParser::input_temp_units = TEMPUNIT_C;
 #endif

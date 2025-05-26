@@ -38,10 +38,6 @@
   typedef enum : uint8_t { TEMPUNIT_C, TEMPUNIT_K, TEMPUNIT_F } TempUnit;
 #endif
 
-#if ENABLED(INCH_MODE_SUPPORT)
-  typedef enum : uint8_t { LINEARUNIT_MM, LINEARUNIT_INCH } LinearUnit;
-#endif
-
 /**
  * GCode parser
  *
@@ -71,10 +67,6 @@ public:
   // Global states for GCode-level units features
 
   static bool volumetric_enabled;
-
-  #if ENABLED(INCH_MODE_SUPPORT)
-    static float linear_unit_factor, volumetric_unit_factor;
-  #endif
 
   #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
     static TempUnit input_temp_units;
@@ -261,40 +253,12 @@ public:
 
   // Units modes: Inches, Fahrenheit, Kelvin
 
-  #if ENABLED(INCH_MODE_SUPPORT)
-    static inline float mm_to_linear_unit(const float mm)     { return mm / linear_unit_factor; }
-    static inline float mm_to_volumetric_unit(const float mm) { return mm / (volumetric_enabled ? volumetric_unit_factor : linear_unit_factor); }
-
-    // Init linear units by constructor
-    GCodeParser() { set_input_linear_units(LINEARUNIT_MM); }
-
-    static inline void set_input_linear_units(const LinearUnit units) {
-      switch (units) {
-        default:
-        case LINEARUNIT_MM:   linear_unit_factor =  1.0f; break;
-        case LINEARUNIT_INCH: linear_unit_factor = 25.4f; break;
-      }
-      volumetric_unit_factor = POW(linear_unit_factor, 3);
-    }
-
-    static inline float axis_unit_factor(const AxisEnum axis) {
-      return (axis >= E_AXIS && volumetric_enabled ? volumetric_unit_factor : linear_unit_factor);
-    }
-
-    static inline float linear_value_to_mm(const float v)                    { return v * linear_unit_factor; }
-    static inline float axis_value_to_mm(const AxisEnum axis, const float v) { return v * axis_unit_factor(axis); }
-    static inline float per_axis_value(const AxisEnum axis, const float v)   { return v / axis_unit_factor(axis); }
-
-  #else
-
     static inline float mm_to_linear_unit(const float mm)     { return mm; }
     static inline float mm_to_volumetric_unit(const float mm) { return mm; }
 
     static inline float linear_value_to_mm(const float v)               { return v; }
     static inline float axis_value_to_mm(const AxisEnum, const float v) { return v; }
     static inline float per_axis_value(const AxisEnum, const float v)   { return v; }
-
-  #endif
 
   #define LINEAR_UNIT(V)     parser.mm_to_linear_unit(V)
   #define VOLUMETRIC_UNIT(V) parser.mm_to_volumetric_unit(V)

@@ -1309,11 +1309,6 @@
 #define BUSY_WHILE_HEATING // Some hosts require "busy" messages even during heating
 
 //
-// G20/G21 Inch mode support
-//
-//#define INCH_MODE_SUPPORT
-
-//
 // M149 Set temperature units support
 //
 //#define TEMPERATURE_UNITS_SUPPORT
