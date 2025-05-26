@@ -213,9 +213,6 @@ void GCodeParser::parse(char *p) {
 
   // Only use string_arg for these M codes
   if (letter == 'M') switch (codenum) {
-    #if ENABLED(GCODE_MACROS)
-      case 810 ... 819:
-    #endif
     #if ENABLED(EXPECTED_PRINTER_CHECK)
       case 16:
     #endif

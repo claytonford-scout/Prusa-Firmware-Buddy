@@ -1751,10 +1751,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 
 #endif
 
-#if ENABLED(GCODE_MACROS) && !WITHIN(GCODE_MACROS_SLOTS, 1, 10)
-  #error "GCODE_MACROS_SLOTS must be a number from 1 to 10."
-#endif
-
 #if ENABLED(CUSTOM_USER_MENUS)
   #ifdef USER_GCODE_1
     constexpr char _chr1 = USER_GCODE_1[strlen(USER_GCODE_1) - 1];
