@@ -232,13 +232,6 @@ void GcodeSuite::dwell(millis_t time, bool no_stepper_delay) {
 
 #endif // HAS_LEVELING && G29_RETRY_AND_RECOVER
 
-//
-// Placeholders for non-migrated codes
-//
-#if ENABLED(M100_FREE_MEMORY_WATCHER)
-  extern void M100_dump_routine(PGM_P const title, char *start, char *end);
-#endif
-
 /**
  * Process the parsed command and dispatch it to its handler
  */
@@ -447,10 +440,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       case 75: M75(); break;                                      // M75: Start print timer
       case 76: M76(); break;                                      // M76: Pause print timer
       case 77: M77(); break;                                      // M77: Stop print timer
-
-      #if ENABLED(M100_FREE_MEMORY_WATCHER)
-        case 100: M100(); break;                                  // M100: Free Memory Report
-      #endif
 
       #if EXTRUDERS
         case 104: M104(); break;                                  // M104: Set hot end temperature
@@ -836,10 +825,6 @@ void GcodeSuite::process_next_command() {
   if (DEBUGGING(ECHO)) {
     SERIAL_ECHO_START();
     SERIAL_ECHOLN(current_command);
-    #if ENABLED(M100_FREE_MEMORY_DUMPER)
-      SERIAL_ECHOPAIR("slot:", queue.index_r);
-      M100_dump_routine(PSTR("   Command Queue:"), queue.command_buffer, queue.command_buffer + sizeof(queue.command_buffer));
-    #endif
   }
 
   // Parse the next command in the queue

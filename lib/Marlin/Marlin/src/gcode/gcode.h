@@ -115,7 +115,6 @@
  * M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
  * M86  - Set Safety Timer expiration time (S<seconds>). Set to zero to disable the timer.
  * M92  - Set planner.settings.axis_steps_per_mm for one or more axes.
- * M100 - Watch Free Memory (for debugging) (Requires M100_FREE_MEMORY_WATCHER)
  * M104 - Set extruder target temp.
  * M105 - Report current temperatures.
  * M106 - Set print fan speed.
@@ -593,10 +592,6 @@ private:
   static void M85();
   static void M86();
   static void M92();
-
-  #if ENABLED(M100_FREE_MEMORY_WATCHER)
-    static void M100();
-  #endif
 
   #if EXTRUDERS
     static void M109();
