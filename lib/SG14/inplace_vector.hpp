@@ -46,7 +46,7 @@
         #include <bsod.h>
         #define SG14_INPLACE_VECTOR_THROW(x) bsod("%s", (x).what())
     #else
-        #include <cstlib.h>
+        #include <cstdlib>
         #define SG14_INPLACE_VECTOR_THROW(x) std::abort()
     #endif
 #endif
