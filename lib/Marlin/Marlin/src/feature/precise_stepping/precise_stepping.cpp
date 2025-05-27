@@ -429,8 +429,6 @@ FORCE_INLINE step_event_info_t step_generator_next_step_event(step_generator_sta
 bool generate_next_step_event(step_event_i32_t &step_event, step_generator_state_t &step_state) {
     const step_index_t old_nearest_step_event_idx = step_state.step_event_index[0];
 
-    // Sorting buffer isn't fulfilled for all active axis, so we need to fulfill.
-    // So we don't have anything to put into step_event_buffer.
     auto step_status = step_state.step_events[old_nearest_step_event_idx].status;
     if (step_status == STEP_EVENT_INFO_STATUS_GENERATED_VALID || step_status == STEP_EVENT_INFO_STATUS_GENERATED_KEEP_ALIVE) {
         const double step_time_absolute = step_state.step_events[old_nearest_step_event_idx].time;
