@@ -31,7 +31,7 @@
  #include <functional>
  
  #ifndef SG14_INPLACE_FUNCTION_THROW
-    #if __cpp_exception || UNITTESTS
+    #if __cpp_exception || defined(UNITTESTS)
         #define SG14_INPLACE_VECTOR_THROW(x) throw((x))
     #elif __has_include(<bsod.h>)
         // Our custom exception handling. Since we don't use them, lets bsod() if we can, otherwise lets abort.
