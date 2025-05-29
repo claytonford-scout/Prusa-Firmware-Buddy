@@ -186,8 +186,6 @@
   #error "MIN_STEPS_PER_SEGMENT must be at least 1. Please update your Configuration_adv.h."
 #elif defined(PREVENT_DANGEROUS_EXTRUDE)
   #error "PREVENT_DANGEROUS_EXTRUDE is now PREVENT_COLD_EXTRUSION. Please update your configuration."
-#elif defined(SCARA)
-  #error "SCARA is now MORGAN_SCARA. Please update your configuration."
 #elif defined(MESH_NUM_X_POINTS) || defined(MESH_NUM_Y_POINTS)
   #error "MESH_NUM_[XY]_POINTS is now GRID_MAX_POINTS_[XY]. Please update your configuration."
 #elif defined(UBL_MESH_NUM_X_POINTS) || defined(UBL_MESH_NUM_Y_POINTS)
@@ -520,9 +518,7 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
  * Babystepping
  */
 #if ENABLED(BABYSTEPPING)
-  #if ENABLED(SCARA)
-    #error "BABYSTEPPING is not implemented for SCARA yet."
-  #elif BOTH(DELTA, BABYSTEP_XY)
+  #if BOTH(DELTA, BABYSTEP_XY)
     #error "BABYSTEPPING only implemented for Z axis on deltabots."
   #elif ENABLED(BABYSTEP_ZPROBE_OFFSET) && !HAS_BED_PROBE
     #error "BABYSTEP_ZPROBE_OFFSET requires a probe."
@@ -661,14 +657,13 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  */
 #if 1 < 0 \
   + ENABLED(DELTA) \
-  + ENABLED(MORGAN_SCARA) \
   + ENABLED(COREXY) \
   + ENABLED(COREXZ) \
   + ENABLED(COREYZ) \
   + ENABLED(COREYX) \
   + ENABLED(COREZX) \
   + ENABLED(COREZY)
-  #error "Please enable only one of DELTA, MORGAN_SCARA, COREXY, COREYX, COREXZ, COREZX, COREYZ, or COREZY."
+  #error "Please enable only one of DELTA, COREXY, COREYX, COREXZ, COREZX, COREYZ, or COREZY."
 #endif
 
 /**
@@ -846,9 +841,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   // Hide PROBE_MANUALLY from the rest of the code
   #undef PROBE_MANUALLY
 
-  #if IS_SCARA
-    #error "AUTO_BED_LEVELING_UBL does not yet support SCARA printers."
-  #elif !WITHIN(GRID_MAX_POINTS_X, 3, 36) || !WITHIN(GRID_MAX_POINTS_Y, 3, 36)
+  #if !WITHIN(GRID_MAX_POINTS_X, 3, 36) || !WITHIN(GRID_MAX_POINTS_Y, 3, 36)
     #error "GRID_MAX_POINTS_[XY] must be a whole number between 3 and 36."
   #elif !defined(RESTORE_LEVELING_AFTER_G28)
     #error "AUTO_BED_LEVELING_UBL used to enable RESTORE_LEVELING_AFTER_G28. To keep this behavior enable RESTORE_LEVELING_AFTER_G28. Otherwise define it as 'false'."
@@ -896,7 +889,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * Make sure Z_SAFE_HOMING point is reachable
  */
 #if ENABLED(Z_SAFE_HOMING)
-  #if HAS_BED_PROBE && (ENABLED(DELTA) || IS_SCARA)
+  #if HAS_BED_PROBE && ENABLED(DELTA)
     static_assert(WITHIN(Z_SAFE_HOMING_X_POINT, PROBE_X_MIN, PROBE_X_MAX), "Z_SAFE_HOMING_X_POINT is outside the probe region.");
     static_assert(WITHIN(Z_SAFE_HOMING_Y_POINT, PROBE_Y_MIN, PROBE_Y_MAX), "Z_SAFE_HOMING_Y_POINT is outside the probe region.");
   #else
@@ -1125,17 +1118,16 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #endif
 
 // Delta and Cartesian use 3 homing endstops
-#if !IS_SCARA
-  #if X_HOME_DIR < 0 && DISABLED(USE_XMIN_PLUG)
-    #error "Enable USE_XMIN_PLUG when homing X to MIN."
-  #elif X_HOME_DIR > 0 && DISABLED(USE_XMAX_PLUG)
-    #error "Enable USE_XMAX_PLUG when homing X to MAX."
-  #elif Y_HOME_DIR < 0 && DISABLED(USE_YMIN_PLUG)
-    #error "Enable USE_YMIN_PLUG when homing Y to MIN."
-  #elif Y_HOME_DIR > 0 && DISABLED(USE_YMAX_PLUG)
-    #error "Enable USE_YMAX_PLUG when homing Y to MAX."
-  #endif
+#if X_HOME_DIR < 0 && DISABLED(USE_XMIN_PLUG)
+  #error "Enable USE_XMIN_PLUG when homing X to MIN."
+#elif X_HOME_DIR > 0 && DISABLED(USE_XMAX_PLUG)
+  #error "Enable USE_XMAX_PLUG when homing X to MAX."
+#elif Y_HOME_DIR < 0 && DISABLED(USE_YMIN_PLUG)
+  #error "Enable USE_YMIN_PLUG when homing Y to MIN."
+#elif Y_HOME_DIR > 0 && DISABLED(USE_YMAX_PLUG)
+  #error "Enable USE_YMAX_PLUG when homing Y to MAX."
 #endif
+
 #if Z_HOME_DIR < 0 && DISABLED(USE_ZMIN_PLUG)
   #error "Enable USE_ZMIN_PLUG when homing Z to MIN."
 #elif Z_HOME_DIR > 0 && DISABLED(USE_ZMAX_PLUG)

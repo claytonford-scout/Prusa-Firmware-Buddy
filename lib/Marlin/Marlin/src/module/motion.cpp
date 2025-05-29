@@ -40,11 +40,6 @@
 
 #include "homing_reporter.hpp"
 
-#if IS_SCARA
-  #include "../libs/buzzer.h"
-  #include "../lcd/ultralcd.h"
-#endif
-
 #if HAS_BED_PROBE
   #include "probe.h"
 #endif
@@ -117,7 +112,7 @@ XYZ_CONSTS(signed char, home_dir, HOME_DIR);
 /**
  * axis_homed
  *   Flags that each linear axis was homed.
- *   XYZ on cartesian, ABC on delta, ABZ on SCARA.
+ *   XYZ on cartesian, ABC on delta.
  *
  * axis_known_position
  *   Flags that the position is known in each linear axis. Set when homed.
@@ -222,10 +217,6 @@ void report_current_position() {
   SERIAL_ECHOPAIR("X:", lpos.x, " Y:", lpos.y, " Z:", lpos.z, " E:", current_position.e);
 
   stepper.report_positions();
-
-  #if IS_SCARA
-    scara_report_positions();
-  #endif
 }
 
 /**
@@ -250,7 +241,7 @@ void sync_plan_position_e() {
 
 /**
  * Get the stepper positions in the cartes[] array.
- * Forward kinematics are applied for DELTA and SCARA.
+ * Forward kinematics are applied for DELTA.
  *
  * The result is in the current coordinate space with
  * leveling applied. The coordinates need to be run through
@@ -265,15 +256,7 @@ void get_cartesian_from_steppers() {
       planner.get_axis_position_mm(C_AXIS)
     );
   #else
-    #if IS_SCARA
-      forward_kinematics_SCARA(
-        planner.get_axis_position_degrees(A_AXIS),
-        planner.get_axis_position_degrees(B_AXIS)
-      );
-      cartes.z = planner.get_axis_position_mm(Z_AXIS);
-    #else
-      planner.get_axis_position_mm(static_cast<xyz_pos_t&>(cartes));
-    #endif
+    planner.get_axis_position_mm(static_cast<xyz_pos_t&>(cartes));
   #endif
 }
 
@@ -405,27 +388,6 @@ void plan_park_move_to(const float rx, const float ry, const float rz, const fee
       destination.z = rz;
       prepare_internal_fast_move_to_destination(fr_z);  // set current_position from destination
       if (DEBUGGING(LEVELING)) DEBUG_POS("z lower move", current_position);
-    }
-
-  #elif IS_SCARA
-
-    if (!position_is_reachable(rx, ry)) return;
-
-    destination = current_position;
-
-    // If Z needs to raise, do it before moving XY
-    if (destination.z < rz) {
-      destination.z = rz;
-      prepare_internal_fast_move_to_destination(fr_z);
-    }
-
-    destination.set(rx, ry);
-    prepare_internal_fast_move_to_destination(fr_xy);
-
-    // If Z needs to lower, do it after moving XY
-    if (destination.z > rz) {
-      destination.z = rz;
-      prepare_internal_fast_move_to_destination(fr_z);
     }
 
   #else
@@ -623,7 +585,7 @@ void restore_feedrate_and_scaling() {
   /**
    * Constrain the given coordinates to the software endstops.
    *
-   * For DELTA/SCARA the XY constraint is based on the smallest
+   * For DELTA the XY constraint is based on the smallest
    * radius within the set software endstops.
    */
   void apply_motion_limits(xyz_pos_t &target) {
@@ -672,7 +634,7 @@ void plan_move_by(const feedRate_t fr, const float dx, const float dy, const flo
  * Prepare a single move and get ready for the next one
  *
  * This may result in several calls to planner.buffer_line to
- * do smaller moves for DELTA, SCARA, mesh moves, etc.
+ * do smaller moves for DELTA, mesh moves, etc.
  *
  * Make sure current_position.e and destination.e are good
  * before calling or cold/lengthy extrusion may get missed.
@@ -1094,9 +1056,6 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
  * homed, DELTA could home to X or Y individually by moving either one
  * to the center. However, homing Z always homes XY and Z.
  *
- * SCARA should wait until all XY homing is done before setting the XY
- * current_position to home, because neither X nor Y is at home until
- * both are at home. Z can however be homed individually.
  *
  * Callers must sync the planner position after calling this!
  *
@@ -1111,9 +1070,7 @@ void set_axis_is_at_home(const AxisEnum axis, [[maybe_unused]] bool homing_z_wit
   SBI(axis_known_position, axis);
   SBI(axis_homed, axis);
 
-  #if ENABLED(MORGAN_SCARA)
-    scara_set_axis_is_at_home(axis);
-  #elif ENABLED(DELTA)
+  #if ENABLED(DELTA)
     current_position[axis] = (axis == Z_AXIS ? delta_height
     #if HAS_BED_PROBE
       - probe_offset.z
@@ -1273,7 +1230,7 @@ void homing_failed(stdext::inplace_function<void()> fallback_error, [[maybe_unus
 /**
  * Home an individual "raw axis" to its endstop.
  * This applies to XYZ on Cartesian and Core robots, and
- * to the individual ABC steppers on DELTA and SCARA.
+ * to the individual ABC steppers on DELTA.
  *
  * At the end of the procedure the axis is marked as
  * homed and the current position of that axis is updated.
@@ -1306,17 +1263,12 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
     constexpr bool orig_crash [[maybe_unused]] = false;
   #endif /*ENABLED(CRASH_RECOVERY)*/
 
-  #if IS_SCARA
-    // Only Z homing (with probe) is permitted
-    if (axis != Z_AXIS) { BUZZ(100, 880); return; }
-  #else
-    #define _CAN_HOME(A) \
-      (axis == _AXIS(A) && ((A##_MIN_PIN > -1 && A##_HOME_DIR < 0) || (A##_MAX_PIN > -1 && A##_HOME_DIR > 0)))
-    #define CAN_HOME_X _CAN_HOME(X)
-    #define CAN_HOME_Y _CAN_HOME(Y)
-    #define CAN_HOME_Z _CAN_HOME(Z)
-    if (!CAN_HOME_X && !CAN_HOME_Y && !CAN_HOME_Z) return true;
-  #endif
+  #define _CAN_HOME(A) \
+    (axis == _AXIS(A) && ((A##_MIN_PIN > -1 && A##_HOME_DIR < 0) || (A##_MAX_PIN > -1 && A##_HOME_DIR > 0)))
+  #define CAN_HOME_X _CAN_HOME(X)
+  #define CAN_HOME_Y _CAN_HOME(Y)
+  #define CAN_HOME_Z _CAN_HOME(Z)
+  if (!CAN_HOME_X && !CAN_HOME_Y && !CAN_HOME_Z) return true;
 
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> homeaxis(", axis_codes[axis], ")");
 
@@ -1665,12 +1617,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     if (planner.draining() || planner.quick_stop_count != initial_quick_stop_count)
       return NAN;
 
-  #if IS_SCARA
-
-    set_axis_is_at_home(axis);
-    sync_plan_position();
-
-  #elif ENABLED(DELTA)
+  #if ENABLED(DELTA)
 
     // Delta has already moved all three towers up in G28
     // so here it re-homes each tower in turn.

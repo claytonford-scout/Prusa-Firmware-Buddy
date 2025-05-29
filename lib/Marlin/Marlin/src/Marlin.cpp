@@ -120,8 +120,6 @@
 
 #if ENABLED(DELTA)
   #include "module/delta.h"
-#elif IS_SCARA
-  #include "module/scara.h"
 #endif
 
 #if HAS_LEVELING

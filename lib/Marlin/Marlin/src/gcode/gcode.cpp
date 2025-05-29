@@ -254,13 +254,13 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
     case 'G': switch (parser.codenum) {
 
       case 0: case 1: G0_G1(                                      // G0: Fast Move, G1: Linear Move
-                        #if IS_SCARA || defined(G0_FEEDRATE)
+                        #if defined(G0_FEEDRATE)
                           parser.codenum == 0
                         #endif
                       );
                       break;
 
-      #if ENABLED(ARC_SUPPORT) && DISABLED(SCARA)
+      #if ENABLED(ARC_SUPPORT)
         case 2: case 3: G2_G3(parser.codenum == 2); break;        // G2: CW ARC, G3: CCW ARC
       #endif
 
@@ -607,14 +607,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
 
       #if HAS_PID_HEATING && ENABLED(PID_AUTOTUNE)
         case 303: M303(); break;                                  // M303: PID autotune
-      #endif
-
-      #if ENABLED(MORGAN_SCARA)
-        case 360: if (M360()) return; break;                      // M360: SCARA Theta pos1
-        case 361: if (M361()) return; break;                      // M361: SCARA Theta pos2
-        case 362: if (M362()) return; break;                      // M362: SCARA Psi pos1
-        case 363: if (M363()) return; break;                      // M363: SCARA Psi pos2
-        case 364: if (M364()) return; break;                      // M364: SCARA Psi pos3 (90 deg to Theta)
       #endif
 
       #if EITHER(EXT_SOLENOID, MANUAL_SOLENOID_CONTROL)

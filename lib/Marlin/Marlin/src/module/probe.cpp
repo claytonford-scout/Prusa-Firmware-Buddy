@@ -892,7 +892,6 @@ float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE
     DEBUG_POS("", current_position);
   }
 
-  // TODO: Adapt for SCARA, where the offset rotates
   xyz_pos_t npos = pos;
   if (probe_relative) {
     if (!position_is_reachable_by_probe(npos)) {

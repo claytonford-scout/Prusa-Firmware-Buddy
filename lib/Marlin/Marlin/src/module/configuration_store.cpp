@@ -256,9 +256,7 @@ void MarlinSettings::reset() {
     reset_motion();
   #endif
 
-  #if HAS_SCARA_OFFSET
-    scara_home_offset.reset();
-  #elif HAS_HOME_OFFSET
+  #if HAS_HOME_OFFSET
     home_offset.reset();
   #endif
 
@@ -766,18 +764,7 @@ void MarlinSettings::reset() {
 
     #endif // EDITABLE_SERVO_ANGLES
 
-    #if HAS_SCARA_OFFSET
-
-      CONFIG_ECHO_HEADING("SCARA settings: S<seg-per-sec> P<theta-psi-offset> T<theta-offset>");
-      CONFIG_ECHO_START();
-      SERIAL_ECHOLNPAIR(
-          "  M665 S", delta_segments_per_second
-        , " P", scara_home_offset.a
-        , " T", scara_home_offset.b
-        , " Z", LINEAR_UNIT(scara_home_offset.z)
-      );
-
-    #elif ENABLED(DELTA)
+    #if ENABLED(DELTA)
 
       CONFIG_ECHO_HEADING("Endstop adjustment:");
       CONFIG_ECHO_START();

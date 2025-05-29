@@ -226,12 +226,6 @@
  * M914 - Set StallGuard sensitivity. (Requires SENSORLESS_HOMING or SENSORLESS_PROBING)
  * M7219 - Control Max7219 Matrix LEDs. (Requires MAX7219_GCODE)
  *
- * M360 - SCARA calibration: Move to cal-position ThetaA (0 deg calibration)
- * M361 - SCARA calibration: Move to cal-position ThetaB (90 deg calibration - steps per degree)
- * M362 - SCARA calibration: Move to cal-position PsiA (0 deg calibration)
- * M363 - SCARA calibration: Move to cal-position PsiB (90 deg calibration - steps per degree)
- * M364 - SCARA calibration: Move to cal-position PSIC (90 deg to Theta calibration position)
- *
  * ************ Custom codes - This can change to suit future G-code regulations
  * G425 - Calibrate using a conductive object. (Requires CALIBRATION_GCODE)
  * M958 - Excite harmonic vibration and measure amplitude
@@ -270,7 +264,7 @@
   #include "../feature/I2CPositionEncoder.h"
 #endif
 
-#if EITHER(IS_SCARA, POLAR) || defined(G0_FEEDRATE)
+#if ANY(POLAR) || defined(G0_FEEDRATE)
   #define HAS_FAST_MOVES 1
 #endif
 
@@ -729,14 +723,6 @@ private:
 
   #if HAS_CASE_LIGHT
     static void M355();
-  #endif
-
-  #if ENABLED(MORGAN_SCARA)
-    static bool M360();
-    static bool M361();
-    static bool M362();
-    static bool M363();
-    static bool M364();
   #endif
 
   #if EITHER(EXT_SOLENOID, MANUAL_SOLENOID_CONTROL)

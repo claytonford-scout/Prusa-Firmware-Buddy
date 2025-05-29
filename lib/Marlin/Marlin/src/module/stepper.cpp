@@ -432,7 +432,7 @@ void Stepper::report_positions() {
     // to avoid locking the step ISR
     const xyz_long_t pos = count_position;
 
-#if CORE_IS_XY || CORE_IS_XZ || ENABLED(DELTA) || IS_SCARA
+#if CORE_IS_XY || CORE_IS_XZ || ENABLED(DELTA)
     SERIAL_ECHOPAIR(MSG_COUNT_A, pos.x, " B:", pos.y);
 #else
     SERIAL_ECHOPAIR(MSG_COUNT_X, pos.x, " Y:", pos.y);

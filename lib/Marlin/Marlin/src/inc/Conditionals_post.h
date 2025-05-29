@@ -99,14 +99,6 @@
 #endif
 
 /**
- * SCARA cannot use SLOWDOWN and requires QUICKHOME
- */
-#if IS_SCARA
-  #undef SLOWDOWN
-  #define QUICK_HOME
-#endif
-
-/**
  * Set the home position based on settings or manual overrides
  */
 #ifdef MANUAL_X_HOME_POS
@@ -1203,7 +1195,7 @@
 
 /**
  * Bed Probing rectangular bounds
- * These can be further constrained in code for Delta and SCARA
+ * These can be further constrained in code for Delta
  */
 #ifndef MIN_PROBE_EDGE
   #define MIN_PROBE_EDGE 0
@@ -1257,15 +1249,6 @@
   #define PROBE_Y_MIN (Y_CENTER - (_PROBE_RADIUS))
   #define PROBE_X_MAX (X_CENTER + _PROBE_RADIUS)
   #define PROBE_Y_MAX (Y_CENTER + _PROBE_RADIUS)
-
-#elif IS_SCARA
-
-  #define SCARA_PRINTABLE_RADIUS (SCARA_LINKAGE_1 + SCARA_LINKAGE_2)
-  #define _PROBE_RADIUS (SCARA_PRINTABLE_RADIUS - (MIN_PROBE_EDGE))
-  #define PROBE_X_MIN (X_CENTER - (SCARA_PRINTABLE_RADIUS) + MIN_PROBE_EDGE_LEFT)
-  #define PROBE_Y_MIN (Y_CENTER - (SCARA_PRINTABLE_RADIUS) + MIN_PROBE_EDGE_FRONT)
-  #define PROBE_X_MAX (X_CENTER +  SCARA_PRINTABLE_RADIUS - (MIN_PROBE_EDGE_RIGHT))
-  #define PROBE_Y_MAX (Y_CENTER +  SCARA_PRINTABLE_RADIUS - (MIN_PROBE_EDGE_BACK))
 
 #endif
 
@@ -1359,12 +1342,10 @@
 #define HAS_POSITION_SHIFT DISABLED(NO_WORKSPACE_OFFSETS)
 // The home offset also shifts the coordinate space
 #define HAS_HOME_OFFSET (DISABLED(NO_WORKSPACE_OFFSETS))
-// The SCARA home offset applies only on G28
-#define HAS_SCARA_OFFSET (DISABLED(NO_WORKSPACE_OFFSETS) && IS_SCARA)
 // Cumulative offset to workspace to save some calculation
 #define HAS_WORKSPACE_OFFSET (HAS_POSITION_SHIFT && HAS_HOME_OFFSET)
 // M206 sets the home offset for Cartesian machines
-#define HAS_M206_COMMAND (HAS_HOME_OFFSET && !IS_SCARA)
+#define HAS_M206_COMMAND (HAS_HOME_OFFSET)
 
 // LCD timeout to status screen default is 15s
 #ifndef LCD_TIMEOUT_TO_STATUS
