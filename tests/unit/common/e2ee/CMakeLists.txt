@@ -41,7 +41,7 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/lib/SG14
   )
 
-target_link_libraries(decryptor_tests mbedTLS bgcode_core freertos_tests)
+target_link_libraries(decryptor_tests mbedTLS bgcode_core freertos_tests raii)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/encrypted_text
           ${CMAKE_CURRENT_SOURCE_DIR}/20_bytes_encrypted_text
