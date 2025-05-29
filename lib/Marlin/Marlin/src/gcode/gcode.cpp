@@ -300,10 +300,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         #endif
       #endif
 
-      #if ENABLED(DELTA_AUTO_CALIBRATION)
-        case 33: G33(); break;                                    // G33: Delta Auto-Calibration
-      #endif
-
       #if ENABLED(Z_STEPPER_AUTO_ALIGN)
         case 34: G34(); break;                                    // G34: Z Stepper automatic alignment using probe
       #endif
@@ -539,12 +535,8 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 206: M206(); break;                                  // M206: Set home offsets
       #endif
 
-      #if ENABLED(DELTA)
-        case 665: M665(); break;                                  // M665: Set delta configurations
-      #endif
-
-      #if ANY(DELTA, X_DUAL_ENDSTOPS, Y_DUAL_ENDSTOPS, Z_DUAL_ENDSTOPS)
-        case 666: M666(); break;                                  // M666: Set delta or dual endstop adjustment
+      #if ANY(X_DUAL_ENDSTOPS, Y_DUAL_ENDSTOPS, Z_DUAL_ENDSTOPS)
+        case 666: M666(); break;                                  // M666: Set dual endstop adjustment
       #endif
 
       #if HAS_SOFTWARE_ENDSTOPS

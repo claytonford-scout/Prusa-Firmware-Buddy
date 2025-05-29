@@ -254,15 +254,6 @@ namespace ExtUI {
       }
     #endif // HAS_SOFTWARE_ENDSTOPS
 
-    // Delta limits XY based on the current offset from center
-    // This assumes the center is 0,0
-    #if ENABLED(DELTA)
-      if (axis != Z_AXIS) {
-        max = SQRT(sq((float)(DELTA_PRINTABLE_RADIUS)) - sq(current_position[Y_AXIS - axis])); // (Y_AXIS - axis) == the other axis
-        min = -max;
-      }
-    #endif
-
     current_position[axis] = constrain(position, min, max);
     line_to_current_position(MMM_TO_MMS(manual_feedrate_mm_m[axis]));
   }

@@ -890,11 +890,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   // Restore previous phase stepping state before we move again
   phstep_disabler.release();
 
-  if (!failed) {
-    // Move to a height where we can use the full xy-area
-    TERN_(DELTA_HOME_TO_SAFE_ZONE, do_blocking_move_to_z(delta_clip_start_height));
-  }
-
   TERN_(CAN_SET_LEVELING_AFTER_G28, if (leveling_restore_state) set_bed_leveling_enabled());
 
   // Restore the active tool after homing

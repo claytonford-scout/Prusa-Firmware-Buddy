@@ -118,10 +118,6 @@
   bool G38_did_trigger; // = false
 #endif
 
-#if ENABLED(DELTA)
-  #include "module/delta.h"
-#endif
-
 #if HAS_LEVELING
   #include "feature/bedlevel/bedlevel.h"
 #endif

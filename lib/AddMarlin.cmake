@@ -145,7 +145,6 @@ if(BOARD_IS_MASTER_BOARD)
             Marlin/Marlin/src/libs/nozzle.cpp
             Marlin/Marlin/src/libs/numtostr.cpp
             Marlin/Marlin/src/libs/vector_3.cpp
-            Marlin/Marlin/src/module/delta.cpp
             Marlin/Marlin/src/module/planner_bezier.cpp
             Marlin/Marlin/src/module/printcounter.cpp
             Marlin/Marlin/src/module/probe.cpp
