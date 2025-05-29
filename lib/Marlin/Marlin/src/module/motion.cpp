@@ -971,14 +971,13 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
  *
  * @param homing_z_with_probe false when sensorless homing was used instead of probe
  */
-void set_axis_is_at_home(const AxisEnum axis, [[maybe_unused]] bool homing_z_with_probe) {
+void set_axis_is_at_home(const AxisEnum axis, AxisHomeLevel level, [[maybe_unused]] bool homing_z_with_probe) {
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> set_axis_is_at_home(", axis_codes[axis], ")");
 
   // ensure we're not within an aborted move: caller needs to check!
   assert(!planner.draining());
 
-  // TODO: This should only set to imprecise, we should get to precise after refinement
-  axes_home_level[axis] = AxisHomeLevel::full;
+  axes_home_level[axis] = level; 
 
   #ifdef WORKSPACE_HOME
     /*Fill workspace_homes[] with data from config*/
@@ -1505,7 +1504,17 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
       return NAN;
 
   if (!invert_home_dir) {
-    set_axis_is_at_home(axis, homing_z_with_probe);
+    bool is_homed_precisely = false;
+    if(axis == Z_AXIS) {
+      // Z is homed precisely only if we used probe (so banging against the ceiling is not considered precise homing)
+      is_homed_precisely = (!HOMING_Z_WITH_PROBE || homing_z_with_probe);
+
+    } else {
+      // If precise homing is enabled, there will be a precise refinement done in a separate function
+      is_homed_precisely = (!HAS_PRECISE_HOMING() && !HAS_PRECISE_HOMING_COREXY());
+    }
+
+    set_axis_is_at_home(axis, is_homed_precisely ? AxisHomeLevel::full : AxisHomeLevel::imprecise, homing_z_with_probe);
   }
   sync_plan_position();
 
