@@ -297,7 +297,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
 
     stream.reset();
 #if HAS_E2EE_SUPPORT()
-    if (start_block.type == ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
+    if (start_block.type == std::to_underlying(EBlockType::EncryptedBlock)) {
         // This is called only on start and resume (not othat often), so we can afford to read the block
         // once more for the hmac check
         if (auto res = check_hmac_and_crc(file, start_block, symmetric_info, false); res != e2ee::CheckResult::OK) {
@@ -381,7 +381,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::switch_to_next_block() {
                 return Result_t::RESULT_ERROR;
             }
         }
-        if (new_block.type != ftrstd::to_underlying(EBlockType::EncryptedBlock)) {
+        if (new_block.type != std::to_underlying(EBlockType::EncryptedBlock)) {
             return Result_t::RESULT_ERROR;
         }
         BlockHeader old_plain_block_header = stream.current_plain_block_header;
@@ -496,7 +496,7 @@ GcodeReaderCommon::Result_t PrusaPackGcodeReader::init_encrypted_block_streaming
     if (fread(&encryption, sizeof(encryption), 1, file.get()) != 1) {
         return Result_t::RESULT_ERROR;
     }
-    if (encryption != ftrstd::to_underlying(bgcode::core::EEncryptedBlockEncryption::AES128_CBC_SHA256_HMAC)) {
+    if (encryption != std::to_underlying(bgcode::core::EEncryptedBlockEncryption::AES128_CBC_SHA256_HMAC)) {
         return Result_t::RESULT_ERROR;
     }
     if (fread(&stream.last_block, sizeof(stream.last_block), 1, file.get()) != 1) {

@@ -160,15 +160,15 @@ const char *read_and_verify_identity_block(FILE *file, const BlockHeader &block_
     if (!read_from_file(&algo, sizeof(algo), file)) {
         return file_error;
     }
-    if (algo != ftrstd::to_underlying(EIdentityBlockSignCypher::RSA)) {
+    if (algo != std::to_underlying(EIdentityBlockSignCypher::RSA)) {
         return unknown_identity_cypher;
     }
     uint8_t flags;
     if (!read_from_file(&flags, sizeof(flags), file)) {
         return file_error;
     }
-    info.one_time_identity = flags & ftrstd::to_underlying(EIdentityFlags::ONE_TIME_IDENTITY);
-    if (block_header.compression != ftrstd::to_underlying(ECompressionType::None)) {
+    info.one_time_identity = flags & std::to_underlying(EIdentityFlags::ONE_TIME_IDENTITY);
+    if (block_header.compression != std::to_underlying(ECompressionType::None)) {
         return compressed_identity_block;
     }
     size_t block_size = block_header.uncompressed_size;
@@ -236,7 +236,7 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
     if (printer_private_key == nullptr) {
         return std::nullopt;
     }
-    if (block_header.compression != ftrstd::to_underlying(ECompressionType::None)) {
+    if (block_header.compression != std::to_underlying(ECompressionType::None)) {
         return std::nullopt;
     }
     uint16_t encryption;
@@ -247,12 +247,12 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
         hash->update(reinterpret_cast<uint8_t *>(&encryption), sizeof(encryption));
     }
     // early return, so we don't allocate buffers etc.
-    if (encryption != ftrstd::to_underlying(EKeyBlockEncryption::None)
-        && encryption != ftrstd::to_underlying(EKeyBlockEncryption::RSA_ENC_SHA256_SIGN)) {
+    if (encryption != std::to_underlying(EKeyBlockEncryption::None)
+        && encryption != std::to_underlying(EKeyBlockEncryption::RSA_ENC_SHA256_SIGN)) {
         return std::nullopt;
     }
 
-    if (encryption == ftrstd::to_underlying(EKeyBlockEncryption::RSA_ENC_SHA256_SIGN)) {
+    if (encryption == std::to_underlying(EKeyBlockEncryption::RSA_ENC_SHA256_SIGN)) {
         // 256 for the encrypted data, 256 for signature
         constexpr size_t KEY_BLOCK_ENC_SIZE = 512;
         if (block_header.uncompressed_size != KEY_BLOCK_ENC_SIZE) {

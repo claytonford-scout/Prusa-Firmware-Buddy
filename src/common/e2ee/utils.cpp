@@ -21,7 +21,7 @@ bool read_encrypted_block_header(FILE *file, BlockHeader &header, Decryptor &dec
     if (!decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.uncompressed_size), sizeof(header.uncompressed_size))) {
         return false;
     }
-    if (header.compression != ftrstd::to_underlying(ECompressionType::None)) {
+    if (header.compression != std::to_underlying(ECompressionType::None)) {
         if (!decryptor.decrypt(file, reinterpret_cast<uint8_t *>(&header.compressed_size), sizeof(header.compressed_size))) {
             return false;
         }
