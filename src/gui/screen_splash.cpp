@@ -194,7 +194,7 @@ screen_splash_data_t::screen_splash_data_t()
                         .formatted(params, PrinterModelInfo::get(config_store().last_boot_base_printer_model.get()).id_str, PrinterModelInfo::firmware_base().id_str),
                     { Response::Continue });
 
-                FactoryReset::perform(false, FactoryReset::item_bitset({ FactoryReset::Item::network, FactoryReset::Item::stats, FactoryReset::Item::user_interface, FactoryReset::Item::user_profiles }));
+                FactoryReset::perform(false, FactoryReset::item_bitset({ FactoryReset::Item::network, FactoryReset::Item::stats, FactoryReset::Item::user_interface, FactoryReset::Item::user_profiles, FactoryReset::Item::security }));
             };
             Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, callback>);
         }

@@ -116,6 +116,9 @@ struct ItemFlag {
 
     /// Special items, completely outside of categorization and selective factory reset, that have a specific handling
     static constexpr ItemFlags special = 1 << 10;
+
+    /// Security stuff. Currently, End to end encryption.
+    static constexpr ItemFlags security = 1 << 11;
 }; // namespace ItemFlag
 
 /**
@@ -491,7 +494,7 @@ struct CurrentStore
 #endif
 
 #if HAS_E2EE_SUPPORT()
-    StoreItem<e2ee::IdentityCheckLevel, e2ee::IdentityCheckLevel::AnyIdentity, ItemFlag::features, journal::hash("E2EE Identity check")> identity_check;
+    StoreItem<e2ee::IdentityCheckLevel, e2ee::IdentityCheckLevel::AnyIdentity, ItemFlag::security, journal::hash("E2EE Identity check")> identity_check;
 #endif
     template <typename F>
     auto visit_hw_check(HWCheckType type, const F &visitor) {

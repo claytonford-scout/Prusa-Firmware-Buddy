@@ -20,6 +20,7 @@ public:
         features,
         printer_state,
         user_profiles,
+        security,
 
         _cnt
     };
@@ -43,6 +44,7 @@ public:
         { Item::features, { N_("Printer Functions"), ItemFlag::features } },
         { Item::printer_state, { N_("Printer State"), ItemFlag::printer_state } },
         { Item::user_profiles, { N_("User Presets"), ItemFlag::user_presets } },
+        { Item::security, { N_("Security"), ItemFlag::security } },
     };
 
 public:
