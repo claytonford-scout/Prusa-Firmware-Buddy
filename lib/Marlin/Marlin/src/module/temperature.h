@@ -515,11 +515,6 @@ class Temperature {
         return scaledFanSpeed(target, fan_speed[target]);
       }
 
-      #if ENABLED(EXTRA_FAN_SPEED)
-        static uint8_t old_fan_speed[FAN_COUNT], new_fan_speed[FAN_COUNT];
-        static void set_temp_fan_speed(const uint8_t fan, const uint16_t tmp_temp);
-      #endif
-
       #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
         void set_fans_paused(const bool p);
       #endif

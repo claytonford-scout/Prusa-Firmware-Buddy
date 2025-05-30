@@ -156,26 +156,6 @@ Temperature thermalManager;
   uint8_t Temperature::fan_speed[FAN_COUNT] = {};
   uint8_t Temperature::applied_fan_speed[FAN_COUNT] = {};
 
-  #if ENABLED(EXTRA_FAN_SPEED)
-    uint8_t Temperature::old_fan_speed[FAN_COUNT], Temperature::new_fan_speed[FAN_COUNT];
-
-    void Temperature::set_temp_fan_speed(const uint8_t fan, const uint16_t tmp_temp) {
-      switch (tmp_temp) {
-        case 1:
-          set_fan_speed(fan, old_fan_speed[fan]);
-          break;
-        case 2:
-          old_fan_speed[fan] = fan_speed[fan];
-          set_fan_speed(fan, new_fan_speed[fan]);
-          break;
-        default:
-          new_fan_speed[fan] = _MIN(tmp_temp, 255U);
-          break;
-      }
-    }
-
-  #endif
-
   #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
     bool Temperature::fans_paused; // = false;
     uint8_t Temperature::saved_fan_speed[FAN_COUNT]; // = { 0 }
