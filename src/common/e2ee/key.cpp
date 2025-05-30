@@ -3,7 +3,7 @@
 
 #include <stat_retry.hpp>
 #include <path_utils.h>
-#include <unique_dir_ptr.hpp>
+#include <common/directory.hpp>
 
 #include <sys/stat.h>
 #include <unique_file_ptr.hpp>
@@ -73,6 +73,29 @@ bool save_identity_key_impl(const e2ee::IdentityInfo &info, const char *folder) 
         return false;
     }
     return true;
+}
+
+void remove_identities_in(const char *in_path) {
+    struct dirent *entry;
+    char path[e2ee::IDENTITY_PATH_MAX_LEN];
+    Directory dir(in_path);
+    if (!dir) {
+        //????
+        return;
+    }
+
+    while ((entry = dir.read()) != nullptr) {
+        // Ignore "." and ".." (current and parent directories)
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        strlcpy(path, in_path, e2ee::IDENTITY_PATH_MAX_LEN);
+        strlcat(path, entry->d_name, e2ee::IDENTITY_PATH_MAX_LEN);
+
+        if (entry->d_type == DT_REG) {
+            remove(path);
+        }
+    }
 }
 
 } // namespace
@@ -214,39 +237,29 @@ void remove_trusted_identity(const IdentityInfo &info) {
 }
 
 void remove_temporary_identites() {
-    struct dirent *entry;
-    char path[IDENTITY_TMP_PATH_LEN];
-    unique_dir_ptr dir(opendir(identities_tmp_folder));
-    if (dir == nullptr) {
-        //????
-        return;
-    }
+    remove_identities_in(identities_tmp_folder);
+}
 
-    while ((entry = readdir(dir.get())) != nullptr) {
-        // Ignore "." and ".." (current and parent directories)
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-        strlcpy(path, identities_tmp_folder, IDENTITY_TMP_PATH_LEN);
-        strlcat(path, entry->d_name, IDENTITY_TMP_PATH_LEN);
+void remove_key() {
+    // We ignore non-existence.
+    remove(private_key_path);
+}
 
-        if (entry->d_type == DT_REG) {
-            remove(path);
-        }
-    }
+void remove_all_identities() {
+    remove_temporary_identites();
+    remove_identities_in(identities_folder);
 }
 
 bool is_trusted_identity(const IdentityInfo &info) {
-    constexpr size_t buff_size = std::max(IDENTITY_TMP_PATH_LEN, IDENTITY_PATH_LEN);
-    char file_path[buff_size];
+    char file_path[e2ee::IDENTITY_PATH_MAX_LEN];
     // do we trust it permanently?
-    strlcpy(file_path, identities_folder, buff_size);
-    strlcat(file_path, info.key_hash_str.data(), buff_size);
+    strlcpy(file_path, identities_folder, e2ee::IDENTITY_PATH_MAX_LEN);
+    strlcat(file_path, info.key_hash_str.data(), e2ee::IDENTITY_PATH_MAX_LEN);
     bool trusted = file_exists(file_path);
     if (!trusted) {
         // or at least temporarily
-        strlcpy(file_path, identities_tmp_folder, buff_size);
-        strlcat(file_path, info.key_hash_str.data(), buff_size);
+        strlcpy(file_path, identities_tmp_folder, e2ee::IDENTITY_PATH_MAX_LEN);
+        strlcat(file_path, info.key_hash_str.data(), e2ee::IDENTITY_PATH_MAX_LEN);
         trusted = file_exists(file_path);
     }
     return trusted;

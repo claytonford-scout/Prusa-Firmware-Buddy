@@ -38,6 +38,7 @@ constexpr const char *const identities_folder = "/internal/e2ee/identities/";
 constexpr const char *const identities_tmp_folder = "/internal/e2ee/tmp_identities/";
 constexpr size_t IDENTITY_PATH_LEN = strlen(identities_folder) + e2ee::HASH_SIZE * 2 + 1;
 constexpr size_t IDENTITY_TMP_PATH_LEN = strlen(identities_tmp_folder) + e2ee::HASH_SIZE * 2 + 1;
+constexpr size_t IDENTITY_PATH_MAX_LEN = std::max(IDENTITY_PATH_LEN, IDENTITY_TMP_PATH_LEN);
 constexpr const char *const public_key_path = "/usb/pubkey.der";
 
 // Error texts

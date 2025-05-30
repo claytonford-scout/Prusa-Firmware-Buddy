@@ -20,6 +20,10 @@
 #if HAS_PHASE_STEPPING()
     #include <feature/phase_stepping/phase_stepping.hpp>
 #endif
+#include <option/has_e2ee_support.h>
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/key.hpp>
+#endif
 
 // Check that our presets cover all the item flags
 static constexpr auto store_flags = [] {
@@ -79,6 +83,13 @@ extern osThreadId displayTaskHandle;
             // These files are only accessed in specific phstep gcodes
             // and it's not worth ensuring that they would happen to overwrite before we enter the final factory reset critical section a few lines below
             phase_stepping::remove_from_persistent_storage();
+        }
+#endif
+
+#if HAS_E2EE_SUPPORT()
+        if (!items_to_keep.test(std::to_underlying(Item::security))) {
+            e2ee::remove_all_identities();
+            e2ee::remove_key();
         }
 #endif
 

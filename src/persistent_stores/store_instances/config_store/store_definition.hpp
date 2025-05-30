@@ -117,8 +117,10 @@ struct ItemFlag {
     /// Special items, completely outside of categorization and selective factory reset, that have a specific handling
     static constexpr ItemFlags special = 1 << 10;
 
+#if HAS_E2EE_SUPPORT()
     /// Security stuff. Currently, End to end encryption.
     static constexpr ItemFlags security = 1 << 11;
+#endif
 }; // namespace ItemFlag
 
 /**

@@ -19,6 +19,7 @@ struct __attribute__((packed)) IdentityKeyInfo {
 };
 
 void generate_key(AsyncJobExecutionControl &control, bool &result);
+void remove_key();
 
 bool export_key();
 
@@ -29,6 +30,7 @@ bool is_trusted_identity(const IdentityInfo &info);
 
 void remove_trusted_identity(const IdentityInfo &info);
 void remove_temporary_identites();
+void remove_all_identities();
 
 void get_key_hash_string(char *out, size_t size, e2ee::Pk *pk);
 
