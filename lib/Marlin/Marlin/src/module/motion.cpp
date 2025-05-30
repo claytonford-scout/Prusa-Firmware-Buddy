@@ -338,32 +338,30 @@ static void line_to_destination_position(const feedRate_t &fr_mm_s) {
 
 /// Z-Manhattan fast move
 void plan_park_move_to(const float rx, const float ry, const float rz, const feedRate_t &fr_xy, const feedRate_t &fr_z, Segmented segmented){
-  #if 1
-    void (*move)(const feedRate_t &fr_mm_s) = nullptr;
-    if (segmented == Segmented::yes) {
-        move = prepare_internal_move_to_destination;
-    } else {
-        move = line_to_destination_position;
-    }
+  void (*move)(const feedRate_t &fr_mm_s) = nullptr;
+  if (segmented == Segmented::yes) {
+      move = prepare_internal_move_to_destination;
+  } else {
+      move = line_to_destination_position;
+  }
 
-    // If Z needs to raise, do it before moving XY
-    if (current_position.z < rz) {
-      destination = current_position;
-      destination.z = rz;
-      move(fr_z);
-    }
-
+  // If Z needs to raise, do it before moving XY
+  if (current_position.z < rz) {
     destination = current_position;
-    destination.set(rx, ry);
-    move(fr_xy);
+    destination.z = rz;
+    move(fr_z);
+  }
 
-    // If Z needs to lower, do it after moving XY
-    if (current_position.z > rz) {
-      destination = current_position;
-      destination.z = rz;
-      move(fr_z);
-    }
-  #endif
+  destination = current_position;
+  destination.set(rx, ry);
+  move(fr_xy);
+
+  // If Z needs to lower, do it after moving XY
+  if (current_position.z > rz) {
+    destination = current_position;
+    destination.z = rz;
+    move(fr_z);
+  }
 }
 
 void do_blocking_move_to(const xy_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0f*/) {
@@ -987,58 +985,56 @@ void set_axis_is_at_home(const AxisEnum axis, [[maybe_unused]] bool homing_z_wit
   SBI(axis_known_position, axis);
   SBI(axis_homed, axis);
 
-  #if 1
-    #ifdef WORKSPACE_HOME
-      /*Fill workspace_homes[] with data from config*/
-      xyz_pos_t workspace_homes[MAX_COORDINATE_SYSTEMS]={{{{0}}}};
+  #ifdef WORKSPACE_HOME
+    /*Fill workspace_homes[] with data from config*/
+    xyz_pos_t workspace_homes[MAX_COORDINATE_SYSTEMS]={{{{0}}}};
 
-      #ifdef WORKSPACE_0_X_POS
-        workspace_homes[0].set(WORKSPACE_0_X_POS, WORKSPACE_0_Y_POS, WORKSPACE_0_Z_POS);
-      #endif
-      #ifdef WORKSPACE_1_X_POS
-        workspace_homes[1].set(WORKSPACE_1_X_POS, WORKSPACE_1_Y_POS, WORKSPACE_1_Z_POS);
-      #endif
-      #ifdef WORKSPACE_2_X_POS
-        workspace_homes[2].set(WORKSPACE_2_X_POS, WORKSPACE_2_Y_POS, WORKSPACE_2_Z_POS);
-      #endif
-      #ifdef WORKSPACE_3_X_POS
-        workspace_homes[3].set(WORKSPACE_3_X_POS, WORKSPACE_3_Y_POS, WORKSPACE_3_Z_POS);
-      #endif
-      #ifdef WORKSPACE_4_X_POS
-        workspace_homes[4].set(WORKSPACE_4_X_POS, WORKSPACE_4_Y_POS, WORKSPACE_4_Z_POS);
-      #endif
-      #ifdef WORKSPACE_5_X_POS
-        workspace_homes[5].set(WORKSPACE_5_X_POS, WORKSPACE_5_Y_POS, WORKSPACE_5_Z_POS);
-      #endif
-      #ifdef WORKSPACE_6_X_POS
-        workspace_homes[6].set(WORKSPACE_6_X_POS, WORKSPACE_6_Y_POS, WORKSPACE_6_Z_POS);
-      #endif
-      #ifdef WORKSPACE_7_X_POS
-        workspace_homes[7].set(WORKSPACE_7_X_POS, WORKSPACE_7_Y_POS, WORKSPACE_7_Z_POS);
-      #endif
-      #ifdef WORKSPACE_8_X_POS
-        workspace_homes[8].set(WORKSPACE_8_X_POS, WORKSPACE_8_Y_POS, WORKSPACE_8_Z_POS);
-      #endif
-      #ifdef WORKSPACE_9_X_POS
-        workspace_homes[9].set(WORKSPACE_9_X_POS, WORKSPACE_9_Y_POS, WORKSPACE_9_Z_POS);
-      #endif
-
-
-      int8_t active_coordinate_system = GcodeSuite::get_coordinate_system();
-      if (active_coordinate_system == -1){ /*If base coordinate system, proceed as usual*/
-        current_position[axis] = base_home_pos(axis);
-      } else { /*If in alternate system, update position shift and system offset from base system*/
-        position_shift[axis] = - current_position[axis] + workspace_homes[active_coordinate_system][axis];
-        GcodeSuite::set_coordinate_system_offset(0, axis, position_shift[axis]);
-        update_workspace_offset(axis);
-      }
-    #else
-      current_position[axis] = base_home_pos(axis)
-        #if HAS_PRECISE_HOMING()
-          - calibrated_home_offset(axis)
-        #endif
-      ;
+    #ifdef WORKSPACE_0_X_POS
+      workspace_homes[0].set(WORKSPACE_0_X_POS, WORKSPACE_0_Y_POS, WORKSPACE_0_Z_POS);
     #endif
+    #ifdef WORKSPACE_1_X_POS
+      workspace_homes[1].set(WORKSPACE_1_X_POS, WORKSPACE_1_Y_POS, WORKSPACE_1_Z_POS);
+    #endif
+    #ifdef WORKSPACE_2_X_POS
+      workspace_homes[2].set(WORKSPACE_2_X_POS, WORKSPACE_2_Y_POS, WORKSPACE_2_Z_POS);
+    #endif
+    #ifdef WORKSPACE_3_X_POS
+      workspace_homes[3].set(WORKSPACE_3_X_POS, WORKSPACE_3_Y_POS, WORKSPACE_3_Z_POS);
+    #endif
+    #ifdef WORKSPACE_4_X_POS
+      workspace_homes[4].set(WORKSPACE_4_X_POS, WORKSPACE_4_Y_POS, WORKSPACE_4_Z_POS);
+    #endif
+    #ifdef WORKSPACE_5_X_POS
+      workspace_homes[5].set(WORKSPACE_5_X_POS, WORKSPACE_5_Y_POS, WORKSPACE_5_Z_POS);
+    #endif
+    #ifdef WORKSPACE_6_X_POS
+      workspace_homes[6].set(WORKSPACE_6_X_POS, WORKSPACE_6_Y_POS, WORKSPACE_6_Z_POS);
+    #endif
+    #ifdef WORKSPACE_7_X_POS
+      workspace_homes[7].set(WORKSPACE_7_X_POS, WORKSPACE_7_Y_POS, WORKSPACE_7_Z_POS);
+    #endif
+    #ifdef WORKSPACE_8_X_POS
+      workspace_homes[8].set(WORKSPACE_8_X_POS, WORKSPACE_8_Y_POS, WORKSPACE_8_Z_POS);
+    #endif
+    #ifdef WORKSPACE_9_X_POS
+      workspace_homes[9].set(WORKSPACE_9_X_POS, WORKSPACE_9_Y_POS, WORKSPACE_9_Z_POS);
+    #endif
+
+
+    int8_t active_coordinate_system = GcodeSuite::get_coordinate_system();
+    if (active_coordinate_system == -1){ /*If base coordinate system, proceed as usual*/
+      current_position[axis] = base_home_pos(axis);
+    } else { /*If in alternate system, update position shift and system offset from base system*/
+      position_shift[axis] = - current_position[axis] + workspace_homes[active_coordinate_system][axis];
+      GcodeSuite::set_coordinate_system_offset(0, axis, position_shift[axis]);
+      update_workspace_offset(axis);
+    }
+  #else
+    current_position[axis] = base_home_pos(axis)
+      #if HAS_PRECISE_HOMING()
+        - calibrated_home_offset(axis)
+      #endif
+    ;
   #endif
 
   /**
