@@ -84,14 +84,14 @@ bool Configuration::has_trinamic_oscillators() const {
     return get_board_bom_id() >= 37;
 }
 
-bool Configuration::is_fw_incompatible_with_hw() const {
+bool Configuration::is_fw_compatible_with_hw() const {
 #if PRINTER_IS_PRUSA_iX()
-    return false;
+    return true;
 #else
 
     #if HAS_DOOR_SENSOR()
     // MK4 also HAS_DOOR_SENSOR for HW compatibility check
-    [[maybe_unused]] const bool door_sensor_detached = buddy::door_sensor().detailed_state().state == buddy::DoorSensor::State::sensor_detached;
+    [[maybe_unused]] const bool door_sensor_connected = buddy::door_sensor().detailed_state().state != buddy::DoorSensor::State::sensor_detached;
     #endif /* HAS_DOOR_SENSOR() */
 
     #if !PRINTER_IS_PRUSA_MK3_5()
@@ -117,16 +117,9 @@ bool Configuration::is_fw_incompatible_with_hw() const {
     #endif /* !PRINTER_IS_PRUSA_MK3_5() */
 
     #if PRINTER_IS_PRUSA_COREONE()
-    return door_sensor_detached;
+    return door_sensor_connected;
     #elif PRINTER_IS_PRUSA_MK4()
-    if (!door_sensor_detached) {
-        return true;
-    }
-
-    if (loveboard_present) {
-        return false; // valid data, fw compatible
-    }
-    return mk35_extruder_detected;
+    return !door_sensor_connected && (loveboard_present || !mk35_extruder_detected);
     #elif PRINTER_IS_PRUSA_MK3_5()
     // valid data from loveboard means that we have MK4 HW, since MK3.5 does not have loveboard
     return loveboard_present;
