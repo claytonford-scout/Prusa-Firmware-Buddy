@@ -24,7 +24,7 @@ LOG_COMPONENT_REF(PhaseStepping);
 // #define SERIAL_DEBUG
 #define ABORT_CHECK()                   \
     if (should_abort && should_abort()) \
-        return std::unexpected("Aborted");
+        return std::unexpected(CalibrateAxisError::aborted);
 
 static constexpr std::size_t RETRY_COUNT = 2;
 static constexpr float MAX_ACC_SAMPLING_RATE = 1500;
@@ -1441,7 +1441,7 @@ static void debug_dump_param_search(int harmonic, const SweepParams &params, int
 // Analyze the motor and measure the best calibration speeds for each harmonic
 // Returns a vector of harmonic frequencies and their corresponding speeds or an
 // error message if the calibration failed.
-static std::expected<stdext::inplace_vector<HarmonicT<float>, opts::CORRECTION_HARMONICS>, const char *>
+static std::expected<stdext::inplace_vector<HarmonicT<float>, opts::CORRECTION_HARMONICS>, CalibrateAxisError>
 measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibration_config, AbortFun should_abort) {
     auto move_characteristics = characterize_speed_sweep(calibration_config);
     auto [start_speed, end_speed] = calibration_config.speed_range;
@@ -1460,7 +1460,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     if (!forward_annotation.movement_ok) {
         log_error(PhaseStepping, "Speed sweep movement failed: acc_error %u, movement_ok %d",
             static_cast<unsigned>(forward_annotation.accel_error), forward_annotation.movement_ok);
-        return std::unexpected("Speed sweep movement failed");
+        return std::unexpected(CalibrateAxisError::speed_sweep_movement_failed);
     }
     ABORT_CHECK();
     auto forward_signal = locate_signal(forward_annotation, forward_samples);
@@ -1478,7 +1478,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     if (!backward_annotation.movement_ok) {
         log_error(PhaseStepping, "Speed sweep movement failed: acc_error %u, movement_ok %d",
             static_cast<unsigned>(backward_annotation.accel_error), backward_annotation.movement_ok);
-        return std::unexpected("Speed sweep movement failed");
+        return std::unexpected(CalibrateAxisError::speed_sweep_movement_failed);
     }
     ABORT_CHECK();
     auto backward_signal = locate_signal(backward_annotation, backward_samples);
@@ -1530,7 +1530,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     };
     auto detected_peaks_sets = find_harmonic_peaks(harmonic_signals, idx_to_pos);
     if (detected_peaks_sets.empty()) {
-        return std::unexpected("No peaks found");
+        return std::unexpected(CalibrateAxisError::no_peaks_found);
     }
     debug_dump_harmonic_peaks("peaks", detected_peaks_sets);
 
@@ -1558,7 +1558,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
 // Estimate the approximate magnitude of a harmonic at a given speed. The
 // function returns the magnitude of the harmonic or an error message if the
 // estimation failed.
-static std::expected<float, const char *> find_approx_mag(AxisEnum axis,
+static std::expected<float, CalibrateAxisError> find_approx_mag(AxisEnum axis,
     const AxisCalibrationConfig &calib_config, int harmonic, float nominal_calib_speed,
     AbortFun should_abort) {
     // Magnitude is estimated by performing a phase sweep with increasing
@@ -1608,7 +1608,7 @@ static std::expected<float, const char *> find_approx_mag(AxisEnum axis,
         if (!annotation.movement_ok) {
             log_error(PhaseStepping, "Param sweep movement failed: acc_error %u, movement_ok %d",
                 static_cast<unsigned>(annotation.accel_error), annotation.movement_ok);
-            return std::unexpected("Param sweep movement failed");
+            return std::unexpected(CalibrateAxisError::param_sweep_movement_failed);
         }
         ABORT_CHECK();
 
@@ -1645,14 +1645,14 @@ static std::expected<float, const char *> find_approx_mag(AxisEnum axis,
     if (gone_worse_count > 0) {
         return min_magnitude;
     } else {
-        return std::unexpected("Magnitude out of bounds");
+        return std::unexpected(CalibrateAxisError::magnitude_out_of_bounds);
     }
 }
 
 // Estimate the approximate magnitude of a harmonic at a given speed. The
 // function returns the magnitude of the harmonic or an error message if the
 // estimation failed.
-[[maybe_unused]] static std::expected<float, const char *> find_approx_mag_fast(AxisEnum axis,
+[[maybe_unused]] static std::expected<float, CalibrateAxisError> find_approx_mag_fast(AxisEnum axis,
     const AxisCalibrationConfig &calib_config, int harmonic, float nominal_calib_speed,
     AbortFun should_abort) {
     // Magnitude is estimated by performing simultaneous phase sweeps with
@@ -1688,7 +1688,7 @@ static std::expected<float, const char *> find_approx_mag(AxisEnum axis,
     if (!annotation.movement_ok) {
         log_error(PhaseStepping, "Param sweep movement failed: acc_error %u, movement_ok %d",
             static_cast<unsigned>(annotation.accel_error), annotation.movement_ok);
-        return std::unexpected("Param sweep movement failed");
+        return std::unexpected(CalibrateAxisError::param_sweep_movement_failed);
     }
     ABORT_CHECK();
     auto signal = locate_signal(annotation, samples);
@@ -1707,7 +1707,7 @@ static std::expected<float, const char *> find_approx_mag(AxisEnum axis,
 // are 4 moves in total: 2 movement and 2 sweep directions. The function returns
 // a combined response for each movement direction or an error message if the
 // sweep failed.
-std::expected<std::array<std::vector<float>, 2>, const char *>
+std::expected<std::array<std::vector<float>, 2>, CalibrateAxisError>
 collect_param_sweep_response(AxisEnum axis, const AxisCalibrationConfig &calib_config,
     int harmonic, float speed, SweepParams f_params, SweepParams b_params,
     AbortFun should_abort) {
@@ -1738,7 +1738,7 @@ collect_param_sweep_response(AxisEnum axis, const AxisCalibrationConfig &calib_c
             if (!annotation.movement_ok) {
                 log_error(PhaseStepping, "Param sweep movement failed: acc_error %u, movement_ok %d",
                     static_cast<unsigned>(annotation.accel_error), annotation.movement_ok);
-                return std::unexpected("Param sweep movement failed");
+                return std::unexpected(CalibrateAxisError::param_sweep_movement_failed);
             }
 
             ABORT_CHECK();
@@ -1776,7 +1776,7 @@ collect_param_sweep_response(AxisEnum axis, const AxisCalibrationConfig &calib_c
 // Given an estimate of magnitude, find the best phase parameter for each
 // movement direction. The function returns a tuple of phase parameters for
 // forward and backward movement or an error message if the estimation failed.
-std::expected<std::array<float, 2>, const char *> find_best_pha(AxisEnum axis,
+std::expected<std::array<float, 2>, CalibrateAxisError> find_best_pha(AxisEnum axis,
     const AxisCalibrationConfig &calib_config, int harmonic, float nominal_calib_speed, float magnitude, AbortFun should_abort) {
     // To find a phase correction we perform 2 movements for each direction: one
     // with increasing phase sweep, one with decreasing phase sweep. We add
@@ -1810,7 +1810,7 @@ std::expected<std::array<float, 2>, const char *> find_best_pha(AxisEnum axis,
             idx_to_phase, 2 * std::numbers::pi_v<float>, PHA_CYCLES);
         if (peak_positions.size() != PHA_CYCLES) {
             log_error(PhaseStepping, "Cannot find %d peaks in phase sweep", PHA_CYCLES);
-            return std::unexpected("Cannot find peaks in phase sweep");
+            return std::unexpected(CalibrateAxisError::cannot_find_peaks_in_phase_sweep);
         }
 
         ABORT_CHECK();
@@ -1829,7 +1829,7 @@ std::expected<std::array<float, 2>, const char *> find_best_pha(AxisEnum axis,
 
 // Given a precise measurement of phase for each direction, find the best
 // magnitude. The function also extracts the percentage of harmonic improvement.
-std::expected<std::array<MagCalibResult, 2>, const char *> find_best_mag(AxisEnum axis,
+std::expected<std::array<MagCalibResult, 2>, CalibrateAxisError> find_best_mag(AxisEnum axis,
     const AxisCalibrationConfig &calib_config, int harmonic, float nominal_calib_speed,
     float forward_pha, float backward_pha, float guessed_magnitude,
     AbortFun should_abort) {
@@ -1878,7 +1878,7 @@ std::expected<std::array<MagCalibResult, 2>, const char *> find_best_mag(AxisEnu
 // Perform a calibration of a single harmonic in both directions. Returns a
 // CalibrationResult for forward and backward direction. If the
 // calibration fails, returns an error message.
-static std::expected<std::array<CalibrationResult, 2>, const char *>
+static std::expected<std::array<CalibrationResult, 2>, CalibrateAxisError>
 calibrate_single_harmonic(AxisEnum axis, const AxisCalibrationConfig &calib_config,
     int harmonic, float nominal_calib_speed, AbortFun should_abort) {
     log_debug(PhaseStepping, "Calibrating harmonic %d", harmonic);
@@ -1910,7 +1910,7 @@ calibrate_single_harmonic(AxisEnum axis, const AxisCalibrationConfig &calib_conf
         CalibrationResult { backward_mag.mag_value, backward_pha, backward_mag.score } } };
 }
 
-std::expected<std::array<MotorPhaseCorrection, 2>, const char *>
+std::expected<std::array<MotorPhaseCorrection, 2>, CalibrateAxisError>
 phase_stepping::calibrate_axis(AxisEnum axis, CalibrateAxisHooks &hooks) {
 
     reset_compensation(axis);
@@ -1928,7 +1928,7 @@ phase_stepping::calibrate_axis(AxisEnum axis, CalibrateAxisHooks &hooks) {
         return measure_calibration_speeds(axis, calib_config, should_abort);
     });
     if (!speed_analysis) {
-        log_error(PhaseStepping, "Speed analysis failed: %s", speed_analysis.error());
+        log_error(PhaseStepping, "Speed analysis failed: %s", to_string(speed_analysis.error()));
         return std::unexpected(speed_analysis.error());
     }
 
@@ -1951,7 +1951,7 @@ phase_stepping::calibrate_axis(AxisEnum axis, CalibrateAxisHooks &hooks) {
                     harmonic_speed.harmonic, harmonic_speed.value, should_abort);
             });
             if (!calib_res) {
-                log_error(PhaseStepping, "Calibration failed: %s", calib_res.error());
+                log_error(PhaseStepping, "Calibration failed: %s", to_string(calib_res.error()));
                 return std::unexpected(calib_res.error());
             }
 
@@ -1979,4 +1979,22 @@ phase_stepping::calibrate_axis(AxisEnum axis, CalibrateAxisHooks &hooks) {
 void phase_stepping::reset_compensation(AxisEnum axis) {
     phase_stepping::axis_states[axis].forward_current.clear();
     phase_stepping::axis_states[axis].backward_current.clear();
+}
+
+const char *phase_stepping::to_string(CalibrateAxisError err) {
+    switch (err) {
+    case CalibrateAxisError::aborted:
+        return "aborted";
+    case CalibrateAxisError::speed_sweep_movement_failed:
+        return "speed sweep movement failed";
+    case CalibrateAxisError::param_sweep_movement_failed:
+        return "param sweep movement failed";
+    case CalibrateAxisError::no_peaks_found:
+        return "no peaks found";
+    case CalibrateAxisError::cannot_find_peaks_in_phase_sweep:
+        return "cannot_find_peaks_in_phase_sweep";
+    case CalibrateAxisError::magnitude_out_of_bounds:
+        return "magnitude out of bounds";
+    }
+    abort();
 }
