@@ -277,7 +277,6 @@ DeviceState get_print_state(State state, bool ready) {
         return DeviceState::Attention;
 #endif
     case State::Idle:
-    case State::WaitGui:
     case State::PrintPreviewInit:
     case State::PrintPreviewImage:
     case State::PrintInit:

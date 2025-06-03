@@ -305,7 +305,3 @@ void DialogHandler::Loop() {
 
     current_fsm_top = new_top;
 }
-
-bool DialogHandler::IsAnyOpen() const {
-    return current_fsm_top.has_value();
-}

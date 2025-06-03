@@ -1113,7 +1113,7 @@ bool print_preview() {
 #if HAS_TOOLCHANGER() || HAS_MMU2()
         || server.print_state == State::PrintPreviewToolsMapping
 #endif
-        || server.print_state == State::WaitGui;
+        ;
 }
 
 bool is_printing() {
@@ -1239,41 +1239,28 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
         GCodeInfo::getInstance().set_gcode_file(filepath_sfn.data(), filename_lfn.data());
     }
 
+    // Mostly we do not allow printing when some FSM is open (for example Load/Unload).
+    // We allow printing from:
+    //  - Printing - reprint
+    //  - Print preview - calling print from internet
+    const bool any_fsm_open = fsm_states.get_top().has_value();
+    const bool print_preview_open = fsm_states.is_active(ClientFSM::PrintPreview);
+    const bool printing_open = fsm_states.is_active(ClientFSM::Printing);
+    const bool allowed_fsm_open = print_preview_open || printing_open;
+    const bool can_print = !any_fsm_open || allowed_fsm_open;
+    if (printing_open) {
+        // FIXME: From the code in this function, it looks like this never happens.
+        //        Let's gather some data and see if it does.
+        log_error(MarlinServer, "ClientFSM::Printing is open and shouldn't be");
+    }
+
     set_media_position(resume_pos.offset);
     print_state.media_restore_info = resume_pos.restore_info;
     media_prefetch_start();
 
-    server.print_state = State::WaitGui;
+    server.print_state = can_print ? State::PrintPreviewInit : State::Idle;
 
     PrintPreview::Instance().set_skip_if_able(skip_preview);
-}
-
-void gui_ready_to_print() {
-    switch (server.print_state) {
-
-    case State::WaitGui:
-        server.print_state = State::PrintPreviewInit;
-        break;
-
-    default:
-        log_error(MarlinServer, "Wrong print state, expected: %u, is: %u",
-            static_cast<unsigned>(State::WaitGui), static_cast<unsigned>(server.print_state));
-        break;
-    }
-}
-
-void gui_cant_print() {
-    switch (server.print_state) {
-
-    case State::WaitGui:
-        server.print_state = State::Idle;
-        break;
-
-    default:
-        log_error(MarlinServer, "Wrong print state, expected: %u, is: %u",
-            static_cast<unsigned>(State::WaitGui), static_cast<unsigned>(server.print_state));
-        break;
-    }
 }
 
 void serial_print_finalize(void) {
@@ -1907,11 +1894,6 @@ static void _server_print_loop(void) {
     switch (server.print_state) {
     case State::Idle:
         break;
-    case State::WaitGui:
-        // without gui just act as if state == State::PrintPreviewInit
-#if HAS_GUI()
-        break;
-#endif
     case State::PrintPreviewInit:
         did_not_start_print = true;
         // reset both percentage counters (normal and silent)
@@ -2112,7 +2094,6 @@ static void _server_print_loop(void) {
             if (!fsm_states.is_active(ClientFSM::Printing)) {
                 // FIXME make this atomic change. It would require improvements in PrintScreen so that it can re-initialize upon phase change.
                 // FYI the DESTROY invoke is in print_start()
-                // NOTE this works surely thanks to State::WaitGui being in between the DESTROY and CREATE
                 fsm_create(PhasesPrinting::active);
             }
         }
@@ -3308,9 +3289,6 @@ static void process_request_flags() {
         }
 
         switch (RequestFlag(i)) {
-        case RequestFlag::PrintReady:
-            gui_ready_to_print();
-            break;
         case RequestFlag::PrintAbort:
             print_abort();
             break;
@@ -3331,9 +3309,6 @@ static void process_request_flags() {
             break;
         case RequestFlag::KnobClick:
             server.knob_click_counter++;
-            break;
-        case RequestFlag::GuiCantPrint:
-            gui_cant_print();
             break;
 #if HAS_SELFTEST()
         case RequestFlag::TestAbort:
