@@ -38,9 +38,9 @@ StringBuilder &StringBuilder::append_char(char ch) {
 }
 
 StringBuilder &StringBuilder::finalize_append() {
-    // If there is a problem, current_pos_ points to the last byte in the buffer
-    // else current_pos_ points to place, where '\0' should be written (yet undefined byte)
-    if (is_problem()) {
+    if (current_pos_ == buffer_end_) {
+        is_ok_ = false;
+        current_pos_--;
         // terminate string - cut the string in between characters (no leftover prefixes)
         while (UTF8_IS_CONT(*current_pos_) && current_pos_ != buffer_start_) {
             current_pos_--;
@@ -68,8 +68,7 @@ StringBuilder &StringBuilder::append_string(const char *str) {
 
         // Check if we're not at the end of the buffer
         if (current_pos_ >= buffer_pre_end) {
-            is_ok_ = false;
-            *current_pos_ = *str;
+            *current_pos_++ = *str;
             break;
         }
 
@@ -88,13 +87,9 @@ StringBuilder &StringBuilder::append_std_string_view(const std::string_view &vie
     const int copy_size = std::min<int>(view.size(), available_bytes);
     view.copy(current_pos_, copy_size);
 
-    // < because we need to account for the terminating \0
-    is_ok_ = static_cast<int>(view.size()) < available_bytes;
-
     // std::string_view::copy does not copy '\0'
-    // if text is truncated it's copied until the last available byte and current_pos_ points to last byte
-    // else text is copied without '\0' and current_pos_ points to place where '\0' should be written
-    current_pos_ += is_ok_ ? copy_size : copy_size - 1;
+    // current_pos_ == buffer_end_ means text overflow
+    current_pos_ += copy_size;
     return finalize_append();
 }
 
@@ -111,8 +106,7 @@ StringBuilder &StringBuilder::append_string_view(const string_view_utf8 &str) {
         }
 
         if (current_pos_ >= buffer_pre_end) {
-            is_ok_ = false;
-            *current_pos_ = b;
+            *current_pos_++ = b;
             break;
         }
 
