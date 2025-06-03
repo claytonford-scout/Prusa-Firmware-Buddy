@@ -107,7 +107,12 @@ TEST_CASE("StringBuilder", "[strbuilder]") {
 
         a.append_string("プ");
         CHECK(a.is_problem());
-        CHECK_THAT(a.str_nocheck(), Equals("ププ")); // Second multi-byte character is truncated
+        CHECK_THAT(a.str_nocheck(), Equals("ププ"));
+
+        ArrayStringBuilder<4> aa;
+        aa.append_string("ププ");
+        CHECK(aa.is_problem());
+        CHECK_THAT(aa.str_nocheck(), Equals("プ"));
 
         ArrayStringBuilder<9> b;
         b.append_std_string_view("ププ");
