@@ -201,7 +201,7 @@ namespace marlin_server {
 
 CallbackHookPoint<> idle_hook_point;
 
-void media_prefetch_start();
+void media_prefetch_lazy_start();
 
 namespace {
 
@@ -1289,7 +1289,7 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
 
     set_media_position(resume_pos.offset);
     print_state.media_restore_info = resume_pos.restore_info;
-    media_prefetch_start();
+    media_prefetch_lazy_start();
 
     server.print_state = can_print ? State::PrintPreviewInit : State::Idle;
 
@@ -1481,9 +1481,13 @@ static void crash_recovery_begin_crash() {
 }
 #endif /*ENABLED(CRASH_RECOVERY)*/
 
-void media_prefetch_start() {
+void media_prefetch_lazy_start() {
     print_state.file_open_reported = false;
     media_prefetch.start(marlin_vars().media_SFN_path.get_ptr(), GCodeReaderPosition { stream_restore_info(), media_position() });
+}
+
+void media_prefetch_start() {
+    media_prefetch_lazy_start();
     media_prefetch.issue_fetch();
 }
 
