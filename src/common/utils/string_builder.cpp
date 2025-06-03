@@ -4,10 +4,13 @@
 #include <cmath>
 #include <cinttypes>
 #include <algorithm>
+#include <assert.h>
 
 #include <bsod.h>
 
 void StringBuilder::init(char *buffer, size_t buffer_size) {
+    assert(buffer_size != 0);
+
     buffer_start_ = buffer;
     current_pos_ = buffer;
     buffer_end_ = buffer + buffer_size;
@@ -34,34 +37,46 @@ StringBuilder &StringBuilder::append_char(char ch) {
     return *this;
 }
 
+StringBuilder &StringBuilder::finalize_append() {
+    // If there is a problem, current_pos_ points to the last byte in the buffer
+    // else current_pos_ points to place, where '\0' should be written (yet undefined byte)
+    if (is_problem()) {
+        // terminate string - cut the string in between characters (no leftover prefixes)
+        while (UTF8_IS_CONT(*current_pos_) && current_pos_ != buffer_start_) {
+            current_pos_--;
+        }
+    }
+
+    *current_pos_ = '\0';
+    return *this;
+}
+
 StringBuilder &StringBuilder::append_string(const char *str) {
     if (is_problem()) {
         return *this;
     }
 
     // Accomodate for terminating null
+    assert(current_pos_ != buffer_end_);
     char *buffer_pre_end = buffer_end_ - 1;
-    char *buffer_pos = current_pos_;
 
     while (true) {
         // At the end of the appended string -> success
         if (*str == '\0') {
-            current_pos_ = buffer_pos;
             break;
         }
 
         // Check if we're not at the end of the buffer
-        if (buffer_pos >= buffer_pre_end) {
+        if (current_pos_ >= buffer_pre_end) {
             is_ok_ = false;
+            *current_pos_ = *str;
             break;
         }
 
-        *buffer_pos++ = *str++;
+        *current_pos_++ = *str++;
     }
 
-    // Ensure the string is valid by appending nullterm
-    *current_pos_ = '\0';
-    return *this;
+    return finalize_append();
 }
 
 StringBuilder &StringBuilder::append_std_string_view(const std::string_view &view) {
@@ -70,34 +85,41 @@ StringBuilder &StringBuilder::append_std_string_view(const std::string_view &vie
     }
 
     const int available_bytes = buffer_end_ - current_pos_;
-    const int copy_size = std::min<int>(view.size(), available_bytes - 1);
+    const int copy_size = std::min<int>(view.size(), available_bytes);
     view.copy(current_pos_, copy_size);
 
     // < because we need to account for the terminating \0
-    is_ok_ = (copy_size == static_cast<int>(view.size()));
+    is_ok_ = static_cast<int>(view.size()) < available_bytes;
 
-    current_pos_ += copy_size;
-    *current_pos_ = '\0';
-    return *this;
+    // std::string_view::copy does not copy '\0'
+    // if text is truncated it's copied until the last available byte and current_pos_ points to last byte
+    // else text is copied without '\0' and current_pos_ points to place where '\0' should be written
+    current_pos_ += is_ok_ ? copy_size : copy_size - 1;
+    return finalize_append();
 }
 
 StringBuilder &StringBuilder::append_string_view(const string_view_utf8 &str) {
     StringReaderUtf8 reader(str);
 
-    while (true) {
-        if (is_problem()) {
-            return *this;
-        }
+    assert(current_pos_ != buffer_end_);
+    char *buffer_pre_end = buffer_end_ - 1;
 
+    while (true) {
         char b = reader.getbyte();
         if (b == '\0') {
-            return *this;
+            break;
         }
 
-        append_char(b);
+        if (current_pos_ >= buffer_pre_end) {
+            is_ok_ = false;
+            *current_pos_ = b;
+            break;
+        }
+
+        *current_pos_++ = b;
     }
 
-    return *this;
+    return finalize_append();
 }
 
 StringBuilder &StringBuilder::append_printf(const char *fmt, ...) {
@@ -120,8 +142,7 @@ StringBuilder &StringBuilder::append_vprintf(const char *fmt, va_list args) {
     is_ok_ = (ret >= 0 && ret < available_bytes);
 
     current_pos_ += std::clamp(ret, 0, available_bytes - 1);
-    *current_pos_ = '\0';
-    return *this;
+    return finalize_append();
 }
 
 // This stupid utility function saves 3kB of FLASH...
@@ -186,7 +207,7 @@ char *StringBuilder::alloc_chars(size_t cnt) {
 
     const size_t available_bytes = int(buffer_end_ - current_pos_);
 
-    // >= because we need to account fo rhte terminating \0
+    // >= because we need to account for the terminating \0
     if (cnt >= available_bytes) {
         is_ok_ = false;
         return nullptr;
