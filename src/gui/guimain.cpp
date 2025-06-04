@@ -1,65 +1,45 @@
+#include "DialogHandler.hpp"
 #include "display.hpp"
+#include "gui_bootstrap_screen.hpp"
 #include "gui_time.hpp"
 #include "gui.hpp"
-#include "img_resources.hpp"
-#include "marlin_client.hpp"
-#include "display_hw_checks.hpp"
-#include "ScreenHandler.hpp"
-#include "ScreenFactory.hpp"
-#include "tasks.hpp"
-#include "screen_print_preview.hpp"
-#include "screen_hardfault.hpp"
-#include "screen_qr_error.hpp"
-#include "screen_watchdog.hpp"
-#include "screen_bsod.hpp"
-#include "screen_stack_overflow.hpp"
-#include "screen_filebrowser.hpp"
-#include "screen_printing.hpp"
-#include "gui_bootstrap_screen.hpp"
-#include "IScreenPrinting.hpp"
-#include "DialogHandler.hpp"
-#include "sound.hpp"
+#include "Jogwheel.hpp"
 #include "knob_event.hpp"
-#include "screen_move_z.hpp"
-#include "ScreenShot.hpp"
-#include "screen_home.hpp"
-#include "gcode_info.hpp"
 #include "language_eeprom.hpp"
-#include "screen_messages.hpp"
+#include "marlin_client.hpp"
+#include "screen_bsod.hpp"
+#include "screen_hardfault.hpp"
+#include "screen_home.hpp"
+#include "screen_move_z.hpp"
+#include "screen_qr_error.hpp"
+#include "screen_stack_overflow.hpp"
+#include "screen_watchdog.hpp"
+#include "ScreenFactory.hpp"
+#include "ScreenHandler.hpp"
+#include "ScreenShot.hpp"
+#include "sound.hpp"
+#include "tasks.hpp"
+#include <config_store/store_instance.hpp>
+#include <crash_dump/dump.hpp>
 #include <screen_splash.hpp>
+#include <wdt.hpp>
 
-#include <option/has_side_leds.h>
-
+#include <printers.h>
 #if PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
     #include "screen_fatal_warning.hpp"
 #endif
 
-#include <option/has_selftest.h>
-#if HAS_SELFTEST()
-    #include "screen_menu_selftest_snake.hpp"
-#endif
-
+#include <option/has_side_leds.h>
 #if HAS_SIDE_LEDS()
     #include <leds/side_strip_handler.hpp>
 #endif
 
-#include "Jogwheel.hpp"
-#include <wdt.hpp>
-#include <crash_dump/dump.hpp>
-#include <option/has_dwarf.h>
 #include <option/has_leds.h>
 #if HAS_LEDS()
     #include <leds/led_manager.hpp>
 #endif
-#include <printers.h>
-
-#include <config_store/store_instance.hpp>
-
-marlin_vars_t *gui_marlin_vars = 0;
 
 Jogwheel jogwheel;
-
-inline constexpr size_t MSG_MAX_LENGTH = 63; // status message max length
 
 /**
  * @brief Get the right error page to display
