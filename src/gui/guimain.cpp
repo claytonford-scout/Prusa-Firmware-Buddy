@@ -70,13 +70,6 @@ void MsgCircleBuffer_cb(char *txt) {
 }
 
 namespace {
-void led_animation_step() {
-#if HAS_LEDS()
-    PrinterStateAnimation::Update();
-    Animator_LCD_leds().Step();
-    leds::TickLoop();
-#endif
-}
 
 void make_gui_ready_to_print() {
     /**
@@ -264,8 +257,6 @@ void gui_run(void) {
     // TODO make some kind of registration
     while (1) {
         gui::StartLoop();
-
-        led_animation_step();
 
         // I must do it before screen and dialog loops
         // do not use marlin_update_vars(MARLIN_VAR_MSK(MARLIN_VAR_PRNSTATE))->print_state, it can make gui freeze in case main thread is unresponsive

@@ -34,6 +34,11 @@
     #include "st7789v.hpp"
 #endif
 
+#include <option/has_leds.h>
+#if HAS_LEDS()
+    #include "led_animations/printer_animation_state.hpp"
+#endif
+
 LOG_COMPONENT_REF(GUI);
 LOG_COMPONENT_REF(Touch);
 
@@ -170,11 +175,19 @@ void gui_bare_loop() {
 
 void gui_loop(void) {
     ++guiloop_nesting;
+
     lcd::communication_check();
 #if XL_ENCLOSURE_SUPPORT()
     // Update XL enclosure fan pwm, it is connected to the same PWM generator as the side LEDs
     leds::side_strip.Update();
 #endif
+
+#if HAS_LEDS()
+    PrinterStateAnimation::Update();
+    Animator_LCD_leds().Step();
+    leds::TickLoop();
+#endif
+
     gui_handle_jogwheel();
 
 #if HAS_TOUCH()
