@@ -426,7 +426,7 @@ FORCE_INLINE step_event_info_t step_generator_next_step_event(step_generator_sta
 
 // Return true when move is fully processed and there is no other work for this move segment.
 // step_event.flags is set to non-zero when a step is produced.
-bool generate_next_step_event(step_event_i32_t &step_event, step_generator_state_t &step_state) {
+static bool generate_next_step_event(step_event_i32_t &step_event, step_generator_state_t &step_state) {
     const step_index_t old_nearest_step_event_idx = step_state.step_event_index[0];
 
     auto step_status = step_state.step_events[old_nearest_step_event_idx].status;
