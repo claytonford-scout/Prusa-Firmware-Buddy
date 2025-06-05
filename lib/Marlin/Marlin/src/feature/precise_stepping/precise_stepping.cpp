@@ -470,11 +470,10 @@ bool generate_next_step_event(step_event_i32_t &step_event, step_generator_state
         step_event.flags = 0;
     }
 
-    // Now we have to compute next step event instead of the one that we putted into step event queue.
+    // Now we have to compute next step event instead of the one that we put into step event queue.
     const step_event_info_t new_step_event = step_generator_next_step_event(step_state, (uint8_t)old_nearest_step_event_idx);
     step_state.step_events[old_nearest_step_event_idx] = new_step_event;
 
-    // Update nearest step event index.
     step_generator_state_update_nearest_idx(step_state);
 
     StepEventInfoStatus nearest_step_event_status = step_state.step_events[step_state.step_event_index[0]].status;
