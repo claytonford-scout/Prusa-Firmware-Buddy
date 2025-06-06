@@ -13,6 +13,8 @@
 #include "marlin_server_extended_fsm_data.hpp"
 #include <stddef.h>
 #include <gcode/inject_queue_actions.hpp>
+#include <marlin_server_shared.h>
+#include <utils/callback_hook.hpp>
 
 #include <serial_printing.hpp>
 
@@ -278,6 +280,9 @@ public:
         return { { progress } };
     }
 };
+
+/// Replacement for the FSM_Notifier. Hooked callbacks will get called in marlin idle()
+extern CallbackHookPoint<> idle_hook_point;
 
 void fsm_create(FSMAndPhase fsm_and_phase, fsm::PhaseData data = {});
 
