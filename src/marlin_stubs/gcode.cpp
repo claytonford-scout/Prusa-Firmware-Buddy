@@ -15,7 +15,7 @@
 #include <option/has_toolchanger.h>
 #include <option/has_side_leds.h>
 #include <option/has_leds.h>
-#include <option/has_phase_stepping.h>
+#include <option/has_phase_stepping_calibration.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_belt_tuning.h>
 #include <option/has_door_sensor_calibration.h>
@@ -24,7 +24,7 @@
     #include "loadcell.hpp"
 #endif
 
-#if HAS_PHASE_STEPPING()
+#if HAS_PHASE_STEPPING_CALIBRATION()
     #include "M1977.hpp"
 #endif
 
@@ -256,7 +256,7 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             break;
 #endif
 
-#if HAS_PHASE_STEPPING()
+#if HAS_PHASE_STEPPING_CALIBRATION()
         case 1977:
             PrusaGcodeSuite::M1977();
             break;
