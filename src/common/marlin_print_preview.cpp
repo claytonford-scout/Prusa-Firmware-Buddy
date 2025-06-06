@@ -17,7 +17,6 @@
 #include "printers.h"
 #include <Marlin/src/module/motion.h>
 #include <option/has_gui.h>
-#include <selftest_result_evaluation.hpp>
 #if HAS_GUI()
     #include "screen_menu_filament_changeall.hpp"
 #endif
@@ -26,6 +25,11 @@
 #if ENABLED(PRUSA_TOOLCHANGER)
     #include <module/prusa/toolchanger.h>
 #endif /*ENABLED(PRUSA_TOOLCHANGER)*/
+
+#include <option/has_selftest.h>
+#if HAS_SELFTEST()
+    #include <selftest_result_evaluation.hpp>
+#endif
 
 #include <config_store/store_instance.hpp>
 #include "tools_mapping.hpp"
