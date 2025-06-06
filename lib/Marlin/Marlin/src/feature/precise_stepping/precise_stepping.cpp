@@ -424,8 +424,37 @@ FORCE_INLINE step_event_info_t step_generator_next_step_event(step_generator_sta
     return new_step_event;
 }
 
-// Return true when move is fully processed and there is no other work for this move segment.
-// step_event.flags is set to non-zero when a step is produced.
+/**
+ * @brief After step generator was called at least once for each axis
+ * output nearest step_event and generate new one for that axis.
+ *
+ * step_state.step_events holds last generated step event for each axis
+ *
+ * If this is beginning of the first move or beginning of the move after planner
+ * buffer was completely drained step_state.step_events for all the axis
+ * are initialized to 0.0 time, 0 flags an STEP_EVENT_INFO_STATUS_NOT_GENERATED.
+ *
+ * 0.0 time (oldest possible) ensures, that step generator is called at least
+ * once for each axis before any valid step_event is output.
+ *
+ * After step generator was called at least once for each axis, this function
+ * outputs nearest step_event and generates new one for particular axis.
+ *
+ * There are three possible step_events returned by step generator.
+ *  - valid step event with time of next step event
+ *  - keep alive step event with time of end of current move segment
+ *  - maximum time it can generate from current queue
+ *
+ *  If there are no data in a queue to generate next step event it may lead to
+ *  particular step generator being called forever.
+ *  In such situation after some time special move segment with flag STEP_EVENT_FLAG_END_OF_MOTION
+ *  is inserted in a queue and it allows all steps generators to generate remaining step events.
+ *
+ *
+ * @param step_event[out] step_event.flags is set to non-zero when a step is produced.
+ * @param step_state[in,out]
+ * @return true when move is fully processed and there is no other work for this move segment.
+ */
 static bool generate_next_step_event(step_event_i32_t &step_event, step_generator_state_t &step_state) {
     const step_index_t old_nearest_step_event_idx = step_state.step_event_index[0];
 
