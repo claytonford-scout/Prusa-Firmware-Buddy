@@ -196,6 +196,8 @@ extern ClientQueue marlin_client_queue[MARLIN_MAX_CLIENTS];
 
 namespace marlin_server {
 
+CallbackHookPoint<> idle_hook_point;
+
 void media_prefetch_start();
 
 namespace {
@@ -802,6 +804,7 @@ static void cycle() {
     }
 
     FSM_notifier::SendNotification();
+    idle_hook_point.call_all();
 
     print_fan_spd();
 
