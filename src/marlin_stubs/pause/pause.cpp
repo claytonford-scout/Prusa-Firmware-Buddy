@@ -147,7 +147,7 @@ PausePrivatePhase::PausePrivatePhase()
     }
 }
 
-void PausePrivatePhase::setPhase(PhasesLoadUnload ph, uint8_t progress) {
+void PausePrivatePhase::setPhase(PhasesLoadUnload ph) {
     phase = ph;
     if (load_unload_mode) {
         log_info(MarlinServer, "setPhase %i %i", int(ph), int(state));
@@ -310,7 +310,7 @@ bool Pause::ensureSafeTemperatureNotifyProgress(uint8_t progress_min, uint8_t pr
         return true;
     }
 
-    setPhase(is_unstoppable() ? PhasesLoadUnload::WaitingTemp_unstoppable : PhasesLoadUnload::WaitingTemp_stoppable, progress_min);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::WaitingTemp_unstoppable : PhasesLoadUnload::WaitingTemp_stoppable);
 
     PauseFsmNotifier N(*this, Temperature::degHotend(active_extruder),
         Temperature::degTargetHotend(active_extruder) - heating_phase_min_hotend_diff, progress_min, progress_max, marlin_vars().hotend(active_extruder).temp_nozzle);
@@ -355,7 +355,7 @@ bool Pause::ensureSafeTemperatureNotifyProgress(uint8_t progress_min, uint8_t pr
     }
 
     // Restore phase after possible heatup GUI
-    setPhase(last_ph, progress_min);
+    setPhase(last_ph);
 
     return do_e_move_notify_progress(length, fr_mm_s, progress_min, progress_max, check_for);
 }
@@ -522,7 +522,7 @@ void Pause::runout_during_load_process([[maybe_unused]] Response response) {
 
 void Pause::assist_insertion_process([[maybe_unused]] Response response) {
     const bool unstoppable { is_unstoppable() };
-    setPhase(unstoppable ? PhasesLoadUnload::Inserting_unstoppable : PhasesLoadUnload::Inserting_stoppable, 10);
+    setPhase(unstoppable ? PhasesLoadUnload::Inserting_unstoppable : PhasesLoadUnload::Inserting_stoppable);
 
     // Filament is in Extruder autoload assistance is done.
     if (FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder)) {
@@ -558,7 +558,7 @@ void Pause::assist_insertion_process([[maybe_unused]] Response response) {
 }
 
 void Pause::load_to_gears_process([[maybe_unused]] Response response) { // slow load
-    setPhase(is_unstoppable() ? PhasesLoadUnload::LoadingToGears_unstoppable : PhasesLoadUnload::LoadingToGears_stoppable, 10);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::LoadingToGears_unstoppable : PhasesLoadUnload::LoadingToGears_stoppable);
 
     const auto result = do_e_move_notify_progress_coldextrude(settings.slow_load_length, FILAMENT_CHANGE_SLOW_LOAD_FEEDRATE, 10, 30, StopConditions::All);
 
@@ -601,7 +601,7 @@ void Pause::wait_temp_process([[maybe_unused]] Response response) {
 }
 
 void Pause::long_load_process([[maybe_unused]] Response response) {
-    setPhase(is_unstoppable() ? PhasesLoadUnload::Loading_unstoppable : PhasesLoadUnload::Loading_stoppable, 50);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::Loading_unstoppable : PhasesLoadUnload::Loading_stoppable);
 
     const float saved_acceleration = planner.user_settings.retract_acceleration;
     {
@@ -637,7 +637,7 @@ static constexpr feedRate_t retract_feedrate = 35; // mm/s
 
 void Pause::purge_process([[maybe_unused]] Response response) {
     // Extrude filament to get into hotend
-    setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable, 70);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
 
     planner.synchronize(); // Finish any pending moves before starting the purge
     const auto purge_result = do_e_move_notify_progress_hotextrude(settings.purge_length(), ADVANCED_PAUSE_PURGE_FEEDRATE, 70, 98, StopConditions::All);
@@ -661,7 +661,7 @@ void Pause::purge_process([[maybe_unused]] Response response) {
         return;
     }
 
-    setPhase(load_type == LoadType::load_purge ? PhasesLoadUnload::IsColorPurge : PhasesLoadUnload::IsColor, 99);
+    setPhase(load_type == LoadType::load_purge ? PhasesLoadUnload::IsColorPurge : PhasesLoadUnload::IsColor);
     set(LoadState::color_correct_ask);
     handle_filament_removal(LoadState::filament_push_ask);
 }
@@ -703,7 +703,7 @@ void Pause::mmu_load_start_process([[maybe_unused]] Response response) {
 
         config_store().set_filament_type(settings.GetExtruder(), filament::get_type_to_load());
 
-        setPhase(PhasesLoadUnload::IsColor, 99);
+        setPhase(PhasesLoadUnload::IsColor);
         set(LoadState::color_correct_ask);
     } else if (load_type == LoadType::filament_change) {
         if (settings.mmu_filament_to_load == MMU2::FILAMENT_UNKNOWN) {
@@ -733,7 +733,7 @@ void Pause::mmu_load_process([[maybe_unused]] Response response) {
     MMU2::mmu2.load_filament(settings.mmu_filament_to_load);
     MMU2::mmu2.load_filament_to_nozzle(settings.mmu_filament_to_load);
 
-    setPhase(PhasesLoadUnload::IsColor, 99);
+    setPhase(PhasesLoadUnload::IsColor);
     set(LoadState::color_correct_ask);
 }
 
@@ -772,11 +772,11 @@ void Pause::eject_process([[maybe_unused]] Response response) {
     }
 #endif
 
-    if (!ram_filament(98)) {
+    if (!ram_filament()) {
         return; // Ramming unsuccessful (stopped by the user (button Stop) or temp not safe to extrude)
     }
 
-    setPhase(is_unstoppable() ? PhasesLoadUnload::Ejecting_unstoppable : PhasesLoadUnload::Ejecting_stoppable, 99);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::Ejecting_unstoppable : PhasesLoadUnload::Ejecting_stoppable);
     unload_filament();
 
     switch (load_type) {
@@ -798,7 +798,7 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
 #if HAS_AUTO_RETRACT()
     if (!marlin_server::is_printing()) {
         // Only retract from nozzle outside printing
-        setPhase(PhasesLoadUnload::AutoRetracting, 99);
+        setPhase(PhasesLoadUnload::AutoRetracting);
         auto_retract().maybe_retract_from_nozzle();
         set(LoadState::_finished);
         return;
@@ -942,13 +942,13 @@ void Pause::ram_sequence_process([[maybe_unused]] Response response) {
     }
 #endif
 
-    if (ram_filament(50)) {
+    if (ram_filament()) {
         set(LoadState::unload);
     }
 }
 
 void Pause::unload_process([[maybe_unused]] Response response) {
-    setPhase(is_unstoppable() ? PhasesLoadUnload::Unloading_unstoppable : PhasesLoadUnload::Unloading_stoppable, 51);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::Unloading_unstoppable : PhasesLoadUnload::Unloading_stoppable);
     unload_filament();
 
     config_store().set_filament_type(settings.GetExtruder(), FilamentType::none);
@@ -982,7 +982,7 @@ void Pause::unload_process([[maybe_unused]] Response response) {
 }
 
 void Pause::unloaded_ask_process(Response response) {
-    setPhase(PhasesLoadUnload::IsFilamentUnloaded, 100);
+    setPhase(PhasesLoadUnload::IsFilamentUnloaded);
 
     if (response == Response::Yes) {
         set(LoadState::filament_not_in_fs);
@@ -995,7 +995,7 @@ void Pause::unloaded_ask_process(Response response) {
 }
 
 void Pause::unload_from_gears_process([[maybe_unused]] Response response) {
-    setPhase(PhasesLoadUnload::Unloading_stoppable, 0);
+    setPhase(PhasesLoadUnload::Unloading_stoppable);
 
     // unload cannot cause a runout -> safe to ignore the result
     std::ignore = do_e_move_notify_progress_coldextrude(-settings.slow_load_length * (float)1.5, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE, 0, 100, StopConditions::UserStopped);
@@ -1056,7 +1056,7 @@ void Pause::filament_not_in_fs_process(Response response) {
 
 void Pause::manual_unload_process(Response response) {
     const bool can_continue = !FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
-    setPhase(can_continue ? PhasesLoadUnload::ManualUnload_continuable : PhasesLoadUnload::ManualUnload_uncontinuable, 100);
+    setPhase(can_continue ? PhasesLoadUnload::ManualUnload_continuable : PhasesLoadUnload::ManualUnload_uncontinuable);
     handle_help(response);
 
     if (response == Response::Continue
@@ -1403,12 +1403,12 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
 #endif
 }
 
-bool Pause::ram_filament(uint8_t progress_percent) {
+bool Pause::ram_filament() {
     if (!ensureSafeTemperatureNotifyProgress(0, 50)) {
         return false;
     }
 
-    setPhase(is_unstoppable() ? PhasesLoadUnload::Ramming_unstoppable : PhasesLoadUnload::Ramming_stoppable, progress_percent);
+    setPhase(is_unstoppable() ? PhasesLoadUnload::Ramming_unstoppable : PhasesLoadUnload::Ramming_stoppable);
 
     const RammingSequence *ramming_sequence = nullptr;
 
