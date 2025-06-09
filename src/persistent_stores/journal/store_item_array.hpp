@@ -141,6 +141,15 @@ public:
         return data_array[index];
     }
 
+    auto get_all() {
+        if (xPortIsInsideInterrupt()) {
+            return data_array;
+        }
+
+        auto l = backend().lock();
+        return data_array;
+    }
+
     void init(uint8_t index, const std::span<const uint8_t> &raw_data) {
         if ((raw_data.size() != sizeof(value_type)) || (index >= item_count)) {
             std::terminate();
