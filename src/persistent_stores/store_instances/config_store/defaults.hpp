@@ -334,6 +334,7 @@ namespace defaults {
     // algorithm can't keep up with the increased demands caused by larger speeds.
     inline constexpr bool phase_stepping_enabled_x = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE();
     inline constexpr bool phase_stepping_enabled_y = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE();
+    inline constexpr bool heat_entire_bed = PRINTER_IS_PRUSA_iX();
 } // namespace defaults
 
 } // namespace config_store_ns
