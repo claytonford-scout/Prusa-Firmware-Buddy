@@ -1,6 +1,7 @@
 #pragma once
 
 #include <FreeRTOS.h>
+#include <utils/algorithm_extensions.hpp>
 
 #include "concepts.hpp"
 
@@ -196,6 +197,26 @@ public:
             std::terminate();
         }
         backend().save(hashed_id_first + index, { reinterpret_cast<const uint8_t *>(&(this->data_array[index])), sizeof(DataT) });
+    }
+};
+
+/// Legacy variant of JournalItemArray for items that were arrays before arrays existed.
+/// \param hashed_ids list of hashed IDs of the individual items
+template <StoreItemDataC DataT, auto default_val, ItemFlags flags_, auto backend, auto hashed_ids>
+struct JournalItemLegacyArray : public JournalItemArrayBase<JournalItemLegacyArray<DataT, default_val, flags_, backend, hashed_ids>, DataT, default_val, flags_, backend, hashed_ids.size()> {
+
+public:
+    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+        if (const auto index = stdext::index_of(hashed_ids, id); index != hashed_ids.size()) {
+            this->init(index, data);
+        }
+    }
+
+    void do_save(uint8_t index) {
+        if (index >= hashed_ids.size()) {
+            std::terminate();
+        }
+        backend().save(hashed_ids[index], { reinterpret_cast<const uint8_t *>(&(this->data_array[index])), sizeof(DataT) });
     }
 };
 

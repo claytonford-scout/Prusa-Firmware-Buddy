@@ -32,6 +32,9 @@ struct CurrentStoreConfig {
 
     template <StoreItemDataC DataT, auto default_val, ItemFlags flags, typename BackendT::Id id, uint8_t max_item_count, uint8_t item_count>
     using StoreItemArray = JournalItemArray<DataT, default_val, flags, backend, id, max_item_count, item_count>;
+
+    template <StoreItemDataC DataT, auto default_val, ItemFlags flags, auto hashed_ids>
+    using StoreItemLegacyArray = JournalItemLegacyArray<DataT, default_val, flags, backend, hashed_ids>;
 };
 
 template <BackendC BackendT>
