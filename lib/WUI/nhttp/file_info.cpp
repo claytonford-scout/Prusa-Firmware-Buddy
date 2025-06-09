@@ -45,11 +45,10 @@ struct FileMetadata {
     bool read_only {};
 };
 
-FileMetadata get_file_metadata(const char *path, struct stat &st, DIR *&dir) {
-    if (dir = opendir(path); dir) {
+FileMetadata get_file_metadata(const char *path, struct stat &st, unique_dir_ptr &dir) {
+    if (dir.reset(opendir(path)); dir) {
         MutablePath mp(path);
         if (auto st_opt = transfers::Transfer::get_transfer_partial_file_stat(mp); st_opt.has_value()) {
-            closedir(dir);
             st = st_opt.value();
             return { FileType::File, true };
         } else {
@@ -321,10 +320,10 @@ void FileInfo::step(std::string_view, bool, uint8_t *output, size_t output_size,
 
         struct stat finfo = {};
         first_packet = true;
-        DIR *dir_attempt = nullptr;
+        unique_dir_ptr dir_attempt;
 
         // Note: apart from just returning the type, it also fills
-        // either the DIR* or struct stat with the appropriate content,
+        // either the unique_dir_ptr or struct stat with the appropriate content,
         // so we don't have to call it twice (especially opendir() which
         // allocates).
         auto file_metadata = get_file_metadata(filepath, finfo, dir_attempt);
@@ -332,7 +331,7 @@ void FileInfo::step(std::string_view, bool, uint8_t *output, size_t output_size,
         switch (file_metadata.type) {
         case FileType::Directory:
             assert(dir_attempt != nullptr);
-            renderer = DirRenderer(this, dir_attempt, api);
+            renderer = DirRenderer { this, std::move(dir_attempt), api };
             break;
         case FileType::File:
             renderer = FileRenderer(this, finfo.st_size, finfo.st_mtime, api, file_metadata.read_only);

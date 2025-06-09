@@ -51,9 +51,9 @@ private:
         bool read_only = false;
         bool partial = false;
         DirState() = default;
-        DirState(FileInfo *owner, DIR *dir)
+        DirState(FileInfo *owner, unique_dir_ptr dir)
             : filepath(owner->filepath)
-            , dir(dir) {
+            , dir { std::move(dir) } {
             std::string_view filepath_view { filepath };
             auto pos = filepath_view.find_last_of('/');
             filename = filepath + pos + 1; // + 1 to get past the /
@@ -77,8 +77,8 @@ private:
         DirRenderer(APIVersion api)
             : JsonRenderer(DirState())
             , api(api) {}
-        DirRenderer(FileInfo *owner, DIR *dir, APIVersion api)
-            : JsonRenderer(DirState(owner, dir))
+        DirRenderer(FileInfo *owner, unique_dir_ptr dir, APIVersion api)
+            : JsonRenderer { DirState(owner, std::move(dir)) }
             , api(api) {}
     };
 
