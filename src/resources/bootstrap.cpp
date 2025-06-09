@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <dirent.h>
-#include <memory>
 #include <string.h>
 #include <optional>
 #include <cerrno>
@@ -15,6 +14,7 @@
 #include "timing.h"
 #include "cmsis_os.h"
 
+#include <unique_dir_ptr.hpp>
 #include <unique_file_ptr.hpp>
 
 #include "semihosting/semihosting.hpp"
@@ -42,7 +42,7 @@ static bool scan_resources_folder(Path &path, ResourcesScanResult &result) {
 
     while (true) {
         // get info about the next item in the directory
-        std::unique_ptr<DIR, DIRDeleter> dir(opendir(path.get()));
+        unique_dir_ptr dir { opendir(path.get()) };
         if (last_dir_location.has_value()) {
             seekdir(dir.get(), last_dir_location.value());
         }
@@ -232,7 +232,7 @@ static bool copy_file(const Path &source_path, const Path &target_path, Bootstra
     while (true) {
         errno = 0;
         // get info about the next item in the directory
-        std::unique_ptr<DIR, DIRDeleter> dir(opendir(path.get()));
+        unique_dir_ptr dir { opendir(path.get()) };
 
         if (dir.get() == nullptr) {
             return false;
@@ -317,7 +317,7 @@ static bool copy_resources_directory(Path &source, Path &target, BootstrapProgre
     while (true) {
         errno = 0;
         // get info about the next item in the directory
-        std::unique_ptr<DIR, DIRDeleter> dir(opendir(source.get()));
+        unique_dir_ptr dir { opendir(source.get()) };
 
         if (dir.get() == nullptr) {
             return false;
@@ -437,7 +437,7 @@ static bool find_suitable_bbf_file(const buddy::resources::Revision &revision, P
     log_debug(Resources, "Searching for a bbf...");
 
     // open the directory
-    std::unique_ptr<DIR, DIRDeleter> dir(opendir("/usb"));
+    unique_dir_ptr dir { opendir("/usb") };
     if (dir.get() == nullptr) {
         log_warning(Resources, "Failed to open /usb directory");
         return false;
@@ -532,7 +532,7 @@ static bool do_bootstrap(const buddy::resources::Revision &revision, buddy::reso
     reporter.assign_scan_result(scan_result);
 
     // open the bbf's root dir
-    std::unique_ptr<DIR, DIRDeleter> dir(opendir("/bbf"));
+    unique_dir_ptr dir { opendir("/bbf") };
     if (dir.get() == nullptr) {
         log_warning(Resources, "Failed to open /bbf directory");
         return false;

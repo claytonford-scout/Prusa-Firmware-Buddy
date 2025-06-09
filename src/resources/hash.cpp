@@ -1,8 +1,8 @@
 #include "resources/hash.hpp"
 #include "fileutils.hpp"
 #include "sha256.h"
+#include <unique_dir_ptr.hpp>
 #include <unique_file_ptr.hpp>
-#include <memory>
 #include <optional>
 #include <logging/log.hpp>
 
@@ -102,7 +102,7 @@ static bool update_hash_with_directory(const char *root, Path &path, HashContext
 
     while (true) {
         // get info about the next item in the directory
-        std::unique_ptr<DIR, DIRDeleter> dir(opendir(path.get()));
+        unique_dir_ptr dir { opendir(path.get()) };
         if (last_dir_location.has_value()) {
             seekdir(dir.get(), last_dir_location.value());
         }
