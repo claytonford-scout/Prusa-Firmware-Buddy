@@ -17,6 +17,7 @@
 #include <cstring>
 #include <cstdio>
 #include "printers.h"
+#include <common/unique_dir_ptr.hpp>
 #include <option/has_mmu2.h>
 
 using namespace json;
@@ -445,15 +446,11 @@ json::JsonResult get_job_v1(size_t resume_point, json::JsonOutput &output) {
 namespace {
 
     bool usb_available() {
-        bool available = false;
         // ideally we would use something more lightweight, like stat()
         // but fatfs doesn't support calling it on root and from it's
         // perspective /usb is root
-        if (DIR *dir = opendir("/usb"); dir != nullptr) {
-            available = true;
-            closedir(dir);
-        }
-        return available;
+        unique_dir_ptr dir { opendir("/usb") };
+        return dir != nullptr;
     }
 
 } // namespace
