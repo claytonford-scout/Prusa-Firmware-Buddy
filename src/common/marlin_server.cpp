@@ -811,6 +811,8 @@ static void cycle() {
     buddy::xbuddy_extension().step();
 #endif
 
+    idle_hook_point.call_all();
+
     static bool is_nested = false;
     if (is_nested) {
         return;
@@ -850,7 +852,6 @@ static void cycle() {
     }
 
     FSM_notifier::SendNotification();
-    idle_hook_point.call_all();
 
     print_fan_spd();
 
