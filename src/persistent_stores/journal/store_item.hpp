@@ -53,12 +53,12 @@ public:
         return data.data();
     }
 
-    inline void init(const std::span<uint8_t> &)
+    inline void init(const std::span<const uint8_t> &)
         requires(ram_only)
     {
     }
 
-    void init(const std::span<uint8_t> &raw_data)
+    void init(const std::span<const uint8_t> &raw_data)
         requires(!ram_only)
     {
         if (raw_data.size() != sizeof(value_type)) {

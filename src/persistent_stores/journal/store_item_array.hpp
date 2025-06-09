@@ -150,7 +150,7 @@ public:
         return data_array[index];
     }
 
-    void init(uint8_t index, const std::span<uint8_t> &raw_data) {
+    void init(uint8_t index, const std::span<const uint8_t> &raw_data) {
         if ((raw_data.size() != sizeof(value_type)) || (index >= item_count)) {
             std::terminate();
         }

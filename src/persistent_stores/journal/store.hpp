@@ -75,7 +75,7 @@ public:
      * @param id Hashed id of target store item
      * @param data Holds data in binary form to be loaded into current item
      */
-    void load_item(uint16_t id, std::span<uint8_t> data) {
+    void load_item(uint16_t id, const std::span<const uint8_t> &data) {
         visit_all_struct_fields(static_cast<Config &>(*this), [&]<typename Item>(Item &item) {
             if constexpr (std::is_base_of_v<JournalItemArrayBase, Item>) {
                 if (Item::hashed_id_first <= id && id <= Item::hashed_id_last) {
@@ -101,7 +101,7 @@ public:
     };
 
     void load_all() {
-        Config::get_backend().load_all([this](uint16_t id, std::span<uint8_t> data) -> void { return load_item(id, data); }, MigrationFunctions);
+        Config::get_backend().load_all([this](uint16_t id, const std::span<const uint8_t> &data) -> void { return load_item(id, data); }, MigrationFunctions);
     };
     void init() {
         Config::get_backend().init([this]() {
