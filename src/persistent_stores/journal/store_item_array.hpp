@@ -9,16 +9,9 @@
 
 namespace journal {
 
+template <typename Child, StoreItemDataC DataT, auto default_val, ItemFlags flags_, auto backend, uint8_t item_count>
 struct JournalItemArrayBase {
-};
-
-/// Array of journal items
-/// \p item_count determines the array size. It can be increased in time, possibly even decreased
-/// \p max_item_count determines the maximum item_count the item can ever have. This is only used for hash collision checking. It can never be decreased, but it can be increased (granted that it does not cause hash collisions)
-/// The journal_hashes_generator python script looks for the next argument after journal::hash for the hash range size - so \p max_item_count must be directly after \p hashed_id
-template <StoreItemDataC DataT, auto default_val, ItemFlags flags_, auto backend, uint16_t hashed_id, uint8_t max_item_count, uint8_t item_count>
-struct JournalItemArray : public JournalItemArrayBase {
-private:
+protected:
     using DefaultVal = std::remove_cvref_t<decltype(default_val)>;
     using ItemArray = std::array<DataT, item_count>;
     ItemArray data_array;
@@ -26,19 +19,17 @@ private:
 public:
     using BackendT = std::remove_cvref_t<std::invoke_result_t<decltype(backend)>>;
     using value_type = DataT;
+    using DataArg = JournalItemBase<DataT, backend, false>::DataArg;
+
+    static constexpr ItemFlags flags { flags_ }; // All items have flag 1 (for easier filtering)
+
     static constexpr size_t data_size { sizeof(DataT) };
     static_assert(journal::BackendC<BackendT>); // BackendT type needs to fulfill this concept. Can be moved to signature with newer clangd, causes too many errors now (constrained auto)
     static_assert(data_size < BackendT::MAX_ITEM_SIZE, "Item is too large");
-    static_assert(max_item_count >= item_count);
     static_assert(std::is_same_v<DefaultVal, std::array<DataT, item_count>> || std::is_same_v<DefaultVal, DataT>);
     static_assert(item_count > 0);
 
-    using DataArg = JournalItemBase<DataT, backend, false>::DataArg;
-
-    static constexpr uint16_t hashed_id_first { hashed_id };
-    static constexpr uint16_t hashed_id_last { hashed_id + item_count - 1 };
-    static constexpr ItemFlags flags { flags_ }; // All items have flag 1 (for easier filtering)
-
+public:
     static constexpr DataT get_default_val(uint8_t index) {
         if constexpr (is_std_array_v<DefaultVal>) {
             return default_val[index];
@@ -47,8 +38,8 @@ public:
         }
     }
 
-    consteval JournalItemArray()
-        requires(sizeof(JournalItemArray) == sizeof(ItemArray)) // Current implementation of journal relies heavily on this
+    consteval JournalItemArrayBase()
+        requires(sizeof(JournalItemArrayBase) == sizeof(ItemArray)) // Current implementation of journal relies heavily on this
     {
         if constexpr (is_std_array_v<DefaultVal>) {
             data_array = default_val;
@@ -57,8 +48,8 @@ public:
         }
     }
 
-    JournalItemArray(const JournalItemArray &other) = delete;
-    JournalItemArray &operator=(const JournalItemArray &other) = delete;
+    JournalItemArrayBase(const JournalItemArrayBase &other) = delete;
+    JournalItemArrayBase &operator=(const JournalItemArrayBase &other) = delete;
 
     /// Sets the config to the provided value \p in
     /// \returns true if the set value was different from the previous one
@@ -72,7 +63,7 @@ public:
         auto l = backend().lock();
 
         data_array[index] = in;
-        do_save(index);
+        static_cast<Child *>(this)->do_save(index);
     }
 
     void set_all(DataArg in) {
@@ -82,7 +73,7 @@ public:
                 continue;
             }
             data_array[i] = in;
-            do_save(i);
+            static_cast<Child *>(this)->do_save(i);
         }
     }
 
@@ -93,7 +84,7 @@ public:
                 continue;
             }
             data_array[i] = in[i];
-            do_save(i);
+            static_cast<Child *>(this)->do_save(i);
         }
     }
     /// Sets the item to f(old_value).
@@ -107,7 +98,7 @@ public:
         const auto new_value = f(old_value);
         if (new_value != old_value) {
             this->data_array = new_value;
-            this->do_save(index);
+            static_cast<Child *>(this)->do_save(index);
         }
     }
 
@@ -120,7 +111,7 @@ public:
             const auto new_value = f(old_value);
             if (new_value != old_value) {
                 this->data_array = new_value;
-                this->do_save(i);
+                static_cast<Child *>(this)->do_save(i);
             }
         }
     }
@@ -158,12 +149,6 @@ public:
         memcpy(&(data_array[index]), raw_data.data(), sizeof(value_type));
     }
 
-    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
-        if (hashed_id_first <= id && id <= hashed_id_last) {
-            init(id - hashed_id_first, data);
-        }
-    }
-
     void ram_dump(ItemFlags exclude_flags) {
         if (flags & exclude_flags) {
             return;
@@ -171,17 +156,37 @@ public:
 
         for (uint8_t i = 0; i < item_count; i++) {
             if (data_array[i] != get_default_val(i)) {
-                do_save(i);
+                static_cast<Child *>(this)->do_save(i);
             }
         }
     }
+};
 
-private:
+/// Array of journal items
+/// \p item_count determines the array size. It can be increased in time, possibly even decreased
+/// \p max_item_count determines the maximum item_count the item can ever have. This is only used for hash collision checking. It can never be decreased, but it can be increased (granted that it does not cause hash collisions)
+/// The journal_hashes_generator python script looks for the next argument after journal::hash for the hash range size - so \p max_item_count must be directly after \p hashed_id
+template <StoreItemDataC DataT, auto default_val, ItemFlags flags_, auto backend, uint16_t hashed_id, uint8_t max_item_count, uint8_t item_count>
+struct JournalItemArray : public JournalItemArrayBase<JournalItemArray<DataT, default_val, flags_, backend, hashed_id, max_item_count, item_count>, DataT, default_val, flags_, backend, item_count> {
+
+public:
+    static_assert(max_item_count >= item_count);
+
+    static constexpr uint16_t hashed_id_first { hashed_id };
+    static constexpr uint16_t hashed_id_last { hashed_id + item_count - 1 };
+
+public:
+    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+        if (hashed_id_first <= id && id <= hashed_id_last) {
+            this->init(id - hashed_id_first, data);
+        }
+    }
+
     void do_save(uint8_t index) {
         if (index >= item_count) {
             std::terminate();
         }
-        backend().save(hashed_id_first + index, { reinterpret_cast<const uint8_t *>(&(data_array[index])), sizeof(DataT) });
+        backend().save(hashed_id_first + index, { reinterpret_cast<const uint8_t *>(&(this->data_array[index])), sizeof(DataT) });
     }
 };
 
