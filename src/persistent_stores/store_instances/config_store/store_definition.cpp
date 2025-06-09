@@ -149,63 +149,6 @@ void CurrentStore::perform_config_migrations() {
     // - migrations here are for the higher abstraction level
 }
 
-footer::Item CurrentStore::get_footer_setting([[maybe_unused]] uint8_t index) {
-    switch (index) {
-    case 0:
-        return footer_setting_0.get();
-#if FOOTER_ITEMS_PER_LINE__ > 1
-    case 1:
-        return footer_setting_1.get();
-#endif
-#if FOOTER_ITEMS_PER_LINE__ > 2
-    case 2:
-        return footer_setting_2.get();
-#endif
-#if FOOTER_ITEMS_PER_LINE__ > 3
-    case 3:
-        return footer_setting_3.get();
-#endif
-#if FOOTER_ITEMS_PER_LINE__ > 4
-    case 4:
-        return footer_setting_4.get();
-#endif
-    default:
-        assert(false && "invalid index");
-        return footer::Item::none;
-    }
-}
-
-void CurrentStore::set_footer_setting(uint8_t index, footer::Item value) {
-    switch (index) {
-    case 0:
-        footer_setting_0.set(value);
-        break;
-#if FOOTER_ITEMS_PER_LINE__ > 1
-    case 1:
-        footer_setting_1.set(value);
-        break;
-#endif
-#if FOOTER_ITEMS_PER_LINE__ > 2
-    case 2:
-        footer_setting_2.set(value);
-        break;
-#endif
-#if FOOTER_ITEMS_PER_LINE__ > 3
-    case 3:
-        footer_setting_3.set(value);
-        break;
-#endif
-#if FOOTER_ITEMS_PER_LINE__ > 4
-    case 4:
-        footer_setting_4.set(value);
-        break;
-#endif
-    default:
-        assert(false && "invalid index");
-        return;
-    }
-}
-
 int32_t CurrentStore::get_extruder_fs_ref_nins_value([[maybe_unused]] uint8_t index) {
 #if HOTENDS <= 1
     assert(index == 0);
