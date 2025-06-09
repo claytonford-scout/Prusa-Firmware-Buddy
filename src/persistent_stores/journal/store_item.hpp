@@ -126,6 +126,12 @@ public:
         static_assert(sizeof(JournalItem) == sizeof(DataT));
     }
 
+    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+        if (hashed_id == id) {
+            this->init(data);
+        }
+    }
+
     /// Sets the config to the provided value \p in
     /// \returns true if the set value was different from the previous one
     inline void set(Base::DataArg in) {

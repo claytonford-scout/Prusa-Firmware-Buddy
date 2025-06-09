@@ -77,15 +77,7 @@ public:
      */
     void load_item(uint16_t id, const std::span<const uint8_t> &data) {
         visit_all_struct_fields(static_cast<Config &>(*this), [&]<typename Item>(Item &item) {
-            if constexpr (std::is_base_of_v<JournalItemArrayBase, Item>) {
-                if (Item::hashed_id_first <= id && id <= Item::hashed_id_last) {
-                    item.init(id - Item::hashed_id_first, data);
-                }
-            } else {
-                if (Item::hashed_id == id) {
-                    item.init(data);
-                }
-            }
+            item.check_init(id, data);
         });
     }
 

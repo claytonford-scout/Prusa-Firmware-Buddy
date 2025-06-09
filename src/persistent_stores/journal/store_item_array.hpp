@@ -158,6 +158,12 @@ public:
         memcpy(&(data_array[index]), raw_data.data(), sizeof(value_type));
     }
 
+    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+        if (hashed_id_first <= id && id <= hashed_id_last) {
+            init(id - hashed_id_first, data);
+        }
+    }
+
     void ram_dump(ItemFlags exclude_flags) {
         if (flags & exclude_flags) {
             return;
