@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include "store_item.hpp"
+#include "store_item_array.hpp"
 #include <algorithm>
 #include <ranges>
 #include <type_traits>
