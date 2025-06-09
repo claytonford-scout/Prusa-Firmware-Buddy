@@ -1,5 +1,6 @@
 #include "marlin_server.hpp"
 
+#include <common/unique_dir_ptr.hpp>
 #include <freertos/critical_section.hpp>
 #include <marlin_stubs/skippable_gcode.hpp>
 #include "marlin_client_queue.hpp"
@@ -1608,14 +1609,13 @@ void update_sfn() {
     // Do this in the async job thread to prevent blocking Marlin on I/O and possibly causing a watchdog reset
     AsyncJob async_job;
     async_job.issue([&d](AsyncJobExecutionControl &) {
-        DIR *dir = opendir(d.filepath_sfn.get());
+        unique_dir_ptr dir { opendir(d.filepath_sfn.get()) };
         if (!dir) {
             return;
         }
-        ScopeGuard dir_guard([&] { closedir(dir); });
 
         struct dirent *ent;
-        while ((ent = readdir(dir))) {
+        while ((ent = readdir(dir.get()))) {
             if ((strcasecmp(ent->d_name, d.lfn) == 0) || (strcasecmp(ent->lfn, d.lfn) == 0)) {
                 break;
             }
