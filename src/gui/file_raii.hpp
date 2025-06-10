@@ -52,27 +52,3 @@ struct F_DIR_RAII_Iterator {
         return filename_is_printable(fno->lfn);
     }
 };
-/// This is just a simple RAII struct for finding one particular file/dir name
-/// and closing the control structures accordingly
-struct F_DIR_RAII_Find_One {
-    Directory dp;
-    dirent *fno;
-    ResType result;
-    F_DIR_RAII_Find_One(char *sfnPath, const char *sfn)
-        : dp { sfnPath } {
-        result = ResType::NO_FILE;
-        if (dp) {
-            for (;;) {
-                fno = dp.read();
-                if (!fno) {
-                    result = ResType::NO_FILE;
-                    break;
-                }
-                if (!strcmp(sfn, fno->d_name)) {
-                    result = ResType::OK;
-                    break;
-                }
-            }
-        }
-    }
-};
