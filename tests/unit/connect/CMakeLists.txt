@@ -6,6 +6,7 @@ add_executable(
   connect_tests
   ${CMAKE_CURRENT_BINARY_DIR}/http_resp_automaton.cpp
   ${CMAKE_SOURCE_DIR}/src/common/automata/core.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/directory.cpp
   ${CMAKE_SOURCE_DIR}/src/common/crc32.cpp
   ${CMAKE_SOURCE_DIR}/src/common/error_code_mangle.cpp
   ${CMAKE_SOURCE_DIR}/src/common/json_encode.cpp
@@ -139,6 +140,7 @@ add_executable(
   ${CMAKE_CURRENT_BINARY_DIR}/http_resp_automaton.cpp
   ${CMAKE_SOURCE_DIR}/src/common/automata/core.cpp
   ${CMAKE_SOURCE_DIR}/src/common/crc32.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/directory.cpp
   ${CMAKE_SOURCE_DIR}/src/common/error_code_mangle.cpp
   ${CMAKE_SOURCE_DIR}/src/common/json_encode.cpp
   ${CMAKE_SOURCE_DIR}/src/common/filepath_operation.cpp

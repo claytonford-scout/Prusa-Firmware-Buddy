@@ -17,7 +17,7 @@
 #include <cstring>
 #include <cstdio>
 #include "printers.h"
-#include <common/unique_dir_ptr.hpp>
+#include <common/directory.hpp>
 #include <option/has_mmu2.h>
 
 using namespace json;
@@ -449,8 +449,8 @@ namespace {
         // ideally we would use something more lightweight, like stat()
         // but fatfs doesn't support calling it on root and from it's
         // perspective /usb is root
-        unique_dir_ptr dir { opendir("/usb") };
-        return dir != nullptr;
+        Directory dir { "/usb" };
+        return static_cast<bool>(dir);
     }
 
 } // namespace

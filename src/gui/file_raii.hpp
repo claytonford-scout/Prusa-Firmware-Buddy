@@ -3,7 +3,7 @@
 #include "../common/filename_type.hpp"
 #include <stdio.h>
 #include "dirent.h"
-#include <common/unique_dir_ptr.hpp>
+#include <common/directory.hpp>
 #include <strings.h>
 
 enum class ResType {
@@ -15,12 +15,12 @@ enum class ResType {
 /// RAII iterator structure over a directory with file/entry matching
 /// tailored for our purposes
 struct F_DIR_RAII_Iterator {
-    unique_dir_ptr dp;
+    Directory dp;
     dirent *fno;
     ResType result;
     char *m_Path;
     F_DIR_RAII_Iterator(char *path)
-        : dp { opendir(path) }
+        : dp { path }
         , m_Path(path) {
         if (!dp) {
             result = ResType::NOK;
@@ -33,7 +33,7 @@ struct F_DIR_RAII_Iterator {
     ///         false if there are no more files or an error iterating over a dir occured
     bool FindNext() {
         // and it only does pattern matching, which I don't need here - I have my own
-        while ((fno = readdir(dp.get())) != nullptr) {
+        while ((fno = dp.read()) != nullptr) {
             if (EntryAccepted()) {
                 return true; // found and accepted
             }
@@ -55,15 +55,15 @@ struct F_DIR_RAII_Iterator {
 /// This is just a simple RAII struct for finding one particular file/dir name
 /// and closing the control structures accordingly
 struct F_DIR_RAII_Find_One {
-    unique_dir_ptr dp;
+    Directory dp;
     dirent *fno;
     ResType result;
     F_DIR_RAII_Find_One(char *sfnPath, const char *sfn)
-        : dp { opendir(sfnPath) } {
+        : dp { sfnPath } {
         result = ResType::NO_FILE;
         if (dp) {
             for (;;) {
-                fno = readdir(dp.get());
+                fno = dp.read();
                 if (!fno) {
                     result = ResType::NO_FILE;
                     break;

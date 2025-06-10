@@ -4,7 +4,7 @@
 
 #include <http/types.h>
 #include <segmented_json.h>
-#include <unique_dir_ptr.hpp>
+#include <directory.hpp>
 
 #include <string_view>
 #include <variant>
@@ -44,14 +44,14 @@ private:
     struct DirState {
         char *filepath = nullptr;
         char *filename = nullptr;
-        unique_dir_ptr dir;
+        Directory dir;
         dirent *ent = nullptr;
         time_t base_folder_timestamp {};
         bool first = true;
         bool read_only = false;
         bool partial = false;
         DirState() = default;
-        DirState(FileInfo *owner, unique_dir_ptr dir)
+        DirState(FileInfo *owner, Directory dir)
             : filepath(owner->filepath)
             , dir { std::move(dir) } {
             std::string_view filepath_view { filepath };
@@ -77,7 +77,7 @@ private:
         DirRenderer(APIVersion api)
             : JsonRenderer(DirState())
             , api(api) {}
-        DirRenderer(FileInfo *owner, unique_dir_ptr dir, APIVersion api)
+        DirRenderer(FileInfo *owner, Directory dir, APIVersion api)
             : JsonRenderer { DirState(owner, std::move(dir)) }
             , api(api) {}
     };
