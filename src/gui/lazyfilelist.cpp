@@ -104,9 +104,9 @@ void LazyDirViewBase::ChangeDirectory(const char *p, SortPolicy sp, const char *
 
     auto filled_region_end = indices_begin + 1;
 
-    F_DIR_RAII_Iterator dir(sfnPath);
-    while (dir.FindNext()) {
-        const EntryRef curr(*dir.fno, sfnPath);
+    Directory dir { sfnPath };
+    while (dirent *entry = FileSort::find_next(dir)) {
+        const EntryRef curr(*entry, sfnPath);
 
         // Check if the entry isn't a link or something we don't support
         if (!curr.is_valid()) {
@@ -199,9 +199,9 @@ bool LazyDirViewBase::MoveUp(int amount) {
     {
         const EntryRef anchor_item = files_data[*full_insert_range_end];
 
-        F_DIR_RAII_Iterator dir(sfnPath);
-        while (dir.FindNext()) {
-            const EntryRef curr(*dir.fno, sfnPath);
+        Directory dir { sfnPath };
+        while (dirent *entry = FileSort::find_next(dir)) {
+            const EntryRef curr(*entry, sfnPath);
 
             // Check if the entry isn't a link or something we don't support
             if (!curr.is_valid()) {
@@ -282,9 +282,9 @@ bool LazyDirViewBase::MoveDown(int amount) {
     {
         const EntryRef anchor_item = files_data[*(insert_range_begin - 1)];
 
-        F_DIR_RAII_Iterator dir(sfnPath);
-        while (dir.FindNext()) {
-            const EntryRef curr(*dir.fno, sfnPath);
+        Directory dir { sfnPath };
+        while (dirent *entry = FileSort::find_next(dir)) {
+            const EntryRef curr(*entry, sfnPath);
 
             // Check if the entry isn't a link or something we don't support
             if (!curr.is_valid()) {

@@ -1,7 +1,7 @@
 // screen_home.cpp
 #include "screen_home.hpp"
 #include "stdio.h"
-#include "file_raii.hpp"
+#include "file_sort.hpp"
 
 #include "config.h"
 
@@ -147,16 +147,16 @@ bool screen_home_data_t::need_check_wifi_credentials = true;
     auto sb = StringBuilder::from_ptr(fpath, fpath_len);
     sb.append_string("/usb/");
 
-    F_DIR_RAII_Iterator dir(fpath);
-    if (dir.result == ResType::NOK) {
+    Directory dir { fpath };
+    if (!dir) {
         return false;
     }
 
     // prepare the item at the zeroth position according to sort policy
     FileSort::Entry entry;
 
-    while (dir.FindNext()) {
-        const FileSort::EntryRef curr(*dir.fno, fpath);
+    while (dirent *fno = FileSort::find_next(dir)) {
+        const FileSort::EntryRef curr(*fno, fpath);
 
         if (curr.type != FileSort::EntryType::FILE) {
             continue;
