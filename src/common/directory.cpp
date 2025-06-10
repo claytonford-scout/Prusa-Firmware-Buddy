@@ -31,6 +31,7 @@ Directory::operator bool() const {
 
 void Directory::close() {
     (void)closedir(dir);
+    dir = nullptr;
 }
 
 struct dirent *Directory::read() {
