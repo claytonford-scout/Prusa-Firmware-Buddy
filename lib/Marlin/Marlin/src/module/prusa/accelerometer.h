@@ -6,6 +6,7 @@
 #include "../../inc/MarlinConfigPre.h"
 #include <option/has_local_accelerometer.h>
 #include <option/has_remote_accelerometer.h>
+#include <Marlin/src/core/types.h>
 
 static_assert(HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER());
 
@@ -85,6 +86,43 @@ public:
             acceleration.val[2] = raw_to_accel(raw_acceleration.val[2]);
         }
         return result;
+    }
+
+    // Computes a pseudo-projection of one vector to another. The length of
+    // direction vector is not normalized.
+    [[maybe_unused]] static int16_t pseudo_project(std::tuple<int16_t, int16_t> what, std::tuple<float, float> dir) {
+        return static_cast<int16_t>(std::get<0>(what) * std::get<0>(dir) + std::get<1>(what) * std::get<1>(dir));
+    }
+
+    static int16_t project_to_axis(AxisEnum axis, const PrusaAccelerometer::RawAcceleration &sample) {
+#if PRINTER_IS_PRUSA_COREONE()
+        if (axis == AxisEnum::X_AXIS) {
+            return sample.val[1];
+        } else if (axis == AxisEnum::Y_AXIS) {
+            return sample.val[0];
+        } else {
+            bsod("Unsupported axis");
+        }
+#elif ENABLED(COREXY)
+        std::pair<float, float> proj_dir;
+        if (axis == AxisEnum::X_AXIS) {
+            proj_dir = { M_SQRT1_2, M_SQRT1_2 };
+        } else if (axis == AxisEnum::Y_AXIS) {
+            proj_dir = { -M_SQRT1_2, M_SQRT1_2 };
+        } else {
+            bsod("Unsupported axis");
+        }
+
+        return pseudo_project({ sample.val[0], sample.val[1] }, proj_dir);
+#else
+        if (axis == AxisEnum::X_AXIS) {
+            return sample.val[0];
+        } else if (axis == AxisEnum::Y_AXIS) {
+            return sample.val[1];
+        } else {
+            bsod("Unsupported axis");
+        }
+#endif
     }
 
     float get_sampling_rate() const;
