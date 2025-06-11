@@ -629,6 +629,10 @@ struct CurrentStore
     static_assert(HOTENDS <= 8);
 #endif
 
+#if PRINTER_IS_PRUSA_COREONE()
+    StoreItem<bool, true, journal::hash("Check chamber ventilation state")> check_manual_vent_state;
+#endif
+
 private:
     void perform_config_migrations();
 };
