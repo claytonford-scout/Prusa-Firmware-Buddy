@@ -78,9 +78,12 @@ using ScreenMenuHardware__ = ScreenMenu<GuiDefaults::MenuFooter,
     MI_HW_MMU,
 #endif
 
-    // ================================
-    // Other
-    // ================================
+// ================================
+// Other
+// ================================
+#if PRINTER_IS_PRUSA_COREONE()
+    MI_CHECK_MANUAL_VENT_STATE,
+#endif
     MI_HARDWARE_G_CODE_CHECKS,
 #if HAS_ILI9488_DISPLAY()
     MI_DISPLAY_BAUDRATE,

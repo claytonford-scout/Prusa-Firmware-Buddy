@@ -73,3 +73,13 @@ protected:
     virtual void OnChange(size_t old_index) override;
 };
 #endif
+
+#if PRINTER_IS_PRUSA_COREONE()
+class MI_CHECK_MANUAL_VENT_STATE : public WI_ICON_SWITCH_OFF_ON_t {
+public:
+    MI_CHECK_MANUAL_VENT_STATE();
+
+protected:
+    virtual void OnChange(size_t old_index) override;
+};
+#endif

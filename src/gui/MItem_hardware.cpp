@@ -137,3 +137,12 @@ void MI_EMERGENCY_STOP_ENABLE::OnChange([[maybe_unused]] size_t old_index) {
     }
 }
 #endif
+
+#if PRINTER_IS_PRUSA_COREONE()
+MI_CHECK_MANUAL_VENT_STATE::MI_CHECK_MANUAL_VENT_STATE()
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().check_manual_vent_state.get(), _("Check Ventilation Grilles"), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_CHECK_MANUAL_VENT_STATE::OnChange([[maybe_unused]] size_t old_index) {
+    config_store().check_manual_vent_state.set(value());
+}
+#endif
