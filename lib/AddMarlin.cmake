@@ -38,7 +38,6 @@ if(BOARD_IS_MASTER_BOARD)
     PRIVATE Marlin/Marlin/src/core/multi_language.cpp
             Marlin/Marlin/src/feature/babystep.cpp
             Marlin/Marlin/src/feature/backlash.cpp
-            Marlin/Marlin/src/feature/bed_preheat.cpp
             Marlin/Marlin/src/feature/bedlevel/abl/abl.cpp
             Marlin/Marlin/src/feature/bedlevel/bedlevel.cpp
             Marlin/Marlin/src/feature/bedlevel/mbl/mesh_bed_leveling.cpp
