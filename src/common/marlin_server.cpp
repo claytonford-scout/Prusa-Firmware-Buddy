@@ -2158,7 +2158,9 @@ static void _server_print_loop(void) {
         server.mbl_failed = false;
 #endif
 #if PRINTER_IS_PRUSA_COREONE()
-        buddy::chamber().check_vent_state();
+        if (config_store().check_manual_vent_state.get()) {
+            buddy::chamber().check_vent_state();
+        }
 #endif
         break;
     case State::SerialPrintInit:
