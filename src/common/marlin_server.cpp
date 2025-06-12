@@ -458,6 +458,16 @@ static void handle_warnings() {
     const auto phase = static_cast<PhasesWarning>(phase_opt->GetPhase());
     const auto warning_type = fsm::deserialize_data<WarningType>(phase_opt->GetData());
 
+    // Timeout
+    if (fsm_states.get_top()->fsm_type != ClientFSM::Warning) {
+        // Some other FSM is on top of Warning FSM - reset warning lifespan timestamp
+        active_warning_pop_timestamp_sec = ticks_s();
+    }
+    if (ticks_s() - active_warning_pop_timestamp_sec > warning_lifespan_sec(warning_type)) {
+        clear_warning(warning_type);
+        return;
+    }
+
     const auto consume_response = [&]() {
         const auto response = get_response_from_phase(phase);
         if (response != Response::_none) {
@@ -470,16 +480,16 @@ static void handle_warnings() {
     switch (phase) {
 
     case PhasesWarning::Warning:
-        if (fsm_states.get_top()->fsm_type != ClientFSM::Warning) {
-            // Some other FSM is on top of Warning FSM - reset warning lifespan timestamp
-            active_warning_pop_timestamp_sec = ticks_s();
-        }
-        if (ticks_s() - active_warning_pop_timestamp_sec > warning_lifespan_sec(warning_type)) {
-            clear_warning(warning_type);
-        } else {
-            consume_response();
+        consume_response();
+        break;
+
+#if PRINTER_IS_PRUSA_COREONE()
+    case PhasesWarning::ChamberVents:
+        if (consume_response() == Response::Disable) {
+            config_store().check_manual_vent_state.set(false);
         }
         break;
+#endif
 
 #if XL_ENCLOSURE_SUPPORT()
     case PhasesWarning::EnclosureFilterExpiration:

@@ -38,6 +38,13 @@ PhasesWarning warning_type_phase(WarningType warning) {
         return PhasesWarning::EnclosureFilterExpiration;
 #endif
 
+#if PRINTER_IS_PRUSA_COREONE()
+    case WarningType::OpenChamberVents:
+        return PhasesWarning::ChamberVents;
+    case WarningType::CloseChamberVents:
+        return PhasesWarning::ChamberVents;
+#endif
+
 #if HAS_EMERGENCY_STOP()
     case WarningType::DoorOpen:
         return PhasesWarning::DoorOpen;

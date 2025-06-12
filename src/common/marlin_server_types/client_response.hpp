@@ -409,6 +409,10 @@ enum class PhasesWarning : PhaseUnderlyingType {
     EnclosureFilterExpiration,
 #endif
 
+#if PRINTER_IS_PRUSA_COREONE()
+    ChamberVents,
+#endif
+
     ProbingFailed,
 
     /// Shown when the M334 is attempting to change metrics configuration, prompting the user to confirm the change (security reasons)
@@ -885,6 +889,9 @@ class ClientResponses {
             { PhasesWarning::Warning, { Response::Continue } },
 #if XL_ENCLOSURE_SUPPORT()
             { PhasesWarning::EnclosureFilterExpiration, { Response::Ignore, Response::Postpone5Days, Response::Done } },
+#endif
+#if PRINTER_IS_PRUSA_COREONE()
+            { PhasesWarning::ChamberVents, { Response::Ok, Response::Disable } },
 #endif
             { PhasesWarning::ProbingFailed, { Response::Yes, Response::No } },
             { PhasesWarning::MetricsConfigChangePrompt, { Response::Yes, Response::No } },
