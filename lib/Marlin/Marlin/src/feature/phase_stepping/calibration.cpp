@@ -1208,9 +1208,9 @@ static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_sampl
         PrusaAccelerometer::RawAcceleration sample;
         using GetSampleResult = PrusaAccelerometer::GetSampleResult;
 
-        switch (accelerometer.get_sample(sample)) {
+        switch (accelerometer.get_sample_motor_coords(sample)) {
         case GetSampleResult::ok:
-            yield_sample({ PrusaAccelerometer::project_to_axis(axis, sample) });
+            yield_sample({ sample.val[axis] });
             break;
 
         case GetSampleResult::buffer_empty:

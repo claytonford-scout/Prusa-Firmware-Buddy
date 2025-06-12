@@ -7,6 +7,7 @@
 #include <option/has_local_accelerometer.h>
 #include <option/has_remote_accelerometer.h>
 #include <Marlin/src/core/types.h>
+#include <utils/enum_array.hpp>
 
 static_assert(HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER());
 
@@ -32,6 +33,10 @@ public:
 
     struct RawAcceleration {
         int16_t val[3];
+
+        Acceleration to_acceleration() const {
+            return Acceleration { { raw_to_accel(val[0]), raw_to_accel(val[1]), raw_to_accel(val[2]) } };
+        }
     };
 
     enum class Error {
@@ -76,53 +81,92 @@ public:
     /// Obtains one sample from the buffer and puts it to \param raw_acceleration (if the results is ok).
     GetSampleResult get_sample(RawAcceleration &raw_acceleration);
 
-    /// Obtains one sample from the buffer and puts it to \param acceleration (if the results is ok).
-    GetSampleResult get_sample(Acceleration &acceleration) {
-        RawAcceleration raw_acceleration;
-        const GetSampleResult result = get_sample(raw_acceleration);
+    GetSampleResult get_sample_printer_coords(RawAcceleration &acceleration) {
+        RawAcceleration sample;
+        const GetSampleResult result = get_sample(sample);
         if (result == GetSampleResult::ok) {
-            acceleration.val[0] = raw_to_accel(raw_acceleration.val[0]);
-            acceleration.val[1] = raw_to_accel(raw_acceleration.val[1]);
-            acceleration.val[2] = raw_to_accel(raw_acceleration.val[2]);
+            acceleration = to_printer_coords(sample);
         }
         return result;
     }
 
-    // Computes a pseudo-projection of one vector to another. The length of
-    // direction vector is not normalized.
-    [[maybe_unused]] static int16_t pseudo_project(std::tuple<int16_t, int16_t> what, std::tuple<float, float> dir) {
-        return static_cast<int16_t>(std::get<0>(what) * std::get<0>(dir) + std::get<1>(what) * std::get<1>(dir));
+    GetSampleResult get_sample_motor_coords(RawAcceleration &acceleration) {
+        RawAcceleration sample;
+        const GetSampleResult result = get_sample(sample);
+        if (result == GetSampleResult::ok) {
+            acceleration = to_motor_coords(sample);
+        }
+        return result;
     }
 
-    static int16_t project_to_axis(AxisEnum axis, const PrusaAccelerometer::RawAcceleration &sample) {
-#if PRINTER_IS_PRUSA_COREONE()
-        if (axis == AxisEnum::X_AXIS) {
-            return sample.val[1];
-        } else if (axis == AxisEnum::Y_AXIS) {
-            return sample.val[0];
-        } else {
-            bsod("Unsupported axis");
-        }
-#elif ENABLED(COREXY)
-        std::pair<float, float> proj_dir;
-        if (axis == AxisEnum::X_AXIS) {
-            proj_dir = { M_SQRT1_2, M_SQRT1_2 };
-        } else if (axis == AxisEnum::Y_AXIS) {
-            proj_dir = { -M_SQRT1_2, M_SQRT1_2 };
-        } else {
-            bsod("Unsupported axis");
-        }
-
-        return pseudo_project({ sample.val[0], sample.val[1] }, proj_dir);
+    template <typename ACCELERATION>
+    static ACCELERATION to_motor_coords(ACCELERATION &sample) {
+        ACCELERATION out;
+#if PRINTER_IS_PRUSA_iX()
+        assert(X_AXIS == A_AXIS && Y_AXIS == B_AXIS);
+        // Accelerometer is fixed to the head in a way that is parallel to the logical axes and diagonal to the physical ones. Therefore, we need to perform a 45° rotation.
+        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
+        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
+        out.val[A_AXIS] = (-sample.val[1]) * cos45 + sample.val[2] * sin45;
+        out.val[B_AXIS] = (-sample.val[1]) * (-sin45) + sample.val[2] * cos45;
+        out.val[Z_AXIS] = sample.val[0];
+#elif PRINTER_IS_PRUSA_COREONE()
+        assert(X_AXIS == A_AXIS && Y_AXIS == B_AXIS);
+        // Due to accelerometer being rotated (approx. 45̀̃° = in the same way) as the head, no rotation is necessary, apart from switching axes.
+        out.val[A_AXIS] = sample.val[1];
+        out.val[B_AXIS] = sample.val[0];
+        out.val[Z_AXIS] = sample.val[2];
+#elif PRINTER_IS_PRUSA_XL()
+        const auto printer_coords = to_printer_coords(sample);
+        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
+        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
+        out.val[X_AXIS] = printer_coords[X_AXIS] * cos45 + printer_coords[Y_AXIS] * sin45;
+        out.val[Y_AXIS] = -printer_coords[X_AXIS] * sin45 + printer_coords[Y_AXIS] * cos45;
+#elif PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
+        // In MK printers the world and motors align
+        out = to_printer_coords(sample);
 #else
-        if (axis == AxisEnum::X_AXIS) {
-            return sample.val[0];
-        } else if (axis == AxisEnum::Y_AXIS) {
-            return sample.val[1];
-        } else {
-            bsod("Unsupported axis");
-        }
+        bsod("Projections are not defined for this type of printer");
 #endif
+        return out;
+    }
+
+    template <typename ACCELERATION>
+    static ACCELERATION to_printer_coords(ACCELERATION &sample) {
+        ACCELERATION out;
+#if PRINTER_IS_PRUSA_iX()
+        // Accelerometer is fixed to the head in a way that is parallel to the logical axes. Therefore, just need to correctly swap the values.
+        out.val[X_AXIS] = -sample.val[1];
+        out.val[Y_AXIS] = sample.val[2];
+        out.val[Z_AXIS] = sample.val[0];
+#elif PRINTER_IS_PRUSA_COREONE()
+        // Due to accelerometer being rotated (approx. 45̀̃° = in the same way as the motors), no rotation is necessary, apart from switching axes.
+        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
+        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
+        out.val[X_AXIS] = sample.val[1] * cos45 - sample.val[0] * sin45;
+        out.val[Y_AXIS] = sample.val[1] * sin45 + sample.val[0] * cos45;
+#elif PRINTER_IS_PRUSA_XL()
+        // Do nothing, XL data are rearranged elsewhere
+        out.val[X_AXIS] = sample.val[0];
+        out.val[Y_AXIS] = sample.val[1];
+        out.val[Z_AXIS] = sample.val[2];
+#elif PRINTER_IS_PRUSA_MK4()
+        // Here we have a little conundrum. MK* attaches accelerometer to the head for X axis and then moves it to the bed for Y axis.
+        // Though these values are both set here, there is no way we could read them both at the same time.
+        out.val[X_AXIS] = sample.val[0];
+        out.val[Y_AXIS] = sample.val[1];
+        out.val[Z_AXIS] = -sample.val[2];
+#elif PRINTER_IS_PRUSA_MK3_5()
+        out.val[X_axis] = sample.val[1];
+        out.val[Y_axis] = sample.val[1];
+        // TODO find out the real angle
+        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
+        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
+        out.val[Z_AXIS] = sample.val[1] * cos45 + sample.val[2] * sin45;
+#else
+        bsod("Projections are not defined for this type of printer");
+#endif
+        return out;
     }
 
     float get_sampling_rate() const;
