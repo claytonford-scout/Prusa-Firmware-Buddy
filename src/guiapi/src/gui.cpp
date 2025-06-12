@@ -13,7 +13,7 @@
 #include "gui_invalidate.hpp"
 #include "knob_event.hpp"
 #include "marlin_client.hpp"
-#include "sw_timer.hpp"
+#include <utils/timing/rate_limiter.hpp>
 #include <logging/log.hpp>
 #include "display_hw_checks.hpp"
 #if XL_ENCLOSURE_SUPPORT()
@@ -51,8 +51,8 @@ static const constexpr uint32_t GUI_DELAY_MAX = 10;
 static const constexpr uint8_t GUI_DELAY_LOOP = 100;
 static const constexpr uint32_t GUI_DELAY_REDRAW = 40; // 40 ms => 25 fps
 
-static Sw_Timer<uint32_t> gui_loop_timer(GUI_DELAY_LOOP);
-static Sw_Timer<uint32_t> gui_redraw_timer(GUI_DELAY_REDRAW);
+static RateLimiter<uint32_t> gui_loop_timer(GUI_DELAY_LOOP);
+static RateLimiter<uint32_t> gui_redraw_timer(GUI_DELAY_REDRAW);
 
 void gui_init(void) {
     display::init();
@@ -126,7 +126,7 @@ void gui_redraw(void) {
     uint32_t now = ticks_ms();
     bool should_sleep = true;
     if (gui_invalid) {
-        if (gui_redraw_timer.RestartIfIsOver(now)) {
+        if (gui_redraw_timer.check(now)) {
             Screens::Access()->Draw();
             gui_invalid = false;
             should_sleep = false;
@@ -134,7 +134,7 @@ void gui_redraw(void) {
     }
 
     if (should_sleep) {
-        uint32_t sleep = std::clamp(gui_redraw_timer.Remains(now), GUI_DELAY_MIN, GUI_DELAY_MAX);
+        uint32_t sleep = std::clamp(gui_redraw_timer.remaining_cooldown(now), GUI_DELAY_MIN, GUI_DELAY_MAX);
         osDelay(sleep);
     }
 }
@@ -155,7 +155,7 @@ void gui_bare_loop() {
     gui_timers_cycle();
     gui_redraw();
 
-    if (gui_loop_timer.RestartIfIsOver(gui::GetTick())) {
+    if (gui_loop_timer.check(gui::GetTick())) {
         Screens::Access()->ScreenEvent(nullptr, GUI_event_t::LOOP, 0);
     }
 
@@ -192,7 +192,7 @@ void gui_loop(void) {
     gui_redraw();
     marlin_client::loop();
     GuiMediaEventsHandler::Tick();
-    if (gui_loop_timer.RestartIfIsOver(gui::GetTick())) {
+    if (gui_loop_timer.check(gui::GetTick())) {
         Screens::Access()->ScreenEvent(nullptr, GUI_event_t::LOOP, 0);
     }
     --guiloop_nesting;
