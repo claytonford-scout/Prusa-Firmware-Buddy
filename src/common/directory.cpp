@@ -4,9 +4,6 @@
 #include <dirent.h>
 #include <utility>
 
-Directory::Directory()
-    : dir { nullptr } {}
-
 Directory::Directory(const char *path)
     : dir { opendir(path) } {}
 
@@ -15,8 +12,8 @@ Directory::~Directory() {
 }
 
 Directory::Directory(Directory &&other) {
-    using std::swap;
-    swap(dir, other.dir);
+    dir = other.dir;
+    other.dir = nullptr;
 }
 
 Directory &Directory::operator=(Directory &&other) {

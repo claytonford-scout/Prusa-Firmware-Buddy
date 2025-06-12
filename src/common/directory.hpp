@@ -6,11 +6,11 @@
 /// Represents a directory on the filesystem.
 class Directory {
 private:
-    DIR *dir;
+    DIR *dir = nullptr;
 
 public:
     /// Constructs empty directory object.
-    Directory();
+    Directory() = default;
 
     /// Constructs directory object, attempting to open the directory at `path`.
     /// If that fails, directory object is constructed empty.
