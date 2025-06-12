@@ -1619,6 +1619,7 @@ bool Planner::_populate_block(block_t * const block,
 #if ENABLED(S_CURVE_ACCELERATION)
   block->nominal_rate = CEIL(block->mstep_event_count * inverse_secs); // (mini-step/sec) Always > 0
 #endif
+  assert(block->nominal_speed > 0);
 
   // Calculate and limit speed in mm/sec for each axis
   xyze_float_t current_speed;
