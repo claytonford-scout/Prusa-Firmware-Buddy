@@ -117,11 +117,10 @@ public:
         out.val[B_AXIS] = sample.val[0];
         out.val[Z_AXIS] = sample.val[2];
 #elif PRINTER_IS_PRUSA_XL()
-        const auto printer_coords = to_printer_coords(sample);
         static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
         static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
-        out.val[X_AXIS] = printer_coords[X_AXIS] * cos45 + printer_coords[Y_AXIS] * sin45;
-        out.val[Y_AXIS] = -printer_coords[X_AXIS] * sin45 + printer_coords[Y_AXIS] * cos45;
+        out.val[X_AXIS] = sample.val[2] * cos45 + sample.val[1] * sin45;
+        out.val[Y_AXIS] = sample.val[2] * (-sin45) + sample.val[1] * cos45;
 #elif PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
         // In MK printers the world and motors align
         out = to_printer_coords(sample);
@@ -145,11 +144,11 @@ public:
         static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
         out.val[X_AXIS] = sample.val[1] * cos45 - sample.val[0] * sin45;
         out.val[Y_AXIS] = sample.val[1] * sin45 + sample.val[0] * cos45;
-#elif PRINTER_IS_PRUSA_XL()
-        // Do nothing, XL data are rearranged elsewhere
-        out.val[X_AXIS] = sample.val[0];
-        out.val[Y_AXIS] = sample.val[1];
         out.val[Z_AXIS] = sample.val[2];
+#elif PRINTER_IS_PRUSA_XL()
+        out.val[X_AXIS] = sample.val[2];
+        out.val[Y_AXIS] = -sample.val[1];
+        out.val[Z_AXIS] = -sample.val[0];
 #elif PRINTER_IS_PRUSA_MK4()
         // Here we have a little conundrum. MK* attaches accelerometer to the head for X axis and then moves it to the bed for Y axis.
         // Though these values are both set here, there is no way we could read them both at the same time.
@@ -157,8 +156,8 @@ public:
         out.val[Y_AXIS] = sample.val[1];
         out.val[Z_AXIS] = -sample.val[2];
 #elif PRINTER_IS_PRUSA_MK3_5()
-        out.val[X_axis] = sample.val[1];
-        out.val[Y_axis] = sample.val[1];
+        out.val[X_AXIS] = sample.val[1];
+        out.val[Y_AXIS] = sample.val[1];
         // TODO find out the real angle
         static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
         static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
