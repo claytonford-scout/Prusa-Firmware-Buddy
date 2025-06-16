@@ -159,12 +159,6 @@ public:
     static uint8_t alert_level; // Higher levels block lower levels
     static inline void reset_alert_level() { alert_level = 0; }
 
-    #if ENABLED(STATUS_MESSAGE_SCROLLING)
-      static uint8_t status_scroll_offset;
-      static void advance_status_scroll();
-      static char* status_and_len(uint8_t &len);
-    #endif
-
     static void refresh() {}
 
     static bool get_blink();

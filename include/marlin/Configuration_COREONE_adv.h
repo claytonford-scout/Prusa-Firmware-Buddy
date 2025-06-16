@@ -569,12 +569,6 @@
     #define FEEDRATE_CHANGE_BEEP_FREQUENCY 440
 #endif
 
-// Include a page of printer information in the LCD Main Menu
-//#define LCD_INFO_MENU
-
-// Scroll a longer status message into view
-//#define STATUS_MESSAGE_SCROLLING
-
 // @section safety
 
 // The hardware watchdog should reset the microcontroller disabling all outputs,
