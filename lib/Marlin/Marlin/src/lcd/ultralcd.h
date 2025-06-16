@@ -165,24 +165,7 @@ public:
       static char* status_and_len(uint8_t &len);
     #endif
 
-    #if HAS_PRINT_PROGRESS
-      #if HAS_PRINT_PROGRESS_PERMYRIAD
-        typedef uint16_t progress_t;
-        #define PROGRESS_SCALE 100U
-        #define PROGRESS_MASK 0x7FFF
-      #else
-        typedef uint8_t progress_t;
-        #define PROGRESS_SCALE 1U
-        #define PROGRESS_MASK 0x7F
-      #endif
-      static progress_t _get_progress();
-      #if HAS_PRINT_PROGRESS_PERMYRIAD
-        static uint16_t get_progress_permyriad() { return _get_progress(); }
-      #endif
-      static uint8_t get_progress_percent() { return uint8_t(_get_progress() / (PROGRESS_SCALE)); }
-    #else
-      static constexpr uint8_t get_progress_percent() { return 0; }
-    #endif
+    static constexpr uint8_t get_progress_percent() { return 0; }
 
     static void refresh() {}
 

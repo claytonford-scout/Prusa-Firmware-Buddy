@@ -208,12 +208,4 @@
     print_job_timer.start(); // Also called by M24
   }
 
-  #if HAS_PRINT_PROGRESS
-
-    MarlinUI::progress_t MarlinUI::_get_progress() {
-      return 0;
-    }
-
-  #endif
-
 #endif // HAS_GUI()
