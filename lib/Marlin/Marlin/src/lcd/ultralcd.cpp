@@ -43,9 +43,7 @@
 #if HAS_BUZZER
   #include "../libs/buzzer.h"
   void MarlinUI::buzz(const long duration, const uint16_t freq) {
-    #if ENABLED(LCD_USE_I2C_BUZZER)
-      lcd.buzz(duration, freq);
-    #elif USE_BEEPER
+    #if USE_BEEPER
       buzzer.tone(duration, freq);
     #endif
   }
