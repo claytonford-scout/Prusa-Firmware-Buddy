@@ -81,17 +81,7 @@
   #endif
 
   void MarlinUI::finish_status(const bool persist) {
-
-    #if !(ENABLED(LCD_PROGRESS_BAR) && (PROGRESS_MSG_EXPIRE > 0))
-      UNUSED(persist);
-    #endif
-
-    #if ENABLED(LCD_PROGRESS_BAR)
-      progress_bar_ms = millis();
-      #if PROGRESS_MSG_EXPIRE > 0
-        expire_status_ms = persist ? 0 : progress_bar_ms + PROGRESS_MSG_EXPIRE;
-      #endif
-    #endif
+    (void)persist;
 
     #if ENABLED(EXTENSIBLE_UI)
       if (has_status()) {
