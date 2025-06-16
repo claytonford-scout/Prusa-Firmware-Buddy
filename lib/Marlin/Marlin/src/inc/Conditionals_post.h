@@ -1281,11 +1281,6 @@
 // M206 sets the home offset for Cartesian machines
 #define HAS_M206_COMMAND (HAS_HOME_OFFSET)
 
-// LCD timeout to status screen default is 15s
-#ifndef LCD_TIMEOUT_TO_STATUS
-  #define LCD_TIMEOUT_TO_STATUS 15000
-#endif
-
 // Add commands that need sub-codes to this list
 #define USE_GCODE_SUBCODES ANY(G38_PROBE_TARGET, CNC_COORDINATE_SYSTEMS, PRINT_CHECKING_Q_CMDS)
 
