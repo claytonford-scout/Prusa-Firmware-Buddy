@@ -165,8 +165,6 @@ public:
       static char* status_and_len(uint8_t &len);
     #endif
 
-    static constexpr uint8_t get_progress_percent() { return 0; }
-
     static void refresh() {}
 
     static bool get_blink();
@@ -186,7 +184,6 @@ public:
     static inline void reset_status() {}
     static inline void reset_alert_level() {}
     static constexpr bool has_status() { return false; }
-    static constexpr uint8_t get_progress_percent() { return 0; }
 
   #endif
 
