@@ -175,12 +175,6 @@ public:
         #define PROGRESS_SCALE 1U
         #define PROGRESS_MASK 0x7F
       #endif
-      #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
-        static progress_t progress_override;
-        static void set_progress(const progress_t p) { progress_override = _MIN(p, 100U * (PROGRESS_SCALE)); }
-        static void set_progress_done() { progress_override = (PROGRESS_MASK + 1U) + 100U * (PROGRESS_SCALE); }
-        static void progress_reset() { if (progress_override & (PROGRESS_MASK + 1U)) set_progress(0); }
-      #endif
       static progress_t _get_progress();
       #if HAS_PRINT_PROGRESS_PERMYRIAD
         static uint16_t get_progress_permyriad() { return _get_progress(); }

@@ -441,13 +441,6 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
   #error "Enable only one of ENDSTOPPULLUP_Z_MIN or ENDSTOPPULLDOWN_Z_MIN."
 #endif
 
-/**
- * Progress Bar
- */
-#if ENABLED(LCD_SET_PROGRESS_MANUALLY) && DISABLED(EXTENSIBLE_UI)
-  #error "LCD_SET_PROGRESS_MANUALLY requires EXTENSIBLE_UI."
-#endif
-
 #if ENABLED(SD_REPRINT_LAST_SELECTED_FILE)
   #error "SD_REPRINT_LAST_SELECTED_FILE currently requires a Marlin-native LCD menu."
 #endif

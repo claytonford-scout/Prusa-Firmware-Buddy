@@ -40,10 +40,6 @@
   char MarlinUI::status_message[MAX_MESSAGE_LENGTH + 1];
 #endif
 
-#if ENABLED(LCD_SET_PROGRESS_MANUALLY)
-  MarlinUI::progress_t MarlinUI::progress_override; // = 0
-#endif
-
 #if HAS_BUZZER
   #include "../libs/buzzer.h"
   void MarlinUI::buzz(const long duration, const uint16_t freq) {
@@ -215,12 +211,7 @@
   #if HAS_PRINT_PROGRESS
 
     MarlinUI::progress_t MarlinUI::_get_progress() {
-      #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
-        const progress_t p = progress_override & PROGRESS_MASK;
-      #else
-        constexpr progress_t p = 0;
-      #endif
-      return p;
+      return 0;
     }
 
   #endif
