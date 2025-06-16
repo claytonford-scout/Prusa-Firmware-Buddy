@@ -59,34 +59,6 @@ const char* i8tostr3(const int8_t x) {
   return &conv[4];
 }
 
-#if HAS_PRINT_PROGRESS_PERMYRIAD
-  // Convert unsigned 16-bit permyriad to percent with 100 / 23 / 23.4 / 3.45 format
-  const char* permyriadtostr4(const uint16_t xx) {
-    if (xx >= 10000)
-      return "100";
-    else if (xx >= 1000) {
-      conv[3] = DIGIMOD(xx, 1000);
-      conv[4] = DIGIMOD(xx, 100);
-      conv[5] = '.';
-      conv[6] = DIGIMOD(xx, 10);
-      return &conv[3];
-    }
-    else if (xx % 100 == 0) {
-      conv[4] = ' ';
-      conv[5] = RJDIGIT(xx, 1000);
-      conv[6] = DIGIMOD(xx, 100);
-      return &conv[4];
-    }
-    else {
-      conv[3] = DIGIMOD(xx, 100);
-      conv[4] = '.';
-      conv[5] = DIGIMOD(xx, 10);
-      conv[6] = RJDIGIT(xx, 1);
-      return &conv[3];
-    }
-  }
-#endif
-
 // Convert unsigned 16bit int to string 12345 format
 const char* ui16tostr5(const uint16_t xx) {
   conv[2] = RJDIGIT(xx, 10000);
