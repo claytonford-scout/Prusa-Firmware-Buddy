@@ -687,10 +687,6 @@ private:
     static void M290();
   #endif
 
-  #if HAS_BUZZER
-    static void M300();
-  #endif
-
   #if ENABLED(PIDTEMP)
     static void M301();
   #endif

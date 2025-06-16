@@ -73,12 +73,10 @@ GCodeLoader nozzle_cleaner_gcode_loader;
 // private:
 // check unsupported features
 // filament sensor is no longer part of marlin thus it must be disabled
-// HAS_BUZZER must be disabled, because we handle it differently than marlin
 // clang-format off
 #if (!ENABLED(EXTENSIBLE_UI)) || \
     (!ENABLED(ADVANCED_PAUSE_FEATURE)) || \
     HAS_FILAMENT_SENSOR || \
-    HAS_BUZZER || \
     NUM_RUNOUT_SENSORS > 1 || \
     ENABLED(ADVANCED_PAUSE_CONTINUOUS_PURGE)
 #error unsupported

@@ -40,15 +40,6 @@
   char MarlinUI::status_message[MAX_MESSAGE_LENGTH + 1];
 #endif
 
-#if HAS_BUZZER
-  #include "../libs/buzzer.h"
-  void MarlinUI::buzz(const long duration, const uint16_t freq) {
-    #if USE_BEEPER
-      buzzer.tone(duration, freq);
-    #endif
-  }
-#endif
-
 #if HAS_GUI()
 
   #if ENABLED(EXTENSIBLE_UI)

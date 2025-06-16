@@ -564,10 +564,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 290: M290(); break;                                  // M290: Babystepping
       #endif
 
-      #if HAS_BUZZER
-        case 300: M300(); break;                                  // M300: Play beep tone
-      #endif
-
       #if ENABLED(PIDTEMP)
         case 301: M301(); break;                                  // M301: Set hotend PID parameters
       #endif
