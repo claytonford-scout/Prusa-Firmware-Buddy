@@ -1273,31 +1273,6 @@
 
 // @section lcd
 
-/**
- * Encoder Direction Options
- *
- * Test your encoder's behavior first with both options disabled.
- *
- *  Reversed Value Edit and Menu Nav? Enable REVERSE_ENCODER_DIRECTION.
- *  Reversed Menu Navigation only?    Enable REVERSE_MENU_DIRECTION.
- *  Reversed Value Editing only?      Enable BOTH options.
- */
-
-//
-// This option reverses the encoder direction everywhere.
-//
-//  Set this option if CLOCKWISE causes values to DECREASE
-//
-//#define REVERSE_ENCODER_DIRECTION
-
-//
-// This option reverses the encoder direction for navigating LCD menus.
-//
-//  If CLOCKWISE normally moves DOWN this makes it go UP.
-//  If CLOCKWISE normally moves UP this makes it go DOWN.
-//
-//#define REVERSE_MENU_DIRECTION
-
 //
 // Individual Axis Homing
 //
