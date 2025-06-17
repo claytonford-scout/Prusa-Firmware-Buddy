@@ -1375,12 +1375,6 @@
 
 // @section lcd
 
-//
-// Use this option to override the number of step signals required to
-// move between next/prev menu items.
-//
-//#define ENCODER_STEPS_PER_MENU_ITEM 1
-
 /**
  * Encoder Direction Options
  *
