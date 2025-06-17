@@ -850,10 +850,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #endif
 #endif
 
-#if ENCODER_PULSES_PER_STEP < 0
-  #error "ENCODER_PULSES_PER_STEP should not be negative, use REVERSE_MENU_DIRECTION instead."
-#endif
-
 /**
  * SAV_3DGLCD display options
  */
