@@ -100,6 +100,7 @@ exclude: |
     lib/tinyusb/|
     lib/magic_enum/|
     lib/SG14/|
+    src/can/data_types/public_regulated_data_types/|
     tests/stubs/FreeRTOS|
     tests/unit/common/gcode/.*\.gcode$|
     tests/unit/lang/translator/(keys|cs|es|fr|de|pl|it)\.txt$|
