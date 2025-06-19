@@ -276,7 +276,7 @@ target_link_libraries(
   Marlin PUBLIC Arduino::Core Arduino::TMCStepper Marlin_Config error_codes marlin_server_types
                 SG14
   )
-target_link_libraries(Marlin PRIVATE CppStdExtensions logging freertos)
+target_link_libraries(Marlin PRIVATE CppStdExtensions logging freertos buddy_utils)
 
 if(HAS_XBUDDY_EXTENSION)
   target_link_libraries(Marlin PUBLIC XBuddyExtensionShared)
