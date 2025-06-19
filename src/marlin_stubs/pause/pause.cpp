@@ -62,6 +62,8 @@
     #include <feature/auto_retract/auto_retract.hpp>
 #endif
 
+#include <feature/ramming/standard_ramming_sequence.hpp>
+
 LOG_COMPONENT_REF(MarlinServer);
 
 #ifndef NOZZLE_UNPARK_XY_FEEDRATE
@@ -726,8 +728,26 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
 #if HAS_AUTO_RETRACT()
     if (!marlin_server::is_printing()) {
         // Only retract from nozzle outside printing
-        setPhase(PhasesLoadUnload::AutoRetracting, 99);
-        auto_retract().maybe_retract_from_nozzle();
+        setPhase(PhasesLoadUnload::AutoRetracting, 0);
+
+        {
+            const auto sequence = standard_ramming_sequence(StandardRammingSequence::auto_retract, marlin_vars().active_hotend_id());
+
+            struct {
+                uint32_t start_time;
+                float progress_coef;
+            } progress_data {
+                ticks_ms(),
+                100.0f / sequence.duration_estimate_ms(),
+            };
+
+            CallbackHookGuard progress_guard(marlin_server::idle_hook_point, [&] {
+                const float progress = std::min((ticks_ms() - progress_data.start_time) * progress_data.progress_coef, 100.0f);
+                setPhase(PhasesLoadUnload::AutoRetracting, std::round(progress));
+            });
+
+            auto_retract().maybe_retract_from_nozzle();
+        }
         set(LoadState::_finish);
         return;
     }
