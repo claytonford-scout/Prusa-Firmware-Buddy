@@ -88,7 +88,7 @@ void MI_ENCLOSURE_FAN_SETTING::OnClick() {
 
 static constexpr NumericInputConfig enclosure_post_print_spin_config {
     .min_value = 1,
-    .max_value = 10,
+    .max_value = 90,
     .unit = Unit::minute,
 };
 

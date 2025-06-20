@@ -79,7 +79,7 @@ void MI_CHAMBER_POST_PRINT_FILTRATION_POWER::Loop() {
 // ============================================
 static constexpr NumericInputConfig duration_numeric_config {
     .min_value = 1,
-    .max_value = 30,
+    .max_value = 90,
     .unit = Unit::minute,
 };
 

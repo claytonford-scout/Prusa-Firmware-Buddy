@@ -959,7 +959,7 @@ void Planner::command(const Command &command, const SetValue &params) {
         uint32_t minutes = raw_value / 60;
         if (raw_value % 60 != 0) {
             err = "Value should be whole minutes";
-        } else if (minutes >= 1 && minutes <= 10) {
+        } else if (minutes >= 1 && minutes <= 90) {
             xl_enclosure.setPostPrintFiltrationDuration(minutes);
         } else {
             err = "Value out of range";
