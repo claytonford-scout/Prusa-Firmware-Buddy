@@ -130,10 +130,6 @@
   #include "feature/caselight.h"
 #endif
 
-#if HAS_FANMUX
-  #include "feature/fanmux.h"
-#endif
-
 #if ENABLED(PRUSA_MMU2)
   #include "feature/prusa/MMU2/mmu2_mk4.h"
 #endif
@@ -807,10 +803,6 @@ void setup() {
     SET_OUTPUT(E_MUX0_PIN);
     SET_OUTPUT(E_MUX1_PIN);
     SET_OUTPUT(E_MUX2_PIN);
-  #endif
-
-  #if HAS_FANMUX
-    fanmux_init();
   #endif
 
   #if ENABLED(BLTOUCH)
