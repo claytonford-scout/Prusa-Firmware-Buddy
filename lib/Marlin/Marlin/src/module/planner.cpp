@@ -1129,12 +1129,7 @@ float Planner::get_axis_position_mm(const AxisEnum axis) {
 
 
 bool Planner::busy() {
-  return !draining_buffer && (
-    processing()
-      #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-        || (READ(CLOSED_LOOP_ENABLE_PIN) && !READ(CLOSED_LOOP_MOVE_COMPLETE_PIN))
-      #endif
-    );
+  return !draining_buffer && processing();
 }
 
 /**

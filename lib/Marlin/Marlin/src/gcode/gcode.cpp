@@ -377,10 +377,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 9: M9(); break;                                      // M9: Coolant OFF
       #endif
 
-      #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-        case 12: M12(); break;                                    // M12: Synchronize and optionally force a CLC set
-      #endif
-
       #if ENABLED(EXPECTED_PRINTER_CHECK)
         case 16: M16(); break;                                    // M16: Expected printer check
       #endif

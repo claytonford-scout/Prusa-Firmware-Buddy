@@ -57,7 +57,6 @@
 #include "module/temperature.h"
 #include "module/configuration_store.h"
 #include "module/printcounter.h"
-#include "feature/closedloop.h"
 #include "feature/safety_timer.h"
 #if !BOARD_IS_DWARF()
 #include "pause_stubbed.hpp"
@@ -815,10 +814,6 @@ void setup() {
 
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
-  #endif
-
-  #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-    init_closedloop();
   #endif
 
   #ifdef STARTUP_COMMANDS
