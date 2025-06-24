@@ -7,8 +7,8 @@
 #include <sys/stat.h>
 #include "assert.h"
 #include "hwio_pindef.h"
-#include "mbedtls/sha256.h"
 #include <logging/log.hpp>
+#include <buddy/digest.hpp>
 #include <buddy/main.h>
 #include "tasks.hpp"
 #include "timing.h"
@@ -562,31 +562,14 @@ void PuppyBootstrap::wait_for_fingerprint(uint32_t calculation_start) {
 }
 
 void PuppyBootstrap::calculate_fingerprint(unique_file_ptr &file, off_t fw_size, fingerprint_t &fingerprint, uint32_t salt) {
-    int ret = fseek(file.get(), 0, SEEK_SET);
-    assert(ret == 0);
-    UNUSED(ret);
-
-    mbedtls_sha256_context sha;
-
-    mbedtls_sha256_init(&sha);
-    mbedtls_sha256_starts_ret(&sha, 0);
-
-    mbedtls_sha256_update_ret(&sha, reinterpret_cast<uint8_t *>(&salt), sizeof(salt)); // Add salt
-
-    uint8_t buffer[128];
-    while (fw_size > 0 && !feof(file.get())) {
-        if (int read = fread(buffer, 1, std::min(fw_size, static_cast<off_t>(sizeof(buffer))), file.get());
-            read > 0) {
-            mbedtls_sha256_update_ret(&sha, buffer, read);
-            fw_size -= read;
-        }
-        if (ferror(file.get())) {
-            fatal_error(ErrCode::ERR_SYSTEM_PUPPY_FINGERPRINT_MISMATCH);
-        }
+    (void)fw_size;
+    Digest digest {
+        (std::byte *)fingerprint.data(),
+        fingerprint.size(),
+    };
+    if (!buddy::compute_file_digest(fileno(file.get()), salt, digest)) {
+        fatal_error(ErrCode::ERR_SYSTEM_PUPPY_FINGERPRINT_MISMATCH);
     }
-
-    mbedtls_sha256_finish_ret(&sha, fingerprint.data());
-    mbedtls_sha256_free(&sha);
 }
 
 bool PuppyBootstrap::fingerprint_match(const fingerprint_t &fingerprint, uint8_t offset, uint8_t size) {
