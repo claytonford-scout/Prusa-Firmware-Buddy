@@ -131,10 +131,6 @@
  * M120 - Enable endstops detection.
  * M121 - Disable endstops detection.
  * M122 - Debug stepper (Requires at least one _DRIVER_TYPE defined as TMC2130/2160/5130/5160/2208/2209/2660)
- * M126 - Solenoid Air Valve Open. (Requires BARICUDA)
- * M127 - Solenoid Air Valve Closed. (Requires BARICUDA)
- * M128 - EtoP Open. (Requires BARICUDA)
- * M129 - EtoP Closed. (Requires BARICUDA)
  * M140 - Set bed target temp. S<temp>
  * M141 - Set heated chamber target temp. S<temp> (Requires a chamber heater)
  * M150 - Set Status LED Color as R<red> U<green> B<blue> P<bright>. Values 0-255.
@@ -597,17 +593,6 @@ private:
   static void M119();
   static void M120();
   static void M121();
-
-  #if ENABLED(BARICUDA)
-    #if HAS_HEATER_1
-      static void M126();
-      static void M127();
-    #endif
-    #if HAS_HEATER_2
-      static void M128();
-      static void M129();
-    #endif
-  #endif
 
   #if HAS_HEATED_BED
     static void M140();
