@@ -209,16 +209,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run(
 
         attempt_crash_dump_download(dock, address);
     #if PUPPY_FLASH_FW()
-        uint8_t offset = 0;
-        uint8_t size = sizeof(fingerprint_t);
-        #if HAS_DWARF()
-        if (to_puppy_type(dock) == DWARF) {
-            // Check this chunk from one puppy, -1 fo modular bed which has different fingerprint
-            size = sizeof(fingerprint_t) / (result.discovered_num() - 1);
-            offset = size * (static_cast<uint8_t>(dock) - 1);
-        }
-        #endif
-        flash_firmware(dock, fingerprints, offset, size, percent_base, percent_per_puppy);
+        flash_firmware(dock, fingerprints, percent_base, percent_per_puppy);
     #endif
         percent_base += percent_per_puppy;
     }
@@ -466,7 +457,7 @@ off_t PuppyBootstrap::get_firmware_size(PuppyType type) {
     return fs.st_size;
 }
 
-void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, uint8_t chunk_offset, uint8_t chunk_size, int percent_offset, int percent_span) {
+void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, int percent_offset, int percent_span) {
     auto puppy_type = to_puppy_type(dock);
     unique_file_ptr fw_file = get_firmware(puppy_type);
     off_t fw_size = get_firmware_size(puppy_type);
@@ -480,7 +471,7 @@ void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, 
 
     progressHook({ percent_offset, FlashingStage::CHECK_FINGERPRINT, puppy_type });
 
-    bool match = fingerprint_match(fw_fingerprints.get_fingerprint(dock), chunk_offset, chunk_size);
+    bool match = fingerprint_match(fw_fingerprints.get_fingerprint(dock));
     log_info(Puppies, "Puppy %d-%s fingerprint %s", static_cast<int>(dock), get_puppy_info(puppy_type).name, match ? "matched" : "didn't match");
 
     // if application firmware fingerprint doesn't match, flash it
@@ -572,19 +563,15 @@ void PuppyBootstrap::calculate_fingerprint(unique_file_ptr &file, off_t fw_size,
     }
 }
 
-bool PuppyBootstrap::fingerprint_match(const fingerprint_t &fingerprint, uint8_t offset, uint8_t size) {
-    if ((offset + size) > sizeof(fingerprint)) {
-        return false;
-    }
-
+bool PuppyBootstrap::fingerprint_match(const fingerprint_t &fingerprint) {
     // read current firmware fingerprint
     fingerprint_t read_fingerprint = { 0 };
-    BootloaderProtocol::status_t result = flasher.get_fingerprint(read_fingerprint, offset, size);
+    BootloaderProtocol::status_t result = flasher.get_fingerprint(read_fingerprint);
     if (result != BootloaderProtocol::COMMAND_OK) {
         fatal_error(ErrCode::ERR_SYSTEM_PUPPY_FINGERPRINT_MISMATCH);
     }
 
-    return (std::memcmp(&read_fingerprint.data()[offset], &fingerprint.data()[offset], size) == 0); // Compare requested chunk
+    return read_fingerprint == fingerprint;
 }
 
 void PuppyBootstrap::start_fingerprint_computation(BootloaderProtocol::Address address, uint32_t salt) {
