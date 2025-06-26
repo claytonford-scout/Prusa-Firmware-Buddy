@@ -50,10 +50,12 @@
 #include <feature/ramming/standard_ramming_sequence.hpp>
 #include <utils/progress.hpp>
 #include <buddy/unreachable.hpp>
+#include <sound.hpp>
 
 #include <option/has_human_interactions.h>
 #include <option/has_mmu2.h>
 #include <option/has_wastebin.h>
+#include <option/has_side_fsensor.h>
 
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
@@ -443,6 +445,18 @@ void Pause::load_start_process([[maybe_unused]] Response response) {
     }
 #endif
 
+#if HAS_SIDE_FSENSOR()
+    if (FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder) && FSensors_instance().no_filament_surely(LogicalFilamentSensor::side)) {
+        // When filament is in extruder sensor but not in side sensor, it's not a good idea to push another one in
+
+        // Filament should be already out of gears by now, we move it just to be sure it's removable manually
+        std::ignore = do_e_move_notify_progress_coldextrude(-20.f, (FILAMENT_CHANGE_UNLOAD_FEEDRATE), StopConditions::Accomplished);
+        Sound_Play(eSOUND_TYPE::SingleBeep);
+        set(LoadState::loading_obstruction);
+        return;
+    }
+#endif
+
     switch (load_type) {
     case LoadType::load_to_gears:
         // Both parts of the condition below need to be true:
@@ -479,6 +493,28 @@ void Pause::load_start_process([[maybe_unused]] Response response) {
         break;
     }
 }
+
+#if HAS_SIDE_FSENSOR()
+void Pause::loading_obstruction_process(Response response) {
+    setPhase(is_unstoppable() ? PhasesLoadUnload::LoadingObstruction_unstoppable : PhasesLoadUnload::LoadingObstruction_stoppable);
+    handle_help(response);
+
+    switch (response) {
+    case Response::Help:
+    case Response::Retry:
+        // Retry falls back to load_start, where FS is checked again and retracts if it fails
+        set(LoadState::load_start);
+        break;
+
+    case Response::Stop:
+        set(LoadState::stop);
+        break;
+
+    default:
+        break;
+    }
+}
+#endif
 
 void Pause::filament_push_ask_process(Response response) {
     if constexpr (!option::has_human_interactions) {
@@ -1551,6 +1587,10 @@ void Pause::handle_help(Response response) {
 
     if (marlin_server::prompt_warning(warning) == Response::FS_disable) {
         FSensors_instance().set_enabled_global(false);
+        while (FSensors_instance().is_enable_state_update_processing()) {
+            // Wait for the filament sensor disable to propagate, some phases rely on it to be updated
+            idle(true, true);
+        }
         marlin_server::set_warning(WarningType::FilamentSensorsDisabled);
         config_store().show_fsensors_disabled_warning_after_print.set(true);
     }

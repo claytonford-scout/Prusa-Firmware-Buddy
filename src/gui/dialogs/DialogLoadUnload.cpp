@@ -16,6 +16,7 @@
 #include <find_error.hpp>
 #include <filament_to_load.hpp>
 #include <utils/enum_array.hpp>
+#include <option/has_side_fsensor.h>
 
 RadioButtonNotice::RadioButtonNotice(window_t *parent, Rect16 rect)
     : RadioButton(parent, rect) {}
@@ -132,6 +133,10 @@ static constexpr EnumArray<PhasesLoadUnload, State, CountPhases<PhasesLoadUnload
     { PhasesLoadUnload::IsFilamentInGear, { txt_is_filament_in_gear } },
     { PhasesLoadUnload::Ejecting_stoppable, { txt_ejecting } },
     { PhasesLoadUnload::Ejecting_unstoppable, { txt_ejecting } },
+#if HAS_SIDE_FSENSOR()
+    { PhasesLoadUnload::LoadingObstruction_stoppable, { nullptr } }, // Set up in notice_update
+    { PhasesLoadUnload::LoadingObstruction_unstoppable, { nullptr } }, // Set up in notice_update
+#endif
     { PhasesLoadUnload::Loading_stoppable, { txt_loading } },
     { PhasesLoadUnload::Loading_unstoppable, { txt_loading } },
     { PhasesLoadUnload::LoadingToGears_stoppable, { txt_inserting } },
@@ -378,8 +383,16 @@ static constexpr bool is_notice_fstuck([[maybe_unused]] PhasesLoadUnload phase) 
 #endif
 }
 
+static constexpr bool is_notice_loading_obstruction([[maybe_unused]] PhasesLoadUnload phase) {
+#if HAS_SIDE_FSENSOR()
+    return phase == PhasesLoadUnload::LoadingObstruction_stoppable || phase == PhasesLoadUnload::LoadingObstruction_unstoppable;
+#else
+    return false;
+#endif
+}
+
 static constexpr bool is_notice(PhasesLoadUnload phase) {
-    return is_notice_mmu(phase) || is_notice_fstuck(phase);
+    return is_notice_mmu(phase) || is_notice_fstuck(phase) || is_notice_loading_obstruction(phase);
 }
 
 void DialogLoadUnload::Change(fsm::BaseData base_data) {
@@ -420,6 +433,15 @@ void DialogLoadUnload::Change(fsm::BaseData base_data) {
             notice_radio_button.set_fixed_width_buttons_count(0);
             notice_radio_button.ChangePhase(phase, { Response::Unload });
             notice_update(std::to_underlying(err_desc.err_code), err_desc.err_title, err_desc.err_text, ErrType::WARNING);
+        }
+    #endif
+    #if HAS_SIDE_FSENSOR()
+        if (is_notice_loading_obstruction(phase)) {
+            const ErrDesc &err = find_error(ErrCode::ERR_MECHANICAL_LOADING_OBSTRUCTION);
+
+            notice_radio_button.set_fixed_width_buttons_count(2);
+            notice_radio_button.ChangePhase(phase, ClientResponses::get_available_responses(phase));
+            notice_update(std::to_underlying(err.err_code), err.err_title, err.err_text, err.type);
         }
     #endif
         current_phase = phase;

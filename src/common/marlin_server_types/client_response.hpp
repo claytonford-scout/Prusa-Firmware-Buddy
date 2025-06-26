@@ -43,6 +43,7 @@
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
+#include <option/has_side_fsensor.h>
 
 #include <option/has_hotend_type_support.h>
 #if HAS_HOTEND_TYPE_SUPPORT()
@@ -147,6 +148,10 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
     IsFilamentInGear,
     Ejecting_stoppable,
     Ejecting_unstoppable,
+#if HAS_SIDE_FSENSOR()
+    LoadingObstruction_stoppable,
+    LoadingObstruction_unstoppable,
+#endif
     Loading_stoppable,
     Loading_unstoppable,
     LoadingToGears_stoppable,
@@ -666,6 +671,10 @@ class ClientResponses {
             { PhasesLoadUnload::IsFilamentInGear, { Response::Yes, Response::No } },
             { PhasesLoadUnload::Ejecting_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Ejecting_unstoppable, {} },
+#if HAS_SIDE_FSENSOR()
+            { PhasesLoadUnload::LoadingObstruction_stoppable, { Response::Retry, Response::Stop } },
+            { PhasesLoadUnload::LoadingObstruction_unstoppable, { Response::Retry, Response::Help } },
+#endif
             { PhasesLoadUnload::Loading_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Loading_unstoppable, {} },
             { PhasesLoadUnload::LoadingToGears_stoppable, { Response::Stop } },

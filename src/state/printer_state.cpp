@@ -16,6 +16,7 @@
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/xbuddy_extension_variant_standard.h>
+#include <option/has_side_fsensor.h>
 
 using namespace marlin_server;
 using namespace printer_state;
@@ -135,6 +136,11 @@ optional<ErrCode> load_unload_attention_while_printing([[maybe_unused]] const fs
         case PhasesLoadUnload::FilamentStuck:
             return ErrCode::ERR_MECHANICAL_STUCK_FILAMENT_DETECTED;
     #endif
+    #if HAS_SIDE_FSENSOR()
+        case PhasesLoadUnload::LoadingObstruction_stoppable:
+        case PhasesLoadUnload::LoadingObstruction_unstoppable:
+            return ErrCode::ERR_MECHANICAL_LOADING_OBSTRUCTION;
+    #endif
         default:
             return nullopt;
         }
@@ -145,6 +151,11 @@ optional<ErrCode> load_unload_attention_while_printing([[maybe_unused]] const fs
 #if HAS_LOADCELL()
     case PhasesLoadUnload::FilamentStuck:
         return ErrCode::ERR_MECHANICAL_STUCK_FILAMENT_DETECTED;
+#endif
+#if HAS_SIDE_FSENSOR()
+    case PhasesLoadUnload::LoadingObstruction_stoppable:
+    case PhasesLoadUnload::LoadingObstruction_unstoppable:
+        return ErrCode::ERR_MECHANICAL_LOADING_OBSTRUCTION;
 #endif
     default:
         return ErrCode::CONNECT_FILAMENT_RUNOUT;
