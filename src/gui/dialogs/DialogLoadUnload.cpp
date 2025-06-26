@@ -55,9 +55,6 @@ static constexpr const char *txt_ejecting = N_("Ejecting");
 static constexpr const char *txt_loading = N_("Loading to nozzle");
 static constexpr const char *txt_purging = N_("Purging");
 static constexpr const char *txt_is_color = N_("Is color correct?");
-#if HAS_LOADCELL()
-static constexpr const char *txt_filament_stuck = ""; // Empty here, set from the error description
-#endif
 #if HAS_NOZZLE_CLEANER()
 static constexpr const char *txt_nozzle_cleaning = N_("Cleaning nozzle");
 #endif
@@ -151,7 +148,7 @@ static constexpr EnumArray<PhasesLoadUnload, State, CountPhases<PhasesLoadUnload
     { PhasesLoadUnload::LoadNozzleCleaning, { txt_nozzle_cleaning } },
 #endif
 #if HAS_LOADCELL()
-    { PhasesLoadUnload::FilamentStuck, { txt_filament_stuck, DialogLoadUnload::phaseAlertSound } },
+    { PhasesLoadUnload::FilamentStuck, { nullptr, DialogLoadUnload::phaseAlertSound } }, // Set up in notice_update
 #endif
 #if HAS_AUTO_RETRACT()
     { PhasesLoadUnload::AutoRetracting, { N_("Auto-retracting filament") } },
