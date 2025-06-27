@@ -164,7 +164,7 @@ void notify_server_about_encoder_move();
 
 void notify_server_about_knob_click();
 
-void set_warning(WarningType type);
+void set_warning(WarningType type, PhasesWarning phase = PhasesWarning::Warning);
 
 /// If the specified warning is open, closes it
 void clear_warning(WarningType type);

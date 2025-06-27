@@ -435,17 +435,17 @@ void notify_server_about_knob_click() {
     _send_request_id_to_server_and_wait(Request::Type::KnobClick);
 }
 
-void set_warning(WarningType type) {
+void set_warning(WarningType type, PhasesWarning phase) {
     Request request;
     request.type = Request::Type::SetWarning;
-    request.warning_type = type;
+    request.warning = { type, phase };
     _send_request_to_server_noreply(request);
 }
 
 void clear_warning(WarningType type) {
     Request request;
     request.type = Request::Type::ClearWarning;
-    request.warning_type = type;
+    request.warning.type = type;
     _send_request_to_server_noreply(request);
 }
 
