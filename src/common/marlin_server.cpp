@@ -459,6 +459,12 @@ namespace {
             }
             break;
 
+#if HAS_ILI9488_DISPLAY()
+        case PhasesWarning::DisplayProblemDetected:
+            config_store().reduce_display_baudrate.set(response == Response::Yes);
+            break;
+#endif
+
         case PhasesWarning::MetricsConfigChangePrompt:
             // This should be unreachable
             std::terminate();

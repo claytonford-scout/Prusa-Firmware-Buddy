@@ -408,6 +408,10 @@ enum class PhasesWarning : PhaseUnderlyingType {
     /// Shown when the M334 is attempting to change metrics configuration, prompting the user to confirm the change (security reasons)
     MetricsConfigChangePrompt,
 
+#if HAS_ILI9488_DISPLAY()
+    DisplayProblemDetected,
+#endif
+
     NozzleCleaningFailed,
     _last = NozzleCleaningFailed,
 };
@@ -809,6 +813,9 @@ class ClientResponses {
 #endif
             { PhasesWarning::ProbingFailed, { Response::Yes, Response::No } },
             { PhasesWarning::MetricsConfigChangePrompt, { Response::Yes, Response::No } },
+#if HAS_ILI9488_DISPLAY()
+            { PhasesWarning::DisplayProblemDetected, { Response::Yes, Response::No } },
+#endif
             { PhasesWarning::NozzleCleaningFailed, { Response::Retry, Response::Abort } },
     };
 

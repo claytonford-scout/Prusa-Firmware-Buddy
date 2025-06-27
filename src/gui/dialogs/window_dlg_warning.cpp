@@ -47,7 +47,7 @@ static constexpr Rect16 text_rect = {
 };
 
 const img::Resource *warning_dialog_icon(WarningType warning_type) {
-    static constexpr EnumArray<WarningType, const img::Resource *, static_cast<int>(WarningType::_last) + 1> data {
+    static constexpr EnumArray<WarningType, const img::Resource *, static_cast<int>(WarningType::_cnt)> data {
         { WarningType::HotendFanError, &img::fan_error_48x48 },
             { WarningType::PrintFanError, &img::fan_error_48x48 },
             { WarningType::HeatersTimeout, &img::exposure_times_48x48 },
@@ -86,6 +86,9 @@ const img::Resource *warning_dialog_icon(WarningType warning_type) {
             { WarningType::GcodeCorruption, &img::warning_48x48 },
             { WarningType::GcodeCropped, &img::warning_48x48 },
             { WarningType::MetricsConfigChangePrompt, &img::warning_48x48 },
+#if HAS_ILI9488_DISPLAY()
+            { WarningType::DisplayProblemDetected, &img::warning_48x48 },
+#endif
     };
     return data[warning_type];
 }
