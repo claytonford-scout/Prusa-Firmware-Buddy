@@ -1,8 +1,7 @@
-#include <crash_dump/secret.hpp>
 #include "e2ee.hpp"
 #include <mbedtls/pk.h>
 
-#include <async_job/async_job_execution_control.hpp>
+class AsyncJobExecutionControl;
 
 namespace e2ee {
 struct Pk {
