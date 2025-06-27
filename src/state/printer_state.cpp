@@ -600,6 +600,10 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
     case WarningType::CloseChamberVents:
         return ErrCode::CONNECT_CLOSE_CHAMBER_VENTS;
 #endif
+
+    case WarningType::_cnt:
+        // Fallthrough to unreachable
+        break;
     }
 
     assert(false);
