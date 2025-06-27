@@ -512,6 +512,10 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 
     case WarningType::MetricsConfigChangePrompt:
         return ErrCode::ERR_CONNECT_GCODE_METRICS_CONFIG_CHANGE;
+
+    case WarningType::_cnt:
+        // Fallthrough to unreachable
+        break;
     }
 
     assert(false);
