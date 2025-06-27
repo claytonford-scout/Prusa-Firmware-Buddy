@@ -470,24 +470,21 @@ static void handle_warnings() {
         return;
     }
 
-    const auto consume_response = [&]() {
-        const auto response = get_response_from_phase(phase);
-        if (response != Response::_none) {
-            clear_warning(warning_type);
-        }
-
-        return response;
-    };
+    // Peek the response, only some of the warnings consume it
+    const auto response = get_response_from_phase(phase, false);
+    if (response == Response::_none) {
+        return;
+    }
 
     switch (phase) {
 
     case PhasesWarning::Warning:
-        consume_response();
+        // The only response is OK, at which point we just consume the response and hide the warning.
         break;
 
 #if PRINTER_IS_PRUSA_COREONE()
     case PhasesWarning::ChamberVents:
-        if (consume_response() == Response::Disable) {
+        if (response == Response::Disable) {
             config_store().check_manual_vent_state.set(false);
         }
         break;
@@ -495,14 +492,12 @@ static void handle_warnings() {
 
 #if XL_ENCLOSURE_SUPPORT()
     case PhasesWarning::EnclosureFilterExpiration:
-        if (auto r = consume_response(); r != Response::_none) {
-            xl_enclosure.setUpReminder(r);
-        }
+        xl_enclosure.setUpReminder(response);
         break;
 #endif
 
     case PhasesWarning::ProbingFailed:
-        switch (consume_response()) {
+        switch (response) {
         case Response::Yes:
             print_resume();
             break;
@@ -517,7 +512,7 @@ static void handle_warnings() {
         break;
 
     case PhasesWarning::NozzleCleaningFailed:
-        switch (consume_response()) {
+        switch (response) {
         case Response::Retry:
             print_resume();
             break;
@@ -532,9 +527,14 @@ static void handle_warnings() {
         break;
 
     default:
-        // Most warnings are handled somewhere else and we shouldn't consume and process the responses
-        break;
+        // Most warnings are handled somewhere else and we shouldn't process the responses here
+        // Return to avoid consuming the response
+        return;
     }
+
+    // Consume the response now
+    get_response_from_phase(phase, true);
+    clear_warning(warning_type);
 }
 
 static void update_warning_fsm() {
