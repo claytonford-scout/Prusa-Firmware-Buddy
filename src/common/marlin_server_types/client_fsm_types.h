@@ -15,7 +15,6 @@
 
 #include <stdint.h>
 #include <utils/utility_extensions.hpp>
-#include <guiconfig/guiconfig.h>
 
 #ifdef __cplusplus
 // C++ checks enum classes
@@ -126,7 +125,7 @@ enum class WarningType : uint32_t {
     GcodeCorruption,
     GcodeCropped,
     MetricsConfigChangePrompt,
-    #if HAS_ILI9488_DISPLAY()
+    #if BOARD_IS_XBUDDY() || BOARD_IS_XLBUDDY()
     DisplayProblemDetected,
     #endif
     _cnt,
