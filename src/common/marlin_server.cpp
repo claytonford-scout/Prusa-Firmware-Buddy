@@ -202,6 +202,7 @@ namespace marlin_server {
 CallbackHookPoint<> idle_hook_point;
 
 void media_prefetch_lazy_start();
+void media_prefetch_start();
 
 namespace {
 
@@ -1289,7 +1290,12 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
 
     set_media_position(resume_pos.offset);
     print_state.media_restore_info = resume_pos.restore_info;
-    media_prefetch_lazy_start();
+
+    if (skip_preview == PreviewSkipIfAble::no) {
+        media_prefetch_lazy_start();
+    } else {
+        media_prefetch_start();
+    }
 
     server.print_state = can_print ? State::PrintPreviewInit : State::Idle;
 
