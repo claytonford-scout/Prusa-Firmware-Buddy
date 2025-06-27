@@ -1,6 +1,7 @@
 #pragma once
 
 #include "client_response.hpp"
+#include <guiconfig/guiconfig.h>
 
 enum class WarningType : uint32_t {
 #if HAS_EMERGENCY_STOP()
@@ -77,6 +78,9 @@ enum class WarningType : uint32_t {
     ChamberFiltrationFanError,
 #endif
     AccelerometerCommunicationFailed,
+#if HAS_ILI9488_DISPLAY()
+    DisplayProblemDetected,
+#endif
     _cnt,
 };
 

@@ -55,6 +55,11 @@ PhasesWarning warning_type_phase(WarningType warning) {
         return PhasesWarning::FailedToReachChamberTemperature;
 #endif
 
+#if HAS_ILI9488_DISPLAY()
+    case WarningType::DisplayProblemDetected:
+        return PhasesWarning::DisplayProblemDetected;
+#endif
+
         //
     }
 }

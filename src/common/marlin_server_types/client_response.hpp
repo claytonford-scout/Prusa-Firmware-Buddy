@@ -17,6 +17,8 @@
 #include "client_fsm_types.h"
 #include "general_response.hpp"
 #include "printers.h"
+#include <enum_array.hpp>
+#include <guiconfig/guiconfig.h>
 #include <option/filament_sensor.h>
 #include <option/has_attachable_accelerometer.h>
 #include <option/has_belt_tuning.h>
@@ -436,6 +438,10 @@ enum class PhasesWarning : PhaseUnderlyingType {
 #if HAS_UNEVEN_BED_PROMPT()
     /// A prompt offering Z align calibration when uneven bed is detected
     BedUnevenAlignmentPrompt,
+#endif
+
+#if HAS_ILI9488_DISPLAY()
+    DisplayProblemDetected,
 #endif
 
     NozzleCleaningFailed,
@@ -907,6 +913,9 @@ class ClientResponses {
 #endif
 #if HAS_UNEVEN_BED_PROMPT()
             { PhasesWarning::BedUnevenAlignmentPrompt, { Response::Yes, Response::No } },
+#endif
+#if HAS_ILI9488_DISPLAY()
+            { PhasesWarning::DisplayProblemDetected, { Response::Yes, Response::No } },
 #endif
             { PhasesWarning::NozzleCleaningFailed, { Response::Retry, Response::Abort } },
     };
