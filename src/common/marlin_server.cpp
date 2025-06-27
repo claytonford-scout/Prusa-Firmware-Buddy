@@ -3328,7 +3328,7 @@ FSM_notifier::~FSM_notifier() {
     activeInstance = nullptr;
 }
 
-FSMResponseVariant get_response_variant_from_phase_internal(uint8_t encoded_fsm, uint8_t encoded_phase) {
+FSMResponseVariant get_response_variant_from_phase_internal(uint8_t encoded_fsm, uint8_t encoded_phase, bool consume_response) {
     // FIXME: Critical section is used to mimic original behaviour with std::atomic
     //        However, maybe we should instead require that the calling task
     //        is actually Marlin task. This is most probably the case,
@@ -3336,7 +3336,9 @@ FSMResponseVariant get_response_variant_from_phase_internal(uint8_t encoded_fsm,
     freertos::CriticalSection critical_section;
     const EncodedFSMResponse value = server_side_encoded_fsm_response;
     if (encoded_fsm == value.encoded_fsm && encoded_phase == value.encoded_phase) {
-        server_side_encoded_fsm_response = empty_encoded_fsm_response;
+        if (consume_response) {
+            server_side_encoded_fsm_response = empty_encoded_fsm_response;
+        }
         return value.response;
     } else {
         return {};

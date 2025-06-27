@@ -214,22 +214,22 @@ bool can_stop_wait_for_heatup();
 void can_stop_wait_for_heatup(bool val);
 
 // internal function, do not use directly
-FSMResponseVariant get_response_variant_from_phase_internal(uint8_t, uint8_t);
+FSMResponseVariant get_response_variant_from_phase_internal(uint8_t, uint8_t, bool consume_response = true);
 
 /// If the phase matches currently recorded response, return it and consume it.
 /// Otherwise, return std::monostate and do not consume it.
 template <class T>
-FSMResponseVariant get_response_variant_from_phase(T phase) {
+FSMResponseVariant get_response_variant_from_phase(T phase, bool consume_response = true) {
     return get_response_variant_from_phase_internal(
         ftrstd::to_underlying(client_fsm_from_phase(phase)),
-        ftrstd::to_underlying(phase));
+        ftrstd::to_underlying(phase), consume_response);
 }
 
 /// If the phase matches currently recorded response, return it and consume it.
 /// Otherwise, return Response::_none and do not consume it.
 template <class T>
-Response get_response_from_phase(T phase) {
-    return get_response_variant_from_phase(phase).template value_or<Response>(Response::_none);
+Response get_response_from_phase(T phase, bool consume_response = true) {
+    return get_response_variant_from_phase(phase, consume_response).template value_or<Response>(Response::_none);
 }
 
 // FSM_notifier
