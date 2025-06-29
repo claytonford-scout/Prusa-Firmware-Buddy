@@ -810,8 +810,7 @@ void PreciseStepping::step_isr() {
         // we need to block PhaseStepping and other high priority interrupts here to have precise timing
         // during setting of the next CC event
         {
-            next = compare + ticks_to_next_isr;
-            uint16_t adjusted_next = next - last_step_isr_delay;
+            next = compare + ticks_to_next_isr - last_step_isr_delay;
 
             buddy::InterruptDisabler _;
             // What follows is a not-straightforward scheduling of the next step ISR
@@ -823,7 +822,7 @@ void PreciseStepping::step_isr() {
             // or equal to (UINT16_MAX / 2). Otherwise, the value returned by counter_signed_diff()
             // will be incorrect.
             tim_counter = __HAL_TIM_GET_COUNTER(timer_handle);
-            diff = counter_signed_diff(adjusted_next, tim_counter);
+            diff = counter_signed_diff(next, tim_counter);
 
             // in case we are behind with steps planning, we allow only limit_steps_merged to be merged
             // and then leave the interrupt for min_reserve[us] in order to give some processing power
@@ -835,9 +834,9 @@ void PreciseStepping::step_isr() {
                     // in case there is a risk to miss next CC, we have to increase time for the next planned event
                     // and compensate it in the next next planned event
                     last_step_isr_delay = min_reserve - diff;
-                    adjusted_next += last_step_isr_delay;
+                    next += last_step_isr_delay;
                 }
-                __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, adjusted_next);
+                __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, next);
                 break;
             }
         }
