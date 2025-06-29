@@ -752,6 +752,8 @@ void PreciseStepping::step_isr() {
     constexpr uint16_t max_time_increment = STEPPER_ISR_MAX_TICKS / 2;
     static_assert(max_time_increment < STEPPER_ISR_MAX_TICKS);
     static_assert(max_time_increment > min_reserve);
+    constexpr uint32_t left_period_min = STEPPER_ISR_MAX_TICKS / 4; // must be higher than min_reserve + max length of other higher priority interrupts
+    static_assert(left_period_min < STEPPER_ISR_MAX_TICKS && left_period_min > min_reserve);
 
     const auto timer_handle = &TimerHandle[STEP_TIMER_NUM].handle;
     const uint32_t compare = __HAL_TIM_GET_COMPARE(timer_handle, TIM_CHANNEL_1);
@@ -792,8 +794,16 @@ void PreciseStepping::step_isr() {
         } else {
             // the next iteration just advances the timer
             left_ticks_to_next_step_event = ticks_to_next_isr - max_ticks;
-            time_increment += max_ticks;
-            ticks_to_next_isr = max_ticks;
+
+            // check if residuum for next period is too short (especially avoid situation when it is below min_reserve)
+            if (left_ticks_to_next_step_event < left_period_min) {
+                left_ticks_to_next_step_event += left_period_min;
+                ticks_to_next_isr = max_ticks - left_period_min;
+            } else {
+                ticks_to_next_isr = max_ticks;
+            }
+
+            time_increment += ticks_to_next_isr;
         }
 
         // actually plan the next deadline and check if we have enough time reserve
