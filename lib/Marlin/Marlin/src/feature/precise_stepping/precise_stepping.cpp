@@ -466,27 +466,13 @@ static bool generate_next_step_event(step_event_i32_t &step_event, step_generato
     auto step_status = step_state.step_events[old_nearest_step_event_idx].status;
     if (step_status == STEP_EVENT_INFO_STATUS_GENERATED_VALID || step_status == STEP_EVENT_INFO_STATUS_GENERATED_KEEP_ALIVE) {
         const double step_time_absolute = step_state.step_events[old_nearest_step_event_idx].time;
-        const uint64_t step_time_absolute_ticks = uint64_t(step_time_absolute * STEPPER_TICKS_PER_SEC);
-        const uint64_t step_time_relative_ticks = step_time_absolute_ticks - step_state.previous_step_time_ticks;
-        // FIXME Commented out:
-        // probably valid assert, but triggering often and making any other debugging difficult.
-        // BFW-5954.
-        // assert(step_time_relative_ticks < std::numeric_limits<uint32_t>::max());
+        const int64_t step_time_absolute_ticks = int64_t(step_time_absolute * STEPPER_TICKS_PER_SEC);
 
-        step_event.time_ticks = int32_t(step_time_relative_ticks);
+        // calculate time ticks and clamp to reasonable values
+        step_event.time_ticks = std::clamp(step_time_absolute_ticks - (int64_t)step_state.previous_step_time_ticks, (int64_t)0, (int64_t)std::numeric_limits<int32_t>::max());
+
         step_event.flags = step_state.step_events[old_nearest_step_event_idx].flags;
         assert(step_event.flags); // ensure flags are non-zero
-
-        // The timer ticks mustn't be negative in any case. Because if it is negative, there is an issue in the code.
-        if (step_event.time_ticks < 0) {
-            /*
-             * FIXME: Same as above (BFW-5954).
-#ifndef NDEBUG
-            bsod("Negative step time: %d, flags: %d", static_cast<int>(step_event.time_ticks), step_event.flags);
-#endif
-*/
-            step_event.time_ticks = 0;
-        }
 
         if (step_state.left_insert_start_of_move_segment) {
             step_event.flags |= STEP_EVENT_FLAG_BEGINNING_OF_MOVE_SEGMENT;
