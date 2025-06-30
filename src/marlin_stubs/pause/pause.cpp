@@ -1058,6 +1058,12 @@ void Pause::ram_sequence_process([[maybe_unused]] Response response) {
 
 void Pause::unload_process([[maybe_unused]] Response response) {
     setPhase(is_unstoppable() ? PhasesLoadUnload::Unloading_unstoppable : PhasesLoadUnload::Unloading_stoppable);
+#if HAS_NOZZLE_CLEANER()
+    bool needs_cleaning = true; // Assume we need to clean the nozzle
+    #if HAS_AUTO_RETRACT()
+    needs_cleaning = !auto_retract().is_retracted(); // If we are retracted, we don't need to clean the nozzle
+    #endif
+#endif
     unload_filament();
 
     config_store().set_filament_type(settings.GetExtruder(), FilamentType::none);
@@ -1072,10 +1078,11 @@ void Pause::unload_process([[maybe_unused]] Response response) {
     case LoadType::filament_change:
     case LoadType::filament_stuck:
 #if HAS_NOZZLE_CLEANER()
-        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::unload_filename, nozzle_cleaner::unload_sequence);
-
-        set(LoadState::unload_nozzle_clean);
-        return;
+        if (needs_cleaning) {
+            nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::unload_filename, nozzle_cleaner::unload_sequence);
+            set(LoadState::unload_nozzle_clean);
+            return;
+        }
 #endif
 
         if constexpr (!option::has_human_interactions) {
