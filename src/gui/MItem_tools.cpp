@@ -1017,7 +1017,7 @@ void MI_LEDS_ENABLE::OnChange(size_t old_index) {
 // MI_SIDE_LEDS_ENABLE
 MI_SIDE_LEDS_ENABLE::MI_SIDE_LEDS_ENABLE()
     : WiSpin(
-        static_cast<float>(config_store().side_leds_max_brightness.get()) * 100 / 255,
+        static_cast<float>(leds::side_strip_control.max_brightness()) * 100 / 255,
         numeric_input_config::percent_with_off,
         _(label)) {
 }
@@ -1031,10 +1031,9 @@ void MI_SIDE_LEDS_ENABLE::OnClick() {
 /**********************************************************************************************/
 // MI_SIDE_LEDS_DIMMING
 MI_SIDE_LEDS_DIMMING::MI_SIDE_LEDS_DIMMING()
-    : WI_ICON_SWITCH_OFF_ON_t(config_store().side_leds_dimming_enabled.get(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
+    : WI_ICON_SWITCH_OFF_ON_t(leds::side_strip_control.is_dimming_enabled(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
 }
 void MI_SIDE_LEDS_DIMMING::OnChange(size_t) {
-    config_store().side_leds_dimming_enabled.set(index);
     leds::side_strip_control.set_dimming_enabled(index);
 }
 #endif

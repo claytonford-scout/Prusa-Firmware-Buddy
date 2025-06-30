@@ -6,6 +6,10 @@ using namespace leds;
 
 SideStripControl leds::side_strip_control;
 
+SideStripControl::SideStripControl() {
+    load_config();
+}
+
 void SideStripControl::ActivityPing() {
     std::unique_lock lock(mutex);
     active_start_timestamp.emplace(ticks_ms());
@@ -212,8 +216,32 @@ SideStripControl::HsvColor SideStripControl::RgbToHsv(ColorRGBW rgb) {
     return hsv;
 }
 
+void SideStripControl::load_config() {
+    std::lock_guard lock(mutex);
+#if HAS_XBUDDY_EXTENSION()
+    camera_enabled = config_store().xbe_usb_power.get();
+    if (camera_enabled) {
+        max_brightness_ = config_store().side_leds_max_brightness_with_camera.get();
+        dimming_enabled = config_store().side_leds_dimming_enabled_with_camera.get();
+    } else
+#endif
+    {
+        max_brightness_ = config_store().side_leds_max_brightness.get();
+        dimming_enabled = config_store().side_leds_dimming_enabled.get();
+    }
+    // Force startup state so that the control is woken up and does the transition
+    state = State::Startup;
+}
+
 void SideStripControl::set_max_brightness(uint8_t set) {
-    config_store().side_leds_max_brightness.set(set);
+#if HAS_XBUDDY_EXTENSION()
+    if (camera_enabled) {
+        config_store().side_leds_max_brightness_with_camera.set(set);
+    } else
+#endif
+    {
+        config_store().side_leds_max_brightness.set(set);
+    }
 
     std::unique_lock lock(mutex);
 
@@ -232,8 +260,21 @@ uint8_t SideStripControl::max_brightness() {
 }
 
 void SideStripControl::set_dimming_enabled(bool set) {
+#if HAS_XBUDDY_EXTENSION()
+    if (camera_enabled) {
+        config_store().side_leds_dimming_enabled_with_camera.set(set);
+    } else
+#endif
+    {
+        config_store().side_leds_dimming_enabled.set(set);
+    }
     std::unique_lock lock(mutex);
     dimming_enabled = set;
+}
+
+bool SideStripControl::is_dimming_enabled() {
+    std::unique_lock lock(mutex);
+    return dimming_enabled;
 }
 
 void SideStripControl::PanicOff() {

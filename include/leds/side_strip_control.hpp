@@ -10,6 +10,7 @@
 #include "../printers.h"
 #include <leds/side_strip.hpp>
 #include <freertos/mutex.hpp>
+#include <option/has_xbuddy_extension.h>
 
 #if PRINTER_IS_PRUSA_iX()
     /// PresentColor duration_ms value 0 means forever
@@ -28,7 +29,7 @@ namespace leds {
 /// 2) We need to control side strip asap :)
 class SideStripControl {
 public:
-    SideStripControl() = default;
+    SideStripControl();
 
     void ActivityPing();
     void PresentColor(ColorRGBW color, uint32_t duration_ms, uint32_t transition_ms);
@@ -41,6 +42,9 @@ public:
     uint8_t max_brightness();
 
     void set_dimming_enabled(bool set);
+    bool is_dimming_enabled();
+
+    void load_config();
 
     /**
      * @brief Quickly turn off LEDs.
@@ -149,8 +153,14 @@ private:
     std::optional<ActiveColorTransition> current_transition;
     void TransitionToColor(ColorRGBW color, uint32_t transition_ms);
     State state = State::Startup;
-    bool dimming_enabled = false;
-    uint8_t max_brightness_ = 0;
+
+    // Values are initialized from config store by load_config() in constructor
+    bool dimming_enabled;
+#if HAS_XBUDDY_EXTENSION()
+    bool camera_enabled;
+#endif
+    uint8_t max_brightness_;
+
     freertos::Mutex mutex;
 
     // Active State

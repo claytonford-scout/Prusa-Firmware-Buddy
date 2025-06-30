@@ -382,6 +382,13 @@ struct CurrentStore
 
     /// Whether the side leds should dim down a bit when user is not interacting with the printer or stay on full power the whole time
     StoreItem<bool, true, journal::hash("Enable Side LEDs dimming")> side_leds_dimming_enabled;
+
+    #if HAS_XBUDDY_EXTENSION()
+    /// same as side_leds_max_brightness but when camera is powered on
+    StoreItem<uint8_t, 255, journal::hash("Chamber LEDs PWM with Camera")> side_leds_max_brightness_with_camera;
+    /// same as side_leds_dimming_enabled but when camera is powered on
+    StoreItem<bool, false, journal::hash("Side LEDs dimming with camera")> side_leds_dimming_enabled_with_camera;
+    #endif
 #endif
 
     StoreItem<bool, true, journal::hash("Enable Serial Printing Screen")> serial_print_screen_enabled;

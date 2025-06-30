@@ -6,6 +6,10 @@ SideStripControl side_strip_control;
 
 uint8_t side_max_brightness = 0;
 
+SideStripControl::SideStripControl() {
+    side_max_brightness = 255;
+}
+
 void SideStripControl::ActivityPing() {
 }
 
