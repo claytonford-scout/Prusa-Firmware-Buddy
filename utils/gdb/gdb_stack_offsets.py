@@ -15,16 +15,13 @@ def invoke():
     stack_bottom = frame_address(bottommost_frame)
 
     frame = gdb.selected_frame()
-    prev_offset = stack_bottom - frame_address(frame)
     while frame:
-        # Calculate the offset relative to the bottommost frame's base address
-        offset = stack_bottom - frame_address(frame)
-
-        # f"{frame.level():>2}  {offset:>4}  {offset_str:>4}  {name:<64}"
         txt = "{lvl:>4} {offset:>4} {rel_offset:>4} {func:<64}".format(
             lvl=frame.level(),
-            offset=offset,
-            rel_offset="+" + str(prev_offset - offset),
+            offset=stack_bottom - frame_address(frame),
+            rel_offset="+" +
+            str((frame_address(frame.older()) -
+                 frame_address(frame)) if frame.older() else 0),
             func=(frame.name() or "<unknown>")[:63],
         )
 
@@ -37,7 +34,6 @@ def invoke():
 
         # Move to the calling frame
         frame = frame.older()
-        prev_offset = offset
 
 
 invoke()
