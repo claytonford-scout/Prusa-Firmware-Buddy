@@ -39,12 +39,20 @@ Errors:
     approved: true
 
   - code: "XX102"
-    printers: [iX, XL, COREONE]
-    title: "PRECISE HOMING REFINEMENT FAILED"
-    text: "Consider adjusting belt tension."
+    printers: [iX, COREONE]
+    title: "PRECISE HOMING FAILED"
+    text: "Cannot perform or failed to calibrate homing. Continuing can cause layer shifts after rehoming."
     id: "PRECISE_REFINEMENT_FAILED"
-    gui_layout: "red_screen"
-    approved: true
+    gui_layout: "warning_dialog"
+    approved: false
+
+  - code: "XX102"
+    printers: [XL]
+    title: "PRECISE HOMING FAILED"
+    text: "Cannot perform or failed to calibrate homing. Continuing can cause layer shifts after rehoming and toolchange issues."
+    id: "PRECISE_REFINEMENT_FAILED"
+    gui_layout: "warning_dialog"
+    approved: false
 
   - code: "XX103"
     printers: [XL]
@@ -96,7 +104,7 @@ Errors:
     approved: true
 
   - code: "XX109"
-    printers: [iX, COREONE]
+    printers: [iX, COREONE, MK4]
     title: "STEEL SHEEL NOT DETECTED"
     text: "Steel sheet was not detected. Please put the sheet on to prevent printer damage."
     action: [Retry, Skip]
@@ -218,7 +226,7 @@ Errors:
     id: "HOMING_CALIBRATION_NEEDED"
     type: WARNING
     gui_layout: "warning_dialog"
-    approved: false
+    approved: true
 
   - code: "XX119"
     title: "LOADING OBSTRUCTION"
@@ -227,7 +235,7 @@ Errors:
     id: "LOADING_OBSTRUCTION"
     type: WARNING
     gui_layout: "warning_dialog"
-    approved: false
+    approved: true
 
   # TEMPERATURE    xx2xx
 
@@ -383,6 +391,14 @@ Errors:
     title: "CHAMBER MINTEMP ERROR"
     text: "Check the chamber thermistor wiring for possible damage."
     id: "CHAMBER_MINTEMP"
+    gui_layout: "red_screen"
+    approved: true
+
+  - code: "XX216"
+    printers: [iX]
+    title: "HEATBREAK COOLING TOO SLOW"
+    text: "Check the thermistor wiring, cooling duct or heatbreak fan wiring for potential damage."
+    id: "HEATBREAK_COOLING_TOO_SLOW"
     gui_layout: "red_screen"
     approved: true
 
@@ -718,7 +734,7 @@ Errors:
     text: "Display issues detected. Reducing the refresh rate will possibly solve the problem. Proceed?"
     id: "DISPLAY_PROBLEM_DETECTED"
     gui_layout: "warning_dialog"
-    approved: false
+    approved: true
 
 # CONNECTIVITY   xx4xx   # Connectivity - Wi - Fi, LAN, Prusa Connect Cloud
 
@@ -1009,6 +1025,13 @@ Errors:
     id: "DWARF_TMC"
     gui_layout: "red_screen"
     approved: true
+
+  - code: "XX537"
+    title: "SELFTEST NOT PASSED"
+    text: "Selftests required to perform this action have not been completed. The action cannot be executed."
+    id: "ACTION_SELFTEST_REQUIRED"
+    gui_layout: "warning_dialog"
+    approved: false
 
   - code: "XX601"
     title: "UNKNOWN ERROR"
