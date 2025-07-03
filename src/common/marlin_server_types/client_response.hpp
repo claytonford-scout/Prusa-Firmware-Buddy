@@ -946,7 +946,7 @@ class ClientResponses {
 #if HAS_EMERGENCY_STOP()
         { PhasesWarning::DoorOpen, {} },
 #endif
-            { PhasesWarning::Warning, { Response::Continue } },
+            { PhasesWarning::Warning, { Response::Ok } },
 #if XL_ENCLOSURE_SUPPORT() || HAS_CHAMBER_FILTRATION_API()
             { PhasesWarning::EnclosureFilterExpiration, { Response::Ignore, Response::Postpone5Days, Response::Done } },
 #endif
