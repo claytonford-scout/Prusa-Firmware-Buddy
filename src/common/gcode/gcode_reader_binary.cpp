@@ -193,34 +193,6 @@ const PrusaPackGcodeReader::StreamRestoreInfo::PrusaPackRec *PrusaPackGcodeReade
 }
 
 namespace {
-class HMAC {
-public:
-    HMAC(const uint8_t *sign_key, size_t key_len) {
-        mbedtls_md_init(&md_ctx);
-        // These errors should not happen in practise
-        if (auto res = mbedtls_md_setup(&md_ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1); res != 0) {
-            bsod("Unable to setup HMAC context: %d", res);
-        }
-        mbedtls_md_hmac_starts(&md_ctx, sign_key, key_len);
-    }
-
-    void update(uint8_t *data, size_t size) {
-        mbedtls_md_hmac_update(&md_ctx, data, size);
-    }
-
-    void finish(uint8_t *output, [[maybe_unused]] size_t size) {
-        assert(size == e2ee::HMAC_SIZE);
-        mbedtls_md_hmac_finish(&md_ctx, output);
-    }
-
-    ~HMAC() {
-        mbedtls_md_free(&md_ctx);
-    }
-
-private:
-    mbedtls_md_context_t md_ctx;
-};
-
 template <typename CB>
 void block_header_bytes_cb(BlockHeader header, CB callback) {
     callback(reinterpret_cast<uint8_t *>(&header.type), sizeof(header.type));
