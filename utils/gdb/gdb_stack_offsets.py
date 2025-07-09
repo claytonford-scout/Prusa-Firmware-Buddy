@@ -9,31 +9,50 @@ def frame_address(frame):
 
 
 def invoke():
-    bottommost_frame = gdb.selected_frame()
-    while bottommost_frame.older():
-        bottommost_frame = bottommost_frame.older()
-    stack_bottom = frame_address(bottommost_frame)
-
     frame = gdb.selected_frame()
-    while frame:
-        txt = "{lvl:>4} {offset:>4} {rel_offset:>4} {func:<64}".format(
-            lvl=frame.level(),
-            offset=stack_bottom - frame_address(frame),
-            rel_offset="+" +
-            str((frame_address(frame.older()) -
-                 frame_address(frame)) if frame.older() else 0),
-            func=(frame.name() or "<unknown>")[:63],
-        )
 
-        # Add source file and line if available
-        sal = frame.find_sal()
-        if sal and sal.symtab and sal.line:
-            txt += f" at {sal.symtab.filename}:{sal.line}"
+    # There might be a task + an interrupt on the stack, treat them separately
+    while True:
+        end_frame = frame
 
-        print(txt)
+        # Detect interrupt/task frame jump
+        while older_frame := end_frame.older():
+            end_frame = older_frame
 
-        # Move to the calling frame
+            if (end_frame.name() or "").endswith("_IRQHandler"):
+                break
+
+        stack_bottom = frame_address(end_frame)
+
+        while True:
+            txt = "{lvl:>4} {offset:>4} {rel_offset:>4} {func:<64}".format(
+                lvl=frame.level(),
+                offset=stack_bottom - frame_address(frame),
+                rel_offset="+" +
+                str((frame_address(frame.older()) -
+                     frame_address(frame)) if frame.older() else 0),
+                func=(frame.name() or "<unknown>")[:63],
+            )
+
+            # Add source file and line if available
+            sal = frame.find_sal()
+            if sal and sal.symtab and sal.line:
+                txt += f" at {sal.symtab.filename}:{sal.line}"
+
+            print(txt)
+
+            if frame == end_frame:
+                break
+
+            # Move to the calling frame
+            frame = frame.older()
+
         frame = frame.older()
+        if not frame:
+            break
+
+        # Print an empty line to separate the IRQ from the task
+        print()
 
 
 invoke()
