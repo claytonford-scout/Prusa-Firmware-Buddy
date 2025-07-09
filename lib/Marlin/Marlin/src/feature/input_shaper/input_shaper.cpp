@@ -75,14 +75,14 @@ static void init_input_shaper_pulses(const float a[], const float t[], const int
         is_pulses->pulses[num_pulses - i - 1].t = -t[i];
     }
 
-    double time_shift = 0.;
+    double pulses_weighted_average_time = 0.;
     for (int i = 0; i < num_pulses; ++i) {
-        time_shift += double(is_pulses->pulses[i].a) * is_pulses->pulses[i].t;
+        pulses_weighted_average_time += double(is_pulses->pulses[i].a) * is_pulses->pulses[i].t;
     }
 
     // Shift pulses around mid-point.
     for (int i = 0; i < num_pulses; ++i) {
-        is_pulses->pulses[i].t -= time_shift;
+        is_pulses->pulses[i].t -= pulses_weighted_average_time;
     }
 
     is_pulses->num_pulses = num_pulses;
