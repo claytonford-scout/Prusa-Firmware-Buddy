@@ -469,7 +469,7 @@ set_feature_for_printers_master_board(
   )
 
 # Printers that support any form of backwards gcode compatibility modes
-set_feature_for_printers(HAS_GCODE_COMPATIBILITY "MK3.5" "MK4" "COREONE")
+set_feature_for_printers(HAS_GCODE_COMPATIBILITY "MK3.5" "MK4" "COREONE" "COREONEL")
 
 # Checks for bed evenness during G29 and if it's too uneven, offers Z alignment calibration.
 # Requires SELFTEST to work
