@@ -15,7 +15,6 @@
 #include <option/has_sheet_profiles.h>
 #include <option/has_chamber_api.h>
 #include "i18n.h"
-#include <bsod.h>
 #include <device/board.h>
 
 // sadly this must be macros, it is used in preprocessor
