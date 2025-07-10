@@ -323,6 +323,7 @@ static void reenable_wavetable(AxisEnum axis)
  * - `L` - Force leveling state ON (if possible) or OFF after homing (Requires `RESTORE_LEVELING_AFTER_G28` or `ENABLE_LEVELING_AFTER_G28`)
  * - `N` - No-change mode (do not change any motion setting such as feedrate)
  * - `O` - Home only if the position is not known and trusted
+ * - `Q` - Same as `O`, but only for printers that are precise homing level-aware; otherwise home unconditionally (backwards compatibility reasons)
  * - `P` - Do not check print sheet presence
  * - `R` - <linear> Raise by n mm/inches before homing
  * - `S` - Simulated homing only in `MARLIN_DEV_MODE`
@@ -341,7 +342,10 @@ void GcodeSuite::G28() {
   bool Z = parser.seen('Z');
 
   G28Flags flags;
-  flags.only_if_needed = parser.boolval('O');
+  flags.only_if_needed = parser.boolval('O')
+    // We will start emitting this new parameter into our gcodes, so that it would be applied only on the new firwmares, where the printers remember whether they are homed precisely or not
+    || parser.boolval('Q');
+
   flags.z_raise = parser.seenval('R') ? parser.value_linear_units() : Z_HOMING_HEIGHT;
   flags.no_change = parser.seen('N');
   flags.can_calibrate = !parser.seen('D');
