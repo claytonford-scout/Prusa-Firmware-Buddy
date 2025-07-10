@@ -65,7 +65,6 @@ private:
     });
 
 private:
-    PreheatData preheat_data;
     FilamentListStorage filament_list_storage;
     DynamicIndexMapping<items> index_mapping;
     bool show_all_filaments_ = false;
