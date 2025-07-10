@@ -80,6 +80,7 @@ static void init_input_shaper_pulses(const float a[], const float t[], const int
         // not sure if pulse centering algorithm works for negative amplitude
         // check if needed
         assert((is_pulses->pulses[i].a) >= 0.f);
+        static_assert(0.f == -0.f);
         // no other operation needed as sum of amplitudes is already 1 at this point
         pulses_weighted_average_time += double(is_pulses->pulses[i].a) * is_pulses->pulses[i].t;
     }
