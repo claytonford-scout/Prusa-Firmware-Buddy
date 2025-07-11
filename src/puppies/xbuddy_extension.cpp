@@ -3,7 +3,9 @@
 #include "timing.h"
 #include <algorithm>
 #include <cassert>
+#include <cinttypes>
 #include <logging/log.hpp>
+#include <mutex>
 #include <puppies/PuppyBootstrap.hpp>
 
 LOG_COMPONENT_REF(MMU2);
