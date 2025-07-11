@@ -40,7 +40,15 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/include/usb_host
   )
 
-target_link_libraries(gcode_reader_test SG14 mbedTLS bgcode_core freertos_tests raii)
+target_link_libraries(
+  gcode_reader_test
+  SG14
+  mbedTLS
+  bgcode_core
+  freertos_tests
+  raii
+  logging-mock
+  )
 
 file(
   COPY ${CMAKE_CURRENT_SOURCE_DIR}/test_plain.gcode
