@@ -226,17 +226,9 @@ SideStripControl::HsvColor SideStripControl::RgbToHsv(ColorRGBW rgb) {
 
 void SideStripControl::load_config() {
     std::unique_lock lock(mutex);
-#if HAS_XBUDDY_EXTENSION()
-    camera_enabled = config_store().xbe_usb_power.get();
     max_brightness_ = config_store().side_leds_max_brightness.get();
     dimmed_brightness_ = config_store().side_leds_dimmed_brightness.get();
-    if (camera_enabled) {
-        dimming_enabled = config_store().side_leds_dimming_enabled_with_camera.get();
-    } else
-#endif
-    {
-        dimming_enabled = config_store().side_leds_dimming_enabled.get();
-    }
+    dimming_enabled = config_store().side_leds_dimming_enabled.get();
     // Force startup state so that the control is woken up and does the transition
     state = State::Startup;
 }
@@ -280,14 +272,7 @@ uint8_t SideStripControl::dimmed_brightness() {
 }
 
 void SideStripControl::set_dimming_enabled(DimmingEnabled set) {
-#if HAS_XBUDDY_EXTENSION()
-    if (camera_enabled) {
-        config_store().side_leds_dimming_enabled_with_camera.set(set);
-    } else
-#endif
-    {
-        config_store().side_leds_dimming_enabled.set(set);
-    }
+    config_store().side_leds_dimming_enabled.set(set);
     std::unique_lock lock(mutex);
     dimming_enabled = set;
 }

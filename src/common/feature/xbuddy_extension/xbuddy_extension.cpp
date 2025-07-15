@@ -281,7 +281,6 @@ std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::filament_se
 
 void XBuddyExtension::set_usb_power(bool enabled) {
     config_store().xbe_usb_power.set(enabled);
-    leds::side_strip_control.load_config(); // SideStripControl has different settings when the USB camera is enabled -> let it know that it should update the settings
 }
 
 bool XBuddyExtension::usb_power() const {
