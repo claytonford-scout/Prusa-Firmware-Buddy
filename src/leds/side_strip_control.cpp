@@ -220,13 +220,12 @@ void SideStripControl::load_config() {
     std::lock_guard lock(mutex);
 #if HAS_XBUDDY_EXTENSION()
     camera_enabled = config_store().xbe_usb_power.get();
+    max_brightness_ = config_store().side_leds_max_brightness.get();
     if (camera_enabled) {
-        max_brightness_ = config_store().side_leds_max_brightness_with_camera.get();
         dimming_enabled = config_store().side_leds_dimming_enabled_with_camera.get();
     } else
 #endif
     {
-        max_brightness_ = config_store().side_leds_max_brightness.get();
         dimming_enabled = config_store().side_leds_dimming_enabled.get();
     }
     // Force startup state so that the control is woken up and does the transition
@@ -234,14 +233,7 @@ void SideStripControl::load_config() {
 }
 
 void SideStripControl::set_max_brightness(uint8_t set) {
-#if HAS_XBUDDY_EXTENSION()
-    if (camera_enabled) {
-        config_store().side_leds_max_brightness_with_camera.set(set);
-    } else
-#endif
-    {
-        config_store().side_leds_max_brightness.set(set);
-    }
+    config_store().side_leds_max_brightness.set(set);
 
     std::unique_lock lock(mutex);
 
