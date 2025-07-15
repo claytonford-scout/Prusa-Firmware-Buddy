@@ -795,14 +795,6 @@ static void cycle() {
     }
     AutoRestore _nr(is_cycle_running, true);
 
-    bool call_print_loop = true;
-#if HAS_SELFTEST()
-    if (SelftestInstance().IsInProgress()) {
-        SelftestInstance().Loop();
-        call_print_loop = false;
-    }
-#endif
-
 #if HAS_MMU2()
     MMU2::Fsm::Instance().Loop();
 #endif
@@ -818,7 +810,11 @@ static void cycle() {
     xl_enclosure.loop(remote_bed::get_mcu_temperature(), dwarf_temp);
 #endif
 
-    if (call_print_loop) {
+#if HAS_SELFTEST()
+    if (SelftestInstance().IsInProgress()) {
+#else
+    {
+#endif
         _server_print_loop(); // we need call print loop here because it must be processed while blocking commands (M109)
     }
 
@@ -977,6 +973,12 @@ static void check_crash() {
 void loop() {
     ::idle(false); // Do an idle first so boot is slightly faster
     queue.advance();
+
+#if HAS_SELFTEST()
+    if (SelftestInstance().IsInProgress()) {
+        SelftestInstance().Loop();
+    }
+#endif
 
 #if ANY(CRASH_RECOVERY, POWER_PANIC)
     check_crash();
