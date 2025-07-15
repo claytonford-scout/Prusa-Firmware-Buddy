@@ -41,6 +41,11 @@ public:
     void set_max_brightness(uint8_t set);
     uint8_t max_brightness();
 
+    /// Set brightness of the side leds while the leds are dimmed down.
+    // /// 0 = disable dimmed side leds, 255 = full brightness
+    void set_dimmed_brightness(uint8_t value);
+    uint8_t dimmed_brightness();
+
     void set_dimming_enabled(bool set);
     bool is_dimming_enabled();
 
@@ -160,6 +165,7 @@ private:
     bool camera_enabled;
 #endif
     uint8_t max_brightness_;
+    uint8_t dimmed_brightness_;
 
     freertos::Mutex mutex;
 

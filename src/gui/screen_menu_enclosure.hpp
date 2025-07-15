@@ -30,7 +30,7 @@ using ScreenMenuManualSetting = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN
 #endif
 #if HAS_SIDE_LEDS()
     ,
-    MI_SIDE_LEDS_ENABLE
+    MI_SIDE_LEDS_MAX_BRIGTHNESS
 #endif
 #if HAS_TOOLCHANGER()
     ,

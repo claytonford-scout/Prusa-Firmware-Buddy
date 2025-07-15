@@ -21,7 +21,6 @@ void SideStripControl::PresentColor(ColorRGBW color, uint32_t duration_ms, uint3
 }
 
 void SideStripControl::TransitionToColor(ColorRGBW color, uint32_t transition_ms) {
-    color.w = std::min(color.w, max_brightness_);
     current_transition.emplace(side_strip.GetColor(0), color, transition_ms);
 }
 
@@ -42,18 +41,18 @@ void SideStripControl::Tick() {
 
     auto set_idle = [&](int transition_ms = 5000) {
         if (SideStrip::HasWhiteLed()) {
-            TransitionToColor(ColorRGBW(0, 0, 0, 40), transition_ms);
+            TransitionToColor(ColorRGBW(0, 0, 0, dimmed_brightness_), transition_ms);
         } else {
-            TransitionToColor(ColorRGBW(40, 40, 40, 40), transition_ms);
+            TransitionToColor(ColorRGBW(dimmed_brightness_, dimmed_brightness_, dimmed_brightness_, dimmed_brightness_), transition_ms);
         }
         state = State::Idle;
     };
 
     auto set_active = [&](int transition_ms = 500) {
         if (SideStrip::HasWhiteLed()) {
-            TransitionToColor(ColorRGBW(0, 0, 0, 255), transition_ms);
+            TransitionToColor(ColorRGBW(0, 0, 0, max_brightness_), transition_ms);
         } else {
-            TransitionToColor(ColorRGBW(255, 255, 255, 255), transition_ms);
+            TransitionToColor(ColorRGBW(max_brightness_, max_brightness_, max_brightness_, max_brightness_), transition_ms);
         }
         state = State::Active;
     };
@@ -65,7 +64,13 @@ void SideStripControl::Tick() {
 
     switch (state) {
     case State::Startup: {
-        set_idle();
+        if (custom_color.has_value()) {
+            set_custom();
+        } else if (active) {
+            set_active();
+        } else {
+            set_idle();
+        }
         break;
     }
     case State::Idle: {
@@ -217,7 +222,7 @@ SideStripControl::HsvColor SideStripControl::RgbToHsv(ColorRGBW rgb) {
 }
 
 void SideStripControl::load_config() {
-    std::lock_guard lock(mutex);
+    std::unique_lock lock(mutex);
 #if HAS_XBUDDY_EXTENSION()
     camera_enabled = config_store().xbe_usb_power.get();
     max_brightness_ = config_store().side_leds_max_brightness.get();
@@ -242,13 +247,32 @@ void SideStripControl::set_max_brightness(uint8_t set) {
     }
 
     // Force startup state so that the control is woken up and does the transition
-    state = (set > 0) ? State::Startup : State::SetOff;
+    state = State::Startup;
     max_brightness_ = set;
 }
 
 uint8_t SideStripControl::max_brightness() {
     std::unique_lock lock(mutex);
     return max_brightness_;
+}
+
+void SideStripControl::set_dimmed_brightness(uint8_t value) {
+    config_store().side_leds_dimmed_brightness.set(value);
+
+    std::unique_lock lock(mutex);
+
+    if (dimmed_brightness_ == value) {
+        return;
+    }
+
+    // Force startup state so that the control is woken up and does the transition
+    state = State::Startup;
+    dimmed_brightness_ = value;
+}
+
+uint8_t SideStripControl::dimmed_brightness() {
+    std::unique_lock lock(mutex);
+    return dimmed_brightness_;
 }
 
 void SideStripControl::set_dimming_enabled(bool set) {
