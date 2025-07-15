@@ -7,6 +7,7 @@
 #include <optional>
 #include <atomic>
 
+#include "dimming_enabled.hpp"
 #include "../printers.h"
 #include <leds/side_strip.hpp>
 #include <freertos/mutex.hpp>
@@ -46,8 +47,8 @@ public:
     void set_dimmed_brightness(uint8_t value);
     uint8_t dimmed_brightness();
 
-    void set_dimming_enabled(bool set);
-    bool is_dimming_enabled();
+    void set_dimming_enabled(DimmingEnabled set);
+    DimmingEnabled is_dimming_enabled();
 
     void load_config();
 
@@ -160,7 +161,7 @@ private:
     State state = State::Startup;
 
     // Values are initialized from config store by load_config() in constructor
-    bool dimming_enabled;
+    DimmingEnabled dimming_enabled;
 #if HAS_XBUDDY_EXTENSION()
     bool camera_enabled;
 #endif

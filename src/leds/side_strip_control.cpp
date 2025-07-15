@@ -1,6 +1,7 @@
 #include <leds/side_strip_control.hpp>
 #include <timing.h>
 #include <mutex>
+#include "marlin_server.hpp"
 
 using namespace leds;
 
@@ -27,8 +28,10 @@ void SideStripControl::TransitionToColor(ColorRGBW color, uint32_t transition_ms
 void SideStripControl::Tick() {
     std::unique_lock lock(mutex);
 
+    const bool dont_dim = dimming_enabled == DimmingEnabled::never || (dimming_enabled == DimmingEnabled::not_printing && marlin_server::is_printing());
+
     bool active = false;
-    if (!dimming_enabled) {
+    if (dont_dim) {
         active = true;
 
     } else if (active_start_timestamp.has_value()) {
@@ -226,6 +229,7 @@ void SideStripControl::load_config() {
 #if HAS_XBUDDY_EXTENSION()
     camera_enabled = config_store().xbe_usb_power.get();
     max_brightness_ = config_store().side_leds_max_brightness.get();
+    dimmed_brightness_ = config_store().side_leds_dimmed_brightness.get();
     if (camera_enabled) {
         dimming_enabled = config_store().side_leds_dimming_enabled_with_camera.get();
     } else
@@ -275,7 +279,7 @@ uint8_t SideStripControl::dimmed_brightness() {
     return dimmed_brightness_;
 }
 
-void SideStripControl::set_dimming_enabled(bool set) {
+void SideStripControl::set_dimming_enabled(DimmingEnabled set) {
 #if HAS_XBUDDY_EXTENSION()
     if (camera_enabled) {
         config_store().side_leds_dimming_enabled_with_camera.set(set);
@@ -288,7 +292,7 @@ void SideStripControl::set_dimming_enabled(bool set) {
     dimming_enabled = set;
 }
 
-bool SideStripControl::is_dimming_enabled() {
+DimmingEnabled SideStripControl::is_dimming_enabled() {
     std::unique_lock lock(mutex);
     return dimming_enabled;
 }

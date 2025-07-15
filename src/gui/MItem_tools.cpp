@@ -1042,18 +1042,24 @@ void MI_SIDE_LEDS_DIMMED_BRIGTHNESS::OnClick() {
 }
 
 void MI_SIDE_LEDS_DIMMED_BRIGTHNESS::Loop() {
-    set_enabled(leds::side_strip_control.is_dimming_enabled());
+    set_enabled(leds::side_strip_control.is_dimming_enabled() != leds::DimmingEnabled::never);
 }
 #endif
 
 #if HAS_SIDE_LEDS()
 /**********************************************************************************************/
 // MI_SIDE_LEDS_DIMMING_ENABLE
+static constexpr EnumArray<leds::DimmingEnabled, const char *, leds::DimmingEnabled::_cnt> dimming_enabled_values {
+    { leds::DimmingEnabled::never, N_("Never") },
+    { leds::DimmingEnabled::always, N_("Always") },
+    { leds::DimmingEnabled::not_printing, N_("On Idle") },
+};
+
 MI_SIDE_LEDS_DIMMING_ENABLE::MI_SIDE_LEDS_DIMMING_ENABLE()
-    : WI_ICON_SWITCH_OFF_ON_t(leds::side_strip_control.is_dimming_enabled(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
+    : MenuItemSwitch(_(label), dimming_enabled_values, std::to_underlying(leds::side_strip_control.is_dimming_enabled())) {
 }
-void MI_SIDE_LEDS_DIMMING_ENABLE::OnChange(size_t) {
-    leds::side_strip_control.set_dimming_enabled(index);
+void MI_SIDE_LEDS_DIMMING_ENABLE::OnChange([[maybe_unused]] size_t old_index) {
+    leds::side_strip_control.set_dimming_enabled(static_cast<leds::DimmingEnabled>(GetIndex()));
 }
 #endif
 
