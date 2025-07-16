@@ -811,7 +811,7 @@ static void cycle() {
 #endif
 
 #if HAS_SELFTEST()
-    if (SelftestInstance().IsInProgress()) {
+    if (!SelftestInstance().IsInProgress()) {
 #else
     {
 #endif
