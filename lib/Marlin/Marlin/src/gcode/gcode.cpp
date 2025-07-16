@@ -326,10 +326,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 59: G59(); break;
       #endif
 
-      #if ENABLED(ADVANCED_HOMING)                                //G65: Advanced Homing/measurement cycle
-        case 65: G65(); break;
-      #endif
-
       #if ENABLED(GCODE_MOTION_MODES) || HAS_GCODE_COMPATIBILITY()
         case 80: G80(); break;                                    // G80: Reset the current motion mode
       #endif

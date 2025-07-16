@@ -435,10 +435,6 @@ private:
     #endif
     static G29_TYPE G29();
   #endif
-  #if ENABLED(ADVANCED_HOMING)
-    static void G65();
-  #endif
-
 
   #if HAS_BED_PROBE
     static void G30();
