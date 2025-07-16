@@ -211,28 +211,14 @@ constexpr float endstop_positions_w8[] = ENDSTOP_POSITIONS_W8;
 
 
 /**
- * Read endstop state. Apply ENDSTOP_NOISE_THRESHOLD if defined.
+ * Read endstop state.
  * Currently does not support ENDSTOP_INVERTING
  * @param endstop_pin MARLIN_PIN on which endstop is attached
  */
 
 int read_endstop(int endstop_pin){
 bool inverting = ENDSTOP_INVERTING[pin_to_endstop(endstop_pin)];
-
-#ifdef ENDSTOP_NOISE_THRESHOLD
-  int res = 0;
-  for(int i = 0; i < ENDSTOP_NOISE_THRESHOLD; i++){
-    res += READ(endstop_pin);
-    osDelay(1);
-  }
-  if(res>=ENDSTOP_NOISE_THRESHOLD/2){
-    return inverting ? 0 : 1;
-  }else{
-    return inverting ? 1 : 0;
-  }
-#else
 return READ(endstop_pin) != inverting;
-#endif
 }
 
 

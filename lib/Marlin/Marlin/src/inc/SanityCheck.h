@@ -262,8 +262,6 @@
   #error "JUNCTION_ACCELERATION_FACTOR is obsolete. Delete it from Configuration_adv.h."
 #elif defined(JUNCTION_ACCELERATION)
   #error "JUNCTION_ACCELERATION is obsolete. Delete it from Configuration_adv.h."
-#elif defined(ENDSTOP_NOISE_FILTER)
-  #error "ENDSTOP_NOISE_FILTER is now ENDSTOP_NOISE_THRESHOLD [2-7]. Please update your configuration."
 #elif defined(RETRACT_ZLIFT)
   #error "RETRACT_ZLIFT is now RETRACT_ZRAISE. Please update your Configuration_adv.h."
 #elif defined(SINGLENOZZLE_TOOLCHANGE_ZRAISE)
@@ -1157,10 +1155,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #endif
 #endif
 
-#if defined(ENDSTOP_NOISE_THRESHOLD) && !WITHIN(ENDSTOP_NOISE_THRESHOLD, 2, 7)
-  #error "ENDSTOP_NOISE_THRESHOLD must be an integer from 2 to 7."
-#endif
-
 /**
  * emergency-command parser
  */
@@ -1426,8 +1420,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     #else
       #error "SENSORLESS_HOMING requires Z_MAX_ENDSTOP_INVERTING = false when homing TMC2209 to Z_MAX."
     #endif
-  #elif ENDSTOP_NOISE_THRESHOLD
-    #error "SENSORLESS_HOMING is incompatible with ENDSTOP_NOISE_THRESHOLD."
   #elif !(X_SENSORLESS || Y_SENSORLESS || Z_SENSORLESS)
     #error "SENSORLESS_HOMING requires a TMC stepper driver with StallGuard on X, Y, or Z axes."
   #endif
