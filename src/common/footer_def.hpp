@@ -105,6 +105,7 @@ inline constexpr std::array item_list {
         Item::f_s_value,
 #endif
         Item::f_sensor,
+        Item::speed,
 #if HAS_SIDE_FSENSOR()
         Item::f_sensor_side,
 #endif
