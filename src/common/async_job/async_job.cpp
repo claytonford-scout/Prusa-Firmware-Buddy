@@ -58,7 +58,7 @@ void AsyncJobBase::discard() {
 
         case State::running:
             // The job is currently being processed -> mark it as discarded so that the worker task does not try to write to this structure afterwards
-            executor->synchronized_data.current_job_discarded = true;
+            executor->synchronized_data.current_job = nullptr;
             break;
 
         case State::finished:
