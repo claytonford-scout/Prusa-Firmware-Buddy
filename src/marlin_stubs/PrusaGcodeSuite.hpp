@@ -7,6 +7,7 @@
 #include <option/has_toolchanger.h>
 #include <option/has_side_leds.h>
 #include <option/has_belt_tuning.h>
+#include <option/has_manual_belt_tuning.h>
 #include <option/has_i2c_expander.h>
 #include <option/has_chamber_api.h>
 #include <option/has_nozzle_cleaner.h>
@@ -122,6 +123,9 @@ void M853(); //< Align z motors over bed pins/end of axis
 #endif
 #if HAS_BELT_TUNING()
 void M960(); //< Belt tuning
+#endif
+#if HAS_MANUAL_BELT_TUNING()
+void M961(); //< Manual Belt tuning
 #endif
 
 void M997(); //< Update firmware. Prusa STM32 platform specific
