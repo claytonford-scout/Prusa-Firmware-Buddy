@@ -11,6 +11,8 @@
  *          Please note that the "atomicity" only means here that enqueing and dequeing can be in different threads.
  *          All enqueues have to be done in the same thread however, and all the dequeues too.
  *
+ *          This can store N - 1 items. The last one is reserved to distinguish between empty and full queue.
+ *
  * @note Inspired from https://www.snellman.net/blog/archive/2016-12-13-ring-buffers/
  */
 template <typename T, typename index_t, index_t N>
@@ -109,7 +111,7 @@ public:
      * @details Returns true if the queue is full, false otherwise.
      * @return  true if queue is full
      */
-    bool isFull() { return count() == N; }
+    bool isFull() { return count() == N - 1; }
 
     /**
      * @brief   Gets the queue size
@@ -131,7 +133,7 @@ public:
      * @details Returns the current number of items stored on the queue.
      * @return number of items in the queue
      */
-    index_t count() { return tail - head; }
+    index_t count() { return mask(tail - head); }
 
     /**
      * @brief Clear the contents of the queue
