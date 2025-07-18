@@ -552,8 +552,7 @@ static void update_warning_fsm() {
 }
 
 void set_warning(WarningType type) {
-    log_warning(MarlinServer, "Warning type %d set", (int)type);
-    log_info(MarlinServer, "WARNING: %" PRIu32, std::to_underlying(type));
+    log_info(MarlinServer, "set_warning(%" PRIu32 ")", std::to_underlying(type));
 
     warning_flags.set(std::to_underlying(type));
     update_warning_fsm();
