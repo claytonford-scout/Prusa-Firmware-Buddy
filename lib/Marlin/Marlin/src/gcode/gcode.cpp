@@ -95,8 +95,9 @@ PrinterGCodeCompatibilityReport GcodeSuite::compatibility;
 #endif
 
 int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> extruder, const bool is_physical) {
+  uint8_t e = active_extruder;
   if (extruder.has_value()) {
-    uint8_t e = *extruder;
+    e = *extruder;
 
     if(!is_physical) {
     #if ENABLED(PRUSA_TOOL_MAPPING)
@@ -105,21 +106,21 @@ int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> 
       e = mapped == ToolMapper::NO_TOOL_MAPPED ? -1 : mapped;
     #endif
     }
+  }
 
-    static_assert(EXTRUDERS <= INT8_MAX, "We need to return int8_t");
-    bool valid_extruder = (e < EXTRUDERS);
-    #if ENABLED(PRUSA_TOOLCHANGER)
-      valid_extruder = valid_extruder && prusa_toolchanger.is_tool_enabled(e);
-    #endif
-    if (valid_extruder) return e;
-
+  static_assert(EXTRUDERS <= INT8_MAX, "We need to return int8_t");
+  bool valid_extruder = (e < EXTRUDERS);
+#if ENABLED(PRUSA_TOOLCHANGER)
+  valid_extruder = valid_extruder && prusa_toolchanger.is_tool_enabled(e);
+#endif
+  if (valid_extruder) {
+    return e;
+  } else {
     SERIAL_ECHO_START();
     SERIAL_CHAR('M'); SERIAL_ECHO(parser.codenum);
     SERIAL_ECHOLNPAIR(" " MSG_INVALID_EXTRUDER " ", int(e));
     return -1;
   }
-
-  return active_extruder;
 }
 
 /**
