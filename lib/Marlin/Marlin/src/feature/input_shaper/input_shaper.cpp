@@ -545,7 +545,6 @@ step_event_info_t input_shaper_step_generator_next_step_event(input_shaper_step_
 }
 
 uint8_t input_shaper_state_t::calc_nearest_next_change_idx() const {
-    assert(m_logical_axis_pulses.front()->num_pulses == m_logical_axis_pulses.back()->num_pulses);
     uint8_t min_next_change_idx = 0;
     double min_next_change = m_next_change[0];
     for (uint8_t idx = 1; idx < m_logical_axis_pulses.front()->num_pulses; ++idx) {
