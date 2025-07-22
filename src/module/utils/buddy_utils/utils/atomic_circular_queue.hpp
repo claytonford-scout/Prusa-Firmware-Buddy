@@ -11,9 +11,11 @@
  *          Please note that the "atomicity" only means here that enqueing and dequeing can be in different threads.
  *          All enqueues have to be done in the same thread however, and all the dequeues too.
  *
- *          This can store N - 1 items. The last one is reserved to distinguish between empty and full queue.
+ *          This can store N items, where N needs to be a power of 2.
  *
- * @note Inspired from https://www.snellman.net/blog/archive/2016-12-13-ring-buffers/
+ * @note Inspired from https://www.snellman.net/blog/archive/2016-12-13-ring-buffers/, were head and
+ * tail are not masked (masking is performed only when accessing the elements) allowing to
+ * distinguish between empty and full without losing a slot.
  */
 template <typename T, typename index_t, index_t N>
 class AtomicCircularQueue {
@@ -129,9 +131,11 @@ public:
     const T &peek() { return queue[mask(head)]; }
 
     /**
-     * @brief Gets the number of items on the queue
+     * @brief   Gets the number of items on the queue
      * @details Returns the current number of items stored on the queue.
-     * @return number of items in the queue
+     * @return  number of items in the queue
+     * @note    Please note that head and tail are not masked: they're not indexes into the buffer,
+     *          but free counters. Masking is perfomed only when indexing.
      */
     index_t count() { return tail - head; }
 
