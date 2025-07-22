@@ -324,36 +324,24 @@ void do_blocking_move_to(const float rx, const float ry, const float rz, const f
   planner.synchronize();
 }
 
-static void line_to_destination_position(const feedRate_t &fr_mm_s) {
-  current_position = destination;
-  line_to_current_position(fr_mm_s);
-}
-
 /// Z-Manhattan fast move
-void plan_park_move_to(const float rx, const float ry, const float rz, const feedRate_t &fr_xy, const feedRate_t &fr_z, Segmented segmented){
-  void (*move)(const feedRate_t &fr_mm_s) = nullptr;
-  if (segmented == Segmented::yes) {
-      move = prepare_internal_move_to_destination;
-  } else {
-      move = line_to_destination_position;
-  }
-
+void plan_park_move_to(const float rx, const float ry, const float rz, const feedRate_t &fr_xy, const feedRate_t &fr_z, Segmented segmented) {
   // If Z needs to raise, do it before moving XY
   if (current_position.z < rz) {
     destination = current_position;
     destination.z = rz;
-    move(fr_z);
+    prepare_internal_move_to_destination(fr_z, { .apply_modifiers = true, .do_segment = segmented == Segmented::yes });
   }
 
   destination = current_position;
   destination.set(rx, ry);
-  move(fr_xy);
+  prepare_internal_move_to_destination(fr_xy, { .apply_modifiers = false /*XY move doesn't need MBL*/, .do_segment = segmented == Segmented::yes });
 
   // If Z needs to lower, do it after moving XY
   if (current_position.z > rz) {
     destination = current_position;
     destination.z = rz;
-    move(fr_z);
+    prepare_internal_move_to_destination(fr_z, { .apply_modifiers = true, .do_segment = segmented == Segmented::yes });
   }
 }
 
