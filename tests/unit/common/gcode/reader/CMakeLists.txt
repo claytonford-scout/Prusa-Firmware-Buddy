@@ -75,6 +75,9 @@ file(
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_corrupted_metadata.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_early_last_block.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_no_last_block.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new.gcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc.bgcode
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
   )
 
