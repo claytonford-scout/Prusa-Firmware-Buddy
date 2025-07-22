@@ -11,7 +11,6 @@
     #include "guitypes.hpp"
 #endif
 #include "i18n.h"
-#include "marlin_stubs/PrusaGcodeSuite.hpp"
 #include <option/has_toolchanger.h>
 #include <config_store/store_instance.hpp>
 #include "gcode_buffer.hpp"
@@ -48,7 +47,8 @@ inline constexpr const char *m109_wait_hotend_temp = "M109";
 /// Check code in PrintPreview::Loop for an example.
 class GCodeInfo {
 public:
-    static constexpr uint32_t gcode_level = GCODE_LEVEL;
+    // GCODE_LEVEL from PrusaGcodeSuite.hpp, but we don't want to include the header.
+    static constexpr uint32_t gcode_level = 2;
 
     static constexpr auto supported_features = std::to_array({ "Input shaper" });
 
