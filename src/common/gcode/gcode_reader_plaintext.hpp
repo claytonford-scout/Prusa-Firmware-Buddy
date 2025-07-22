@@ -23,6 +23,11 @@ public:
     virtual StreamRestoreInfo get_restore_info() override { return {}; }
     virtual void set_restore_info(const StreamRestoreInfo &) override {}
 
+    // Tries to parse the given comment (already stripped of the ; at the front) as a thumbnail start.
+    //
+    // If successful, provides the details.
+    static std::optional<ThumbnailDetails> thumbnail_details(GcodeBuffer::String comment);
+
 private:
     // Size of header that have to be valid before we start printing
     // One big file was observed to have header with size of 740 kB, so this adds some headroom

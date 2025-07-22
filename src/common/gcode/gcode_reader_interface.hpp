@@ -38,6 +38,13 @@ public:
         QOI,
     };
 
+    struct ThumbnailDetails {
+        uint16_t width;
+        uint16_t height;
+        unsigned long num_bytes;
+        ImgType type;
+    };
+
     enum class FileVerificationLevel {
         /// Quick verification, does not perform full CRC check,
         /// just checks for some markers that the file is valid (for exapmle GCDE at the beginning)
