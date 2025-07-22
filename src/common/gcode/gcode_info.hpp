@@ -6,12 +6,12 @@
  */
 #pragma once
 
-#include "option/has_gui.h"
-#if HAS_GUI()
-    #include "guitypes.hpp"
-#endif
-#include "i18n.h"
+#include <utils/color.hpp>
 #include <option/has_toolchanger.h>
+#include <option/has_mmu2.h>
+#include <option/has_gcode_compatibility.h>
+#include <common/filament.hpp>
+#include <common/hw_check.hpp>
 #include <config_store/store_instance.hpp>
 #include "gcode_buffer.hpp"
 #include "gcode_reader_any.hpp"
@@ -293,20 +293,17 @@ private:
     /// LFN filename (used for display)
     std::array<char, FILE_NAME_BUFFER_LEN> gcode_file_name = { '\0' };
 
-#if HAS_GUI()
-    /** Set static variable for gcode filename
-     *  @param[in] file - gcode file reference
-     *  @param[in] size - thumbnail wanted size
-     *  @return True - if has thumbnail with those size parameters
-     */
-    bool hasThumbnail(IGcodeReader &reader, size_ui16_t size);
+#ifdef UNITTESTS
+public:
 #endif
     GCodeInfo();
+
+private:
     GCodeInfo(const GCodeInfo &) = delete;
 
     void parse_m555(GcodeBuffer::String cmd);
     void parse_m862(GcodeBuffer::String cmd);
     void parse_gcode(GcodeBuffer::String cmd, uint32_t &gcode_counter);
-    void parse_comment(GcodeBuffer::String cmd);
+    void parse_comment(GcodeBuffer::String cmd, bool plaintext_gcodes);
     bool is_up_to_date(const char *new_version);
 };

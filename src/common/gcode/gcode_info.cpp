@@ -1,7 +1,7 @@
 #include "gcode_info.hpp"
 #include "option/has_gui.h"
 #if HAS_GUI()
-    #include <guiconfig/GuiDefaults.hpp>
+    #include <common/thumbnail_sizes.hpp>
 #endif
 #include <algorithm>
 #include <cstring>
@@ -44,12 +44,6 @@ void GCodeInfo::set_gcode_file(const char *filepath_sfn, const char *filename_lf
     strlcpy(gcode_file_name.data(), filename_lfn, gcode_file_name.size());
 }
 
-#if HAS_GUI()
-bool GCodeInfo::hasThumbnail(IGcodeReader &reader, size_ui16_t size) {
-    return reader.stream_thumbnail_start(size.w, size.h, IGcodeReader::ImgType::QOI);
-}
-#endif
-
 GCodeInfo::GCodeInfo()
     : printing_time { "?" }
     , has_preview_thumbnail_(false)
@@ -89,13 +83,27 @@ bool GCodeInfo::check_valid_for_print(IGcodeReader &reader) {
 }
 
 void GCodeInfo::load(IGcodeReader &reader) {
+    // Note: We are still checking integrity while printing, i.e. when media
+    //       prefetch calls stream_gcode_start(). Ignoring CRC check here in
+    //       print preview screen saves around 800ms which is quite noticable.
+    const bool ignore_crc = true;
+
+    // Perform pre-indexing, if applicable for this type. Seeking will be faster.
+    IGcodeReader::Index index;
+    static_assert(index.thumbnails.size() >= 3);
+    index.thumbnails[0] = { thumbnail_sizes::preview_thumbnail_width, thumbnail_sizes::preview_thumbnail_height, IGcodeReader::ImgType::QOI };
+    index.thumbnails[1] = { thumbnail_sizes::progress_thumbnail_width, thumbnail_sizes::progress_thumbnail_height, IGcodeReader::ImgType::QOI };
+    index.thumbnails[2] = { thumbnail_sizes::old_progress_thumbnail_width, thumbnail_sizes::progress_thumbnail_height, IGcodeReader::ImgType::QOI };
+    reader.generate_index(index, ignore_crc);
+
 #if HAS_GUI()
-    has_preview_thumbnail_ = hasThumbnail(reader, GuiDefaults::PreviewThumbnailRect.Size());
-    has_progress_thumbnail_ = hasThumbnail(reader, GuiDefaults::ProgressThumbnailRect.Size());
-    if (!has_progress_thumbnail_) {
-        has_progress_thumbnail_ = hasThumbnail(reader, { GuiDefaults::OldSlicerProgressImgWidth, GuiDefaults::ProgressThumbnailRect.Height() });
-    }
+    has_preview_thumbnail_ = IGcodeReader::Index::present(index.thumbnails[0].position);
+    has_progress_thumbnail_ = IGcodeReader::Index::present(index.thumbnails[1].position) || IGcodeReader::Index::present(index.thumbnails[2].position);
 #endif
+
+    // If we didn't get any thumbnails in the index, it means they are mixed into the metadata.
+    // This is a workaround way how to check that the reader is PlainGCodeReader (we don't have RTTI)
+    const bool plaintext_gcodes = std::find_if(index.thumbnails.begin(), index.thumbnails.end(), [](const auto &t) { return t.position == IGcodeReader::Index::not_indexed; }) != index.thumbnails.end();
 
     // scan info G-codes and comments
     valid_printer_settings = ValidPrinterSettings(); // reset to valid state
@@ -108,7 +116,7 @@ void GCodeInfo::load(IGcodeReader &reader) {
     GcodeBuffer buffer;
 
     // parse metadata
-    if (reader.stream_metadata_start()) {
+    if (reader.stream_metadata_start(&index)) {
         while (true) {
             auto res = reader.stream_get_line(buffer, IGcodeReader::Continuations::Discard);
 
@@ -118,7 +126,7 @@ void GCodeInfo::load(IGcodeReader &reader) {
                 break;
             }
 
-            parse_comment(buffer.line);
+            parse_comment(buffer.line, plaintext_gcodes);
         }
 
     } else {
@@ -127,11 +135,7 @@ void GCodeInfo::load(IGcodeReader &reader) {
 
     // parse first few gcodes
     const uint32_t offset = 0;
-    // Note: We are still checking integrity while printing, i.e. when media
-    //       prefetch calls stream_gcode_start(). Ignoring CRC check here in
-    //       print preview screen saves around 800ms which is quite noticable.
-    const bool ignore_crc = true;
-    if (reader.stream_gcode_start(offset, ignore_crc) == IGcodeReader::Result_t::RESULT_OK) {
+    if (reader.stream_gcode_start(offset, ignore_crc, &index) == IGcodeReader::Result_t::RESULT_OK) {
         uint32_t gcode_counter = 0;
         while (true) {
             // valid_for_print should is supposed to make sure that file is downloaded-enough to not run out of bounds here.
@@ -574,7 +578,28 @@ void GCodeInfo::parse_gcode(GcodeBuffer::String cmd, uint32_t &gcode_counter) {
     }
 }
 
-void GCodeInfo::parse_comment(GcodeBuffer::String comment) {
+void GCodeInfo::parse_comment(GcodeBuffer::String comment, bool plaintext_gcodes) {
+    comment.skip_ws();
+
+#if HAS_GUI()
+    if (plaintext_gcodes) {
+        if (const auto details = PlainGcodeReader::thumbnail_details(comment); details != std::nullopt) {
+            auto check = [&](uint16_t w_exp, uint16_t h_exp, bool &has_thumbnail) {
+                if (details->width == w_exp && details->height == h_exp && details->type == IGcodeReader::ImgType::QOI) {
+                    has_thumbnail = true;
+                }
+            };
+            check(thumbnail_sizes::preview_thumbnail_width, thumbnail_sizes::preview_thumbnail_height, has_preview_thumbnail_);
+            check(thumbnail_sizes::progress_thumbnail_width, thumbnail_sizes::progress_thumbnail_height, has_progress_thumbnail_);
+            check(thumbnail_sizes::old_progress_thumbnail_width, thumbnail_sizes::progress_thumbnail_height, has_progress_thumbnail_);
+
+            return;
+        }
+    }
+#else
+    (void)plaintext_gcodes;
+#endif
+
     auto [name, val] = comment.parse_metadata();
     if (name.begin == nullptr || val.begin == nullptr) {
         // not a metadatum
