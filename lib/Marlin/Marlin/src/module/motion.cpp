@@ -288,7 +288,7 @@ void line_to_current_position(const feedRate_t &fr_mm_s/*=feedrate_mm_s*/) {
   planner.buffer_line(current_position, fr_mm_s, active_extruder);
 }
 
-void _internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/) {
+void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, const PrepareMoveHints & hints) {
   const feedRate_t old_feedrate = feedrate_mm_s;
   if (fr_mm_s) feedrate_mm_s = fr_mm_s;
 
@@ -300,7 +300,7 @@ void _internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/) {
      planner.e_factor[active_extruder] = 1.0f;
   #endif
 
-  prepare_move_to_destination();
+  prepare_move_to_destination(hints);
 
   feedrate_mm_s = old_feedrate;
   feedrate_percentage = old_pct;
@@ -555,7 +555,7 @@ void plan_move_by(const feedRate_t fr, const float dx, const float dy, const flo
  *
  * Before exit, current_position is set to destination.
  */
-void prepare_move_to_destination(const MoveHints &hints) {
+void prepare_move_to_destination(const PrepareMoveHints &hints) {
   apply_motion_limits(destination);
 
   #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
@@ -580,7 +580,7 @@ void prepare_move_to_destination(const MoveHints &hints) {
 
   #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
 
-  prepare_move_to(destination, feedrate_mm_s, { .move = hints });
+  prepare_move_to(destination, feedrate_mm_s, hints);
 
   current_position = destination;
 }
