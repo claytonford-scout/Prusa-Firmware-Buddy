@@ -48,6 +48,7 @@ target_link_libraries(
   freertos_tests
   raii
   logging-mock
+  buddy_utils
   )
 
 file(
