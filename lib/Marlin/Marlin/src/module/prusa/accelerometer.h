@@ -125,7 +125,7 @@ public:
         // In MK printers the world and motors align
         out = to_printer_coords(sample);
 #else
-        bsod("Projections are not defined for this type of printer");
+    #error
 #endif
         return out;
     }
@@ -163,7 +163,7 @@ public:
         static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
         out.val[Z_AXIS] = sample.val[1] * cos45 + sample.val[2] * sin45;
 #else
-        bsod("Projections are not defined for this type of printer");
+    #error
 #endif
         return out;
     }
