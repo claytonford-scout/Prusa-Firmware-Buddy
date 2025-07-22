@@ -191,6 +191,51 @@ const PrusaPackGcodeReader::StreamRestoreInfo::PrusaPackRec *PrusaPackGcodeReade
     return nullptr;
 }
 
+void PrusaPackGcodeReader::generate_index(Index &out, bool ignore_crc) {
+    out.gcode = Index::not_present;
+    out.metadata = Index::not_present;
+    for (auto &thumb : out.thumbnails) {
+        thumb.position = Index::not_present;
+    }
+
+    auto result = iterate_blocks(!ignore_crc, [&](const BlockHeader &header) -> IterateResult_t {
+        switch (static_cast<EBlockType>(header.type)) {
+        case EBlockType::GCode:
+        case EBlockType::EncryptedBlock:
+            out.gcode = header.get_position();
+            // All the interesting stuff is before actual gcodes. No reason to index further.
+            return IterateResult_t::End;
+        case EBlockType::PrinterMetadata:
+            // Note: We are not really interested in the other metadata blocks.
+            out.metadata = header.get_position();
+            return IterateResult_t::Continue;
+        case EBlockType::Thumbnail: {
+            const auto details = thumbnail_details(header);
+            if (!details.has_value()) {
+                return IterateResult_t::Continue;
+            }
+            for (auto &thumb : out.thumbnails) {
+                if (thumb.w == details->width && thumb.h == details->height && thumb.type == details->type) {
+                    thumb.position = header.get_position();
+                    break;
+                }
+            }
+            return IterateResult_t::Continue;
+        }
+        case bgcode::core::EBlockType::FileMetadata:
+        case bgcode::core::EBlockType::IdentityBlock:
+        case bgcode::core::EBlockType::KeyBlock:
+        case bgcode::core::EBlockType::PrintMetadata:
+        case bgcode::core::EBlockType::SlicerMetadata:;
+        }
+        return IterateResult_t::Continue;
+    });
+    if (!std::holds_alternative<std::monostate>(result)) {
+        assert(std::holds_alternative<Result_t>(result));
+        out = Index();
+    }
+}
+
 namespace {
 template <typename CB>
 void block_header_bytes_cb(BlockHeader header, CB callback) {

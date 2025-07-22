@@ -73,7 +73,57 @@ public:
         thumbnail,
     };
 
+    /// Positions where things start.
+    struct Index {
+        /// A position, or not_indexed.
+        ///
+        /// std::optional would be better, but takes more space.
+        ///
+        /// Note: This is raw file offset (bytes), not anything related to
+        /// stream positions.
+        using Position = uint32_t;
+
+        /// Not found, but we are not 100% sure.
+        ///
+        /// We may have looked or not.
+        static constexpr Position not_indexed = 0xFFFFFFFF;
+
+        /// We are sure it is not there. No reason to look again.
+        static constexpr Position not_present = not_indexed - 1;
+
+        static constexpr size_t thumbnail_slots = 3;
+
+        Position gcode = not_indexed;
+        Position metadata = not_indexed;
+
+        struct Thumbnail {
+            // Request section
+            uint16_t w = 0;
+            uint16_t h = 0;
+            ImgType type = ImgType::Unknown;
+            // Output
+            Position position = not_indexed;
+        };
+
+        std::array<Thumbnail, thumbnail_slots> thumbnails;
+
+        bool indexed() const {
+            // Simplified. We don't bother with formats that index only thumbnails.
+            return gcode != not_indexed || metadata != not_indexed;
+        }
+
+        static bool present(Position position) {
+            return position != not_indexed && position != not_present;
+        }
+    };
+
 public:
+    /// Pre-index the file.
+    ///
+    /// If the file / type doesn't support indexing, it doesn't modify the out
+    /// parameter at all.
+    virtual void generate_index(Index &out, bool ignore_crc = false);
+
     /**
      * @brief Start streaming metadata from gcode
      */

@@ -34,6 +34,7 @@ public:
     PrusaPackGcodeReader(PrusaPackGcodeReader &&other) = default;
     PrusaPackGcodeReader &operator=(PrusaPackGcodeReader &&other) = default;
 
+    virtual void generate_index(Index &out, bool ignore_crc) override;
     virtual bool stream_metadata_start() override;
     virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false) override;
     virtual AbstractByteReader *stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger = false) override;
