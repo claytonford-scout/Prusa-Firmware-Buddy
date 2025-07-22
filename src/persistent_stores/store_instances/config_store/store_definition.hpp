@@ -1,5 +1,5 @@
 #pragma once
-#include <Marlin/src/inc/MarlinConfigPre.h>
+#include <inc/MarlinConfigPre.h>
 
 #include <bitset>
 

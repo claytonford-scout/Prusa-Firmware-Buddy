@@ -3,9 +3,9 @@
 #if HAS_GUI()
     #include <guiconfig/GuiDefaults.hpp>
 #endif
+#include <algorithm>
 #include <cstring>
 #include <option/developer_mode.h>
-#include <Marlin/src/module/motion.h>
 #include <version.h>
 #include <tools_mapping.hpp>
 #include <module/prusa/spool_join.hpp>
@@ -230,7 +230,7 @@ void GCodeInfo::ValidPrinterSettings::add_unsupported_feature(const char *featur
     size_t occupied = strlen(unsupported_features_text);
     size_t free = sizeof(unsupported_features_text) - occupied;
     if (occupied == 0) {
-        strncpy(unsupported_features_text, feature, min(length, free));
+        strncpy(unsupported_features_text, feature, std::min(length, free));
     } else if (free > length + 2) {
         strcat(unsupported_features_text, ", ");
         strncat(unsupported_features_text, feature, length);
@@ -491,7 +491,7 @@ void GCodeInfo::parse_m862(GcodeBuffer::String cmd) {
         // Makes the pre-print screen hide the nozzle sizes, which is both good and bad at the same time
         // -> "?.??" is gone, but no actual diameter is shown anymore - that can be tweaked further on the visualization side.
         // Here, we must set the correct nozzle diameter for all tools if specified.
-        EXTRUDER_LOOP() {
+        for (int8_t e = 0; e < EXTRUDERS; e++) {
             visitor(per_extruder_info[e]);
         }
 #else
@@ -514,14 +514,14 @@ void GCodeInfo::parse_m862(GcodeBuffer::String cmd) {
 
 void GCodeInfo::parse_gcode(GcodeBuffer::String cmd, uint32_t &gcode_counter) {
     cmd.skip_ws();
-    if (cmd.front() == ';' || cmd.is_empty()) {
+    if (cmd.is_empty() || cmd.front() == ';') {
         return;
     }
     gcode_counter++;
 
     // skip line number if present
     if (cmd.front() == 'N') {
-        cmd.skip(2u);
+        cmd.skip(static_cast<size_t>(2));
         cmd.skip([](auto c) -> bool { return isdigit(c) || isspace(c); });
     }
 
@@ -540,7 +540,7 @@ void GCodeInfo::parse_gcode(GcodeBuffer::String cmd, uint32_t &gcode_counter) {
 
             if (!is_up_to_date(cmd.c_str())) {
                 valid_printer_settings.outdated_firmware.fail();
-                strlcpy(valid_printer_settings.latest_fw_version, cmd.c_str(), min(sizeof(valid_printer_settings.latest_fw_version), cmd.len() + 1 /* +1 for the null terminator */));
+                strlcpy(valid_printer_settings.latest_fw_version, cmd.c_str(), std::min(sizeof(valid_printer_settings.latest_fw_version), cmd.len() + 1 /* +1 for the null terminator */));
                 // Cut the string at the comment start
                 char *comment_start = strchr(valid_printer_settings.latest_fw_version, ';');
                 if (comment_start) {
@@ -577,7 +577,7 @@ void GCodeInfo::parse_gcode(GcodeBuffer::String cmd, uint32_t &gcode_counter) {
 void GCodeInfo::parse_comment(GcodeBuffer::String comment) {
     auto [name, val] = comment.parse_metadata();
     if (name.begin == nullptr || val.begin == nullptr) {
-        // not a metadata
+        // not a metadatum
         return;
     }
 
@@ -602,7 +602,7 @@ void GCodeInfo::parse_comment(GcodeBuffer::String comment) {
 
                 } else if (is_filament_type) {
                     filament_buff filament_name;
-                    snprintf(filament_name.begin(), filament_name.size(), "%.*s", item->size(), item->data());
+                    snprintf(filament_name.begin(), filament_name.size(), "%.*s", static_cast<int>(item->size()), item->data());
                     per_extruder_info[extruder].filament_name = filament_name;
                     filament_described = true;
 
@@ -675,7 +675,7 @@ bool GCodeInfo::is_singletool_gcode() const {
 }
 
 void GCodeInfo::for_each_used_extruder(const stdext::inplace_function<void(uint8_t logical_ix, uint8_t physical_ix, const ExtruderInfo &info)> &callback) {
-    EXTRUDER_LOOP() {
+    for (int8_t e = 0; e < EXTRUDERS; e++) {
         const auto &info = get_extruder_info(e);
         if (!info.used()) {
             continue;

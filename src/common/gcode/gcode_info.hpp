@@ -165,7 +165,7 @@ public:
     void reset_info();
 
     const time_buff &get_printing_time() const { return printing_time; } ///< Get string representation of printing time left
-    bool is_loaded() const { return is_loaded_; } ///< Check if file has preview thumbnail
+    bool is_loaded() const { return is_loaded_; }
 
     inline bool has_error() const { return error_str_; } ///< Returns whether there is an (unrecoverable) error detected. The error message can then be obtained using error_str
     inline const char *error_str() const { return error_str_; } ///< If there is any reportable error, returns it. Otherwise returns nullptr.

@@ -1,6 +1,5 @@
 #include "gcode_reader_binary.hpp"
 #include <utility_extensions.hpp>
-#include "lang/i18n.h"
 #include <md.h>
 #include <crc32.h>
 #include <logging/log.hpp>
