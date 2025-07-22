@@ -144,7 +144,7 @@ void GCodeInfo::load(IGcodeReader &reader) {
             parse_gcode(buffer.line, gcode_counter);
         }
         // If we didnt find any M862.6 "Input Shaper" command, we assume that the gcode was not sliced with input shaper.
-        if (!sliced_with_input_shaper_) {
+        if (!sliced_with_input_shaper_ && !PRINTER_IS_PRUSA_iX()) {
             valid_printer_settings.sliced_without_input_shaper.fail();
         }
     }
