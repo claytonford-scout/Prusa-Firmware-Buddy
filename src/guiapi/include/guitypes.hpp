@@ -72,7 +72,6 @@ using point_ui16_t = point_t<uint16_t>;
 enum class layout_color : uint8_t { leave_it,
     black,
     red,
-    blue,
 };
 
 union event_conversion_union {

@@ -21,7 +21,6 @@ ScreenBlueError::ScreenBlueError()
     , header(this, header_rect, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("UNKNOWN ERROR"))
     , title(this, title_rect, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("Unable to show details"))
     , description(this, description_rect, is_multiline::yes) {
-    SetBlueLayout();
 
     // Simple text instead of header
     header.SetAlignment(Align_t::LeftTop());
