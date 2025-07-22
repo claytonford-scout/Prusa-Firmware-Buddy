@@ -63,11 +63,11 @@ struct DummyReader : public GcodeReaderCommon {
         ptr_stream_getc = static_cast<stream_getc_type>(&DummyReader::dummy_getc);
     }
 
-    virtual bool stream_metadata_start() override {
+    virtual bool stream_metadata_start(const Index *) override {
         return true;
     }
 
-    virtual Result_t stream_gcode_start(uint32_t, bool) override {
+    virtual Result_t stream_gcode_start(uint32_t, bool, const Index *) override {
         return Result_t::RESULT_OK;
     }
 

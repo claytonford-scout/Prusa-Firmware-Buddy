@@ -110,6 +110,35 @@ IGcodeReader::Result_t PrusaPackGcodeReader::read_block_header(BlockHeader &bloc
     return Result_t::RESULT_OK;
 }
 
+IGcodeReader::Result_t PrusaPackGcodeReader::seek_block_header(BlockHeader &block_header, Index::Position position_hint, bool check_crc, stdext::inplace_function<IterateResult_t(BlockHeader &)> search_predicate) {
+    if (position_hint == Index::not_present) {
+        return Result_t::RESULT_EOF;
+    } else if (position_hint == Index::not_indexed) {
+        // get first matching block
+        const auto res = iterate_blocks(check_crc, search_predicate);
+
+        return std::visit([&](const auto &res) -> Result_t {
+            if constexpr (std::is_same_v<decltype(res), const BlockHeader &>) {
+                block_header = res;
+                return Result_t::RESULT_OK;
+            } else if constexpr (std::is_same_v<decltype(res), const Result_t &>) {
+                return res;
+            } else if constexpr (std::is_same_v<decltype(res), const std::monostate &>) {
+                return Result_t::RESULT_ERROR;
+            } else {
+                static_assert(false, "Not exhaustive");
+            }
+        },
+            res);
+    } else {
+        if (fseek(file.get(), position_hint, SEEK_SET) != 0) {
+            return Result_t::RESULT_ERROR;
+        }
+
+        return read_block_header(block_header, check_crc);
+    }
+}
+
 std::variant<std::monostate, BlockHeader, PrusaPackGcodeReader::Result_t> PrusaPackGcodeReader::iterate_blocks(bool check_crc, stdext::inplace_function<IterateResult_t(BlockHeader &)> function) {
     if (auto res = read_and_check_header(); res != Result_t::RESULT_OK) {
         return res;
@@ -143,24 +172,33 @@ std::variant<std::monostate, BlockHeader, PrusaPackGcodeReader::Result_t> PrusaP
     }
 }
 
-bool PrusaPackGcodeReader::stream_metadata_start() {
+bool PrusaPackGcodeReader::stream_metadata_start(const Index *index) {
     // Will be set accordingly at the end on success
     stream_mode_ = StreamMode::none;
 
-    auto res = iterate_blocks(false, [](BlockHeader &block_header) {
-        if (bgcode::core::EBlockType(block_header.type) == bgcode::core::EBlockType::PrinterMetadata) {
-            return IterateResult_t::Return;
+    {
+        BlockHeader header;
+
+        const auto res = seek_block_header(header, index ? index->metadata : Index::not_indexed, false, [](BlockHeader &block_header) {
+            switch (bgcode::core::EBlockType(block_header.type)) {
+            case bgcode::core::EBlockType::PrinterMetadata:
+                return IterateResult_t::Return;
+            case bgcode::core::EBlockType::GCode:
+            case bgcode::core::EBlockType::EncryptedBlock:
+                // No chance of finding it past this point.
+                return IterateResult_t::End;
+            default:
+                return IterateResult_t::Continue;
+            }
+        });
+
+        if (res != Result_t::RESULT_OK) {
+            return false;
         }
 
-        return IterateResult_t::Continue;
-    });
-
-    if (!std::holds_alternative<BlockHeader>(res)) {
-        return false;
+        stream.reset();
+        stream.current_plain_block_header = header;
     }
-
-    stream.reset();
-    stream.current_plain_block_header = get<BlockHeader>(res);
 
     uint16_t encoding;
     if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
@@ -249,7 +287,7 @@ void block_header_bytes_cb(BlockHeader header, CB callback) {
 
 } // namespace
 
-IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc) {
+IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc, const Index *index) {
     BlockHeader start_block;
     uint32_t block_decompressed_offset; //< what is offset of first byte inside block that we start streaming from
     uint32_t block_throwaway_bytes; //< How many bytes to throw away from current block (after decompression)
@@ -262,8 +300,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     const bool check_crc = verify && !ignore_crc;
 
     if (offset == 0) {
-        // get first gcode block
-        auto res = iterate_blocks(check_crc, [](BlockHeader &block_header) {
+        const auto res = seek_block_header(start_block, index ? index->gcode : Index::not_indexed, check_crc, [](BlockHeader &block_header) {
             // check if correct type, if so, return this block
             if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode || (bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
                 return IterateResult_t::Return;
@@ -271,23 +308,15 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
 
             return IterateResult_t::Continue;
         });
-
-        auto header = std::get_if<BlockHeader>(&res);
-        if (header == nullptr) {
-            if (auto status = std::get_if<Result_t>(&res); status != nullptr) {
-                return *status;
-            } else {
-                // monostate should be returned only when the inner function returns End and we don't do that.
-                assert(false);
-                return Result_t::RESULT_ERROR;
-            }
+        if (res != Result_t::RESULT_OK) {
+            return res;
         }
 
-        start_block = *header;
         block_throwaway_bytes = 0;
         block_decompressed_offset = 0;
-
     } else {
+        // Index shall not be used when opening at a specific offset.
+        assert(index == nullptr);
         // offset > 0 - we are starting from arbitrary offset, find nearest block from cache
         if (auto res = read_and_check_header(); res != Result_t::RESULT_OK) {
             return res; // need to check file header somewhere

@@ -12,13 +12,16 @@ PlainGcodeReader::PlainGcodeReader(FILE &f, const struct stat &stat_info)
     file_size = stat_info.st_size;
 }
 
-bool PlainGcodeReader::stream_metadata_start() {
+bool PlainGcodeReader::stream_metadata_start([[maybe_unused]] const Index *index) {
+    assert(index == nullptr || !index->indexed());
     bool success = fseek(file.get(), 0, SEEK_SET) == 0;
     stream_mode_ = success ? StreamMode::metadata : StreamMode::none;
     gcodes_in_metadata = 0;
     return success;
 }
-IGcodeReader::Result_t PlainGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc) {
+
+IGcodeReader::Result_t PlainGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc, [[maybe_unused]] const Index *index) {
+    assert(index == nullptr || !index->indexed());
     // There is no CRC in plaintext G-Code.
     (void)ignore_crc;
 

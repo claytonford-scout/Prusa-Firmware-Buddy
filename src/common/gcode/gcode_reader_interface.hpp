@@ -127,7 +127,7 @@ public:
     /**
      * @brief Start streaming metadata from gcode
      */
-    virtual bool stream_metadata_start() = 0;
+    virtual bool stream_metadata_start(const Index *index = nullptr) = 0;
 
     /**
      * @brief Start streaming gcodes from .gcode or .bgcode file
@@ -144,8 +144,10 @@ public:
      *
      * @param offset if non-zero will skip to specified offset (after powerpanic, pause etc)
      * @param ignore_crc if non-zero will ignore CRC, which should be used with caution
+     * @param index (if present) - preindexed to look up things faster. If not
+     *   nullptr, must come from previous call into index() on the same reader.
      */
-    virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false) = 0;
+    virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false, const Index *index = nullptr) = 0;
 
     /**
      * @brief Find thumbnail with specified parameters and start streaming it.
@@ -158,6 +160,15 @@ public:
      * Errors are not indicated specially.
      */
     virtual AbstractByteReader *stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger = false) = 0;
+#if 0
+    // TODO: Once we need it (do we? Will we?)
+    /**
+     * Start streaming a thumbnail on given position.
+     *
+     * Overload for the above, but with a position previously returned as part of index.
+     */
+    virtual AbstractByteReader *stream_thumbnail_start(Index::Position position);
+#endif
 
     /**
      * @brief Get line from stream specified before by start_xx function
