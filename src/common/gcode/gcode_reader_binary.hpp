@@ -192,4 +192,6 @@ private:
         std::span<std::byte> read(std::span<std::byte>) final;
     };
     ThumbnailReader thumbnail_reader;
+
+    std::optional<ThumbnailDetails> thumbnail_details(const bgcode::core::BlockHeader &block_header);
 };

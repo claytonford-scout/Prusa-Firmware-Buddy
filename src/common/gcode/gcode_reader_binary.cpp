@@ -603,6 +603,25 @@ std::span<std::byte> PrusaPackGcodeReader::ThumbnailReader::read(std::span<std::
     return { buffer.data(), nread };
 }
 
+std::optional<PrusaPackGcodeReader::ThumbnailDetails> PrusaPackGcodeReader::thumbnail_details(const BlockHeader &block_header) {
+    if ((ECompressionType)block_header.compressed_size != bgcode::core::ECompressionType::None) {
+        // no compression supported on images, they are already compressed enough
+        return std::nullopt;
+    }
+
+    bgcode::core::ThumbnailParams thumb_header;
+    if (thumb_header.read(*file) != bgcode::core::EResult::Success) {
+        return std::nullopt;
+    }
+
+    return ThumbnailDetails {
+        .width = thumb_header.width,
+        .height = thumb_header.height,
+        .num_bytes = block_header.uncompressed_size,
+        .type = thumbnail_format_to_type(static_cast<bgcode::core::EThumbnailFormat>(thumb_header.format)),
+    };
+}
+
 AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger) {
 
     const struct params {
@@ -626,24 +645,20 @@ AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expect
         if ((EBlockType)block_header.type != EBlockType::Thumbnail) {
             return IterateResult_t::Continue;
         }
-        if ((ECompressionType)block_header.compressed_size != bgcode::core::ECompressionType::None) {
-            // no compression supported on images, they are already compressed enough
+
+        const auto details = thumbnail_details(block_header);
+
+        if (!details.has_value()) {
+            return IterateResult_t::Continue;
+        }
+        if (details->type != params.expected_type) {
+            // Other format than what we want
             return IterateResult_t::Continue;
         }
 
-        bgcode::core::ThumbnailParams thumb_header;
-        if (thumb_header.read(*file) != bgcode::core::EResult::Success) {
-            return IterateResult_t::Continue;
-        }
-
-        // format not valid
-        if (thumbnail_format_to_type(static_cast<bgcode::core::EThumbnailFormat>(thumb_header.format)) != params.expected_type) {
-            return IterateResult_t::Continue;
-        }
-
-        if (params.expected_height == thumb_header.height && params.expected_width == thumb_header.width) {
+        if (params.expected_height == details->height && params.expected_width == details->width) {
             return IterateResult_t::Return;
-        } else if (params.allow_larger && params.expected_height <= thumb_header.height && params.expected_width <= thumb_header.width) {
+        } else if (params.allow_larger && params.expected_height <= details->height && params.expected_width <= details->width) {
             return IterateResult_t::Return;
         } else {
             return IterateResult_t::Continue;
