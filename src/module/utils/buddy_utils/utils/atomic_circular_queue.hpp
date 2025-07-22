@@ -111,7 +111,7 @@ public:
      * @details Returns true if the queue is full, false otherwise.
      * @return  true if queue is full
      */
-    bool isFull() { return count() == N - 1; }
+    bool isFull() { return count() == N; }
 
     /**
      * @brief   Gets the queue size
@@ -133,7 +133,7 @@ public:
      * @details Returns the current number of items stored on the queue.
      * @return number of items in the queue
      */
-    index_t count() { return mask(tail - head); }
+    index_t count() { return tail - head; }
 
     /**
      * @brief Clear the contents of the queue
