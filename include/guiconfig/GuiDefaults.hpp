@@ -1,7 +1,7 @@
 #pragma once
 
+#include <common/thumbnail_sizes.hpp>
 #include "fonts.hpp"
-#include "guitypes.hpp"
 #include "Rect16.h"
 #include "align.hpp"
 #include "footer_def.hpp"
@@ -232,3 +232,13 @@ struct GuiDefaults {
     static constexpr Rect16::Width_t InvalidPrinterIconMargin = 6;
     static constexpr Rect16::Height_t InvalidPrinterLineSpacing = 8;
 };
+
+// Check these are the same
+// (we don't do a direct define approach, since here it is _computed_ from some
+// other things; but we want to make sure the hardcoded values elsewhere do
+// match).
+static_assert(thumbnail_sizes::progress_thumbnail_width == GuiDefaults::ProgressThumbnailWidth);
+static_assert(thumbnail_sizes::old_progress_thumbnail_width == GuiDefaults::OldSlicerProgressImgWidth);
+static_assert(thumbnail_sizes::progress_thumbnail_height == GuiDefaults::ProgressThumbnailHeight);
+static_assert(thumbnail_sizes::preview_thumbnail_width == GuiDefaults::PreviewThumbnailRect.Width());
+static_assert(thumbnail_sizes::preview_thumbnail_height == GuiDefaults::PreviewThumbnailRect.Height());
