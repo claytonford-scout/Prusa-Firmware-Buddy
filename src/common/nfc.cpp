@@ -1,5 +1,6 @@
 #include "nfc.hpp"
 
+#include <buddy/unreachable.hpp>
 #include <common/st25dv64k.h>
 #include <common/st25dv64k_internal.h>
 
@@ -299,9 +300,6 @@ void turn_off() {
 }
 
 bool has_nfc_probably() {
-    // Please revise this function when adding a new printer model
-    static_assert(std::to_underlying(PrinterModel::_cnt) == 13);
-
     // MK 3.xS/4S are the only printers that has the antenna in the package.
     // So if this is a MK4S, it probably has an NFC, if not, then it probably doesn't.
     switch (PrinterModelInfo::current().model) {
@@ -310,10 +308,20 @@ bool has_nfc_probably() {
     case PrinterModel::mk3_5s:
     case PrinterModel::coreone:
         return true;
-
-    default:
+    case PrinterModel::mk3:
+    case PrinterModel::mk3s:
+    case PrinterModel::mk3_5:
+    case PrinterModel::mk3_9:
+    case PrinterModel::mk4:
+    case PrinterModel::mini:
+    case PrinterModel::xl:
+    case PrinterModel::xl_dev_kit:
+    case PrinterModel::ix:
         return false;
+    case PrinterModel::_cnt:
+        break;
     }
+    BUDDY_UNREACHABLE();
 }
 
 bool has_activity() {
