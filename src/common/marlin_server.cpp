@@ -184,6 +184,10 @@
 
 #include <feature/print_status_message/print_status_message_mgr.hpp>
 
+#if HAS_NOZZLE_CLEANER()
+    #include <nozzle_cleaner.hpp>
+#endif
+
 using namespace ExtUI;
 
 using ClientQueue = marlin_client::ClientQueue;
@@ -850,13 +854,25 @@ static void cycle() {
 }
 
 /// Function that is called just before finalize_print, before the steppers are possibly disabled
-static void pre_finalize_print([[maybe_unused]] bool finished) {
+/// \retval true the function did its job and we can continue with the state machine
+/// \retval false the function is not ready yet, we need to call it later again (loop in the same state)
+static bool pre_finalize_print([[maybe_unused]] bool finished) {
+#if HAS_NOZZLE_CLEANER()
+    if (nozzle_cleaner::is_loader_idle()) {
+        nozzle_cleaner::load_g12_gcode();
+    }
+    if (nozzle_cleaner::is_loader_buffering()) {
+        return false; // We are not ready yet, we need to wait for the loader to finish buffering
+    }
+#endif // HAS_NOZZLE_CLEANER()
+
 #if ENABLED(PRUSA_MMU2)
     if (MMU2::mmu2.Enabled() && (!finished || GCodeInfo::getInstance().is_singletool_gcode())) {
         // When we are running single-filament gcode with MMU, we should unload current filament.
         safely_unload_filament_from_nozzle_to_mmu();
     } else
 #endif // ENABLED(PRUSA_MMU2)
+
 #if HAS_AUTO_RETRACT()
         if (true) {
         buddy::auto_retract().maybe_retract_from_nozzle();
@@ -864,6 +880,17 @@ static void pre_finalize_print([[maybe_unused]] bool finished) {
 #endif
     {
     }
+
+#if HAS_NOZZLE_CLEANER()
+    // Here the nozzle cleaner loader should already be ready to execute the gcode.
+    nozzle_cleaner::execute();
+
+    xyz_pos_t park = XYZ_NOZZLE_PARK_POINT;
+    park.z = current_position.z;
+    plan_park_move_to_xyz(park, NOZZLE_PARK_XY_FEEDRATE, NOZZLE_PARK_Z_FEEDRATE, Segmented::yes);
+#endif
+
+    return true;
 }
 
 void static finalize_print(bool finished) {
@@ -2395,7 +2422,9 @@ static void _server_print_loop(void) {
             break;
         }
 
-        pre_finalize_print(false);
+        if (!pre_finalize_print(false)) {
+            break;
+        };
         server.print_state = State::Aborting_ParkHead;
         break;
     case State::Aborting_ParkHead:
@@ -2454,7 +2483,9 @@ static void _server_print_loop(void) {
             break;
         }
 
-        pre_finalize_print(true);
+        if (!pre_finalize_print(true)) {
+            break;
+        };
         server.print_state = State::Finishing_ParkHead;
         break;
     case State::Finishing_ParkHead:

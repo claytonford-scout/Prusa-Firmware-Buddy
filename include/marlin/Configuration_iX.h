@@ -1309,7 +1309,10 @@
     #define XYZ_NOZZLE_PARK_POINT \
         {X_NOZZLE_PARK_POINT, Y_NOZZLE_PARK_POINT, Z_NOZZLE_PARK_POINT}
 
-    #define XYZ_NOZZLE_PARK_POINT_ON_PRINT_END XYZ_NOZZLE_PARK_POINT
+    #define XYZ_WASTEBIN_POINT \
+        {X_WASTEBIN_POINT, Y_WASTEBIN_POINT, Z_NOZZLE_PARK_POINT}
+
+    #define XYZ_NOZZLE_PARK_POINT_ON_PRINT_END XYZ_WASTEBIN_POINT
 
     #define X_NOZZLE_PARK_POINT_M600 X_WASTEBIN_POINT
     #define Y_NOZZLE_PARK_POINT_M600 Y_WASTEBIN_POINT
@@ -1332,7 +1335,7 @@
      * Park the nozzle after print is finished
      * When disabled, similar functionality can be still achieved with slicer "End G-code"
      */
-    //#define PARK_HEAD_ON_PRINT_FINISH
+    #define PARK_HEAD_ON_PRINT_FINISH
 
 /**
  * Print Job Timer
