@@ -303,20 +303,20 @@ bool has_nfc_probably() {
     // MK 3.xS/4S are the only printers that has the antenna in the package.
     // So if this is a MK4S, it probably has an NFC, if not, then it probably doesn't.
     switch (PrinterModelInfo::current().model) {
-    case PrinterModel::mk4s:
-    case PrinterModel::mk3_9s:
-    case PrinterModel::mk3_5s:
     case PrinterModel::coreone:
+    case PrinterModel::mk3_5s:
+    case PrinterModel::mk3_9s:
+    case PrinterModel::mk4s:
         return true;
-    case PrinterModel::mk3:
-    case PrinterModel::mk3s:
+    case PrinterModel::ix:
+    case PrinterModel::mini:
     case PrinterModel::mk3_5:
     case PrinterModel::mk3_9:
+    case PrinterModel::mk3:
+    case PrinterModel::mk3s:
     case PrinterModel::mk4:
-    case PrinterModel::mini:
-    case PrinterModel::xl:
     case PrinterModel::xl_dev_kit:
-    case PrinterModel::ix:
+    case PrinterModel::xl:
         return false;
     case PrinterModel::_cnt:
         break;
