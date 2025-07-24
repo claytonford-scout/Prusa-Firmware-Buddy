@@ -555,10 +555,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 240: M240(); break;                                  // M240: Trigger a camera
       #endif
 
-      #if HAS_LCD_CONTRAST
-        case 250: M250(); break;                                  // M250: Set LCD contrast
-      #endif
-
       #if HAS_I2C_EXPANDER()
         case 260: M260(); break;                                  // M260: Send data to an i2c slave
         case 261: M261(); break;                                  // M261: Request data from an i2c slave
