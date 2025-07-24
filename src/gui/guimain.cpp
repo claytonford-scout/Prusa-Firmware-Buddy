@@ -38,7 +38,7 @@ void gui_error_run(void) {
     // gui_error_run executes before bootstrap so resources may not be up to date resulting in artefects
     display::enable_resource_file();
 
-    screen_node screen_initializer { ScreenFactory::Screen<screen_home_data_t> };
+    screen_node screen_initializer { ScreenFactory::Screen<ScreenError> };
     Screens::Init(screen_initializer);
 
     // Mark everything as displayed
