@@ -305,14 +305,14 @@
   #if PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI()
 
   // Apply weighted correction on each point based on it's location.
-  // The whole correction is then conversed from µm to mm. 
+  // The whole correction is then converted from µm to mm.
 
   float x_axis_correction(int x, int y) {
     int32_t left_correction_um{config_store().left_bed_correction.get()};
     int32_t right_correction_um{config_store().right_bed_correction.get()};
 
     int32_t x_len{GRID_MAX_POINTS_X-1};
-    
+
     return ( (left_correction_um*(x_len-x)) + (right_correction_um*(x)) ) / static_cast<float>(x_len);
   }
 
