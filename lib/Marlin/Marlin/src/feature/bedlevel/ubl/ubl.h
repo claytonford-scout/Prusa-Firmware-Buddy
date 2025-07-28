@@ -62,7 +62,6 @@ class unified_bed_leveling {
       static int  g29_grid_size;
     #endif
 
-    static int count_points_to_probe();
     static bool g29_parameter_parsing() __O0;
     static void shift_mesh_height();
     /**
