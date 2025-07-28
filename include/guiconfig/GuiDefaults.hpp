@@ -191,9 +191,8 @@ struct GuiDefaults {
     // New msgbox
     static constexpr uint8_t DefaultCornerRadius = 8;
 #if HAS_MINI_DISPLAY() || HAS_MOCK_DISPLAY()
-    static const constexpr Rect16 RedscreenTitleRect = Rect16(10, 24, GuiDefaults::ScreenWidth - 26, 20);
-    static const constexpr Rect16 RedscreenDescriptionRect = Rect16(10, 50, GuiDefaults::ScreenWidth - 20, 220);
-    static const constexpr Rect16 WarningDlgDescriptionRect = Rect16(6, 112, 228, 320 - 52);
+    static const constexpr Rect16 RedscreenTitleRect = Rect16(10, 24, GuiDefaults::ScreenWidth - 20, 20);
+    static const constexpr Rect16 RedscreenDescriptionRect = Rect16(10, 50, GuiDefaults::ScreenWidth - 20, 130);
     static const constexpr Rect16 MMUNoticeTitleRect = Rect16(0, 0, 0, 0); // Not used on MINI
     static const constexpr Rect16 MMUNoticeTextRect = Rect16(0, 0, 0, 0); // Not used on MINI
 
@@ -207,8 +206,7 @@ struct GuiDefaults {
     static constexpr uint16_t WarningDlgPadding = 6;
 #elif HAS_LARGE_DISPLAY()
     static const constexpr Rect16 RedscreenTitleRect = Rect16(30, 44, GuiDefaults::ScreenWidth - 60, 20);
-    static const constexpr Rect16 RedscreenDescriptionRect = Rect16(30, 85, 230, 170);
-    static const constexpr Rect16 WarningDlgDescriptionRect = Rect16(26, 182, 480 - 52, 282 - 26);
+    static const constexpr Rect16 RedscreenDescriptionRect = Rect16(30, 85, 290, 170);
     static const constexpr Rect16 MMUNoticeTitleRect = Rect16(86, 44, 374, 22);
     static const constexpr Rect16 MMUNoticeTextRect = Rect16(86, 72, 244, 140);
 
