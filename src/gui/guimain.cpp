@@ -1,6 +1,5 @@
 #include "DialogHandler.hpp"
 #include "display.hpp"
-#include "gui_bootstrap_screen.hpp"
 #include "gui_time.hpp"
 #include "gui.hpp"
 #include "Jogwheel.hpp"
@@ -133,7 +132,10 @@ void gui_run(void) {
     leds::LEDManager::instance().init();
 #endif
     // Show bootstrap screen untill firmware initializes
-    gui_bootstrap_screen_run();
+    TaskDeps::provide(TaskDeps::Dependency::gui_display_ready);
+    while (!TaskDeps::check(TaskDeps::Tasks::bootstrap_done)) {
+        gui_bare_loop();
+    }
 
     marlin_client::init();
 

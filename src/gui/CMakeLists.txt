@@ -17,7 +17,6 @@ target_sources(
           frame_calibration_common.cpp
           frame_qr_layout.cpp
           gcode_description.cpp
-          gui_bootstrap_screen.cpp
           gui_media_events.cpp
           gui_time.cpp
           guimain.cpp

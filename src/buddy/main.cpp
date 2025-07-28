@@ -66,7 +66,6 @@
 #include <version/version.hpp>
 #include "data_exchange.hpp"
 #include "bootloader/bootloader.hpp"
-#include "gui_bootstrap_screen.hpp"
 #include "resources/revision.hpp"
 #include <buddy/filesystem_semihosting.h>
 #include <freertos/timing.hpp>
@@ -175,25 +174,7 @@ static void manufacture_report_endless_loop() {
 // Return TRUE if bootloader was updated -> in this case we have to reset the system, because important data addresses could be moved
 static bool bootloader_update() {
     if (buddy::bootloader::needs_update()) {
-        buddy::bootloader::update(
-            [](int percent_done, buddy::bootloader::UpdateStage stage) {
-                const char *stage_description = nullptr;
-                switch (stage) {
-                case buddy::bootloader::UpdateStage::LookingForBbf:
-                    stage_description = "Looking for BBF...";
-                    break;
-                case buddy::bootloader::UpdateStage::PreparingUpdate:
-                case buddy::bootloader::UpdateStage::Updating:
-                    stage_description = "Updating bootloader";
-                    break;
-                default:
-                    bsod("unreachable");
-                }
-
-                if (gui_bootstrap_screen_set_state(percent_done, stage_description)) {
-                    log_info(Buddy, "Bootloader update progress %s (%i %%)", stage_description, percent_done);
-                }
-            });
+        buddy::bootloader::update();
         return true;
     }
     return false;
@@ -202,27 +183,7 @@ static bool bootloader_update() {
 
 static void resources_update() {
     if (!buddy::resources::has_resources(buddy::resources::revision::standard)) {
-        buddy::resources::bootstrap(
-            buddy::resources::revision::standard, [](int percent_done, buddy::resources::BootstrapStage stage) {
-                const char *stage_description = nullptr;
-                switch (stage) {
-                case buddy::resources::BootstrapStage::LookingForBbf:
-                    stage_description = "Looking for BBF...";
-                    break;
-                case buddy::resources::BootstrapStage::PreparingBootstrap:
-                    stage_description = "Preparing";
-                    break;
-                case buddy::resources::BootstrapStage::CopyingFiles:
-                    stage_description = "Installing";
-                    break;
-                default:
-                    bsod("unreachable");
-                }
-
-                if (gui_bootstrap_screen_set_state(percent_done, stage_description)) {
-                    log_info(Buddy, "Bootstrap progress %s (%i %%)", stage_description, percent_done);
-                }
-            });
+        buddy::resources::bootstrap(buddy::resources::revision::standard);
     }
     TaskDeps::provide(TaskDeps::Dependency::resources_ready);
 }
