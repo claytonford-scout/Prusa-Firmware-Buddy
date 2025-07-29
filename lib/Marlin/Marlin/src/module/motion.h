@@ -260,8 +260,6 @@ void sync_plan_position_e();
 void line_to_current_position(const feedRate_t &fr_mm_s=feedrate_mm_s);
 
 /// Plans (non-blocking) linear move to relative distance.
-/// It uses prepare_move_to_destination() for the planning which
-/// is suitable with UBL.
 void plan_move_by(const feedRate_t fr, const float dx, const float dy = 0, const float dz = 0, const float de = 0);
 
 enum class Segmented {
