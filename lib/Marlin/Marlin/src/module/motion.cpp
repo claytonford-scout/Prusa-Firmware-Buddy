@@ -544,33 +544,7 @@ void plan_move_by(const feedRate_t fr, const float dx, const float dy, const flo
  * Before exit, current_position is set to destination.
  */
 void prepare_move_to_destination(const PrepareMoveHints &hints) {
-  apply_motion_limits(destination);
-
-  #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
-
-    if (!DEBUGGING(DRYRUN)) {
-      if (destination.e != current_position.e) {
-        #if ENABLED(PREVENT_COLD_EXTRUSION)
-          if (thermalManager.tooColdToExtrude(active_extruder)) {
-            current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
-            SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
-          }
-        #endif // PREVENT_COLD_EXTRUSION
-        #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
-          const float e_delta = ABS(destination.e - current_position.e) * planner.e_factor[active_extruder];
-          if (e_delta > (EXTRUDE_MAXLENGTH)) {
-            current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
-            SERIAL_ECHO_MSG(MSG_ERR_LONG_EXTRUDE_STOP);
-          }
-        #endif // PREVENT_LENGTHY_EXTRUDE
-      }
-    }
-
-  #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
-
   prepare_move_to(destination, feedrate_mm_s, hints);
-
-  current_position = destination;
 }
 
 uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {
@@ -890,11 +864,37 @@ uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate
   return trigger_state;
 }
 
-void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHints hints) {
+void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hints) {
   static_assert(sizeof(PrepareMoveHints) <= 4, "Change the parameter to a reference");
+
+  if(hints.apply_motion_limits) {
+    apply_motion_limits(target);
+  }
 
   if (!position_is_reachable(target)) {
       return;
+  }
+
+  if(hints.extrusion_safety_checks) {
+    #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
+      if (!DEBUGGING(DRYRUN)) {
+        if (destination.e != current_position.e) {
+          #if ENABLED(PREVENT_COLD_EXTRUSION)
+            if (thermalManager.tooColdToExtrude(active_extruder)) {
+              current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
+              SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
+            }
+          #endif // PREVENT_COLD_EXTRUSION
+          #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
+            const float e_delta = ABS(destination.e - current_position.e) * planner.e_factor[active_extruder];
+            if (e_delta > (EXTRUDE_MAXLENGTH)) {
+              current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
+              SERIAL_ECHO_MSG(MSG_ERR_LONG_EXTRUDE_STOP);
+            }
+          #endif // PREVENT_LENGTHY_EXTRUDE
+        }
+      }
+    #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
   }
 
   if(hints.scale_feedrate) {
@@ -948,6 +948,8 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
     buffer_move(segment_pos);
   }
   buffer_move(target);
+
+  current_position = target;
 }
 
 /**

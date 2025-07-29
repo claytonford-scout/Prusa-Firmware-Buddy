@@ -58,6 +58,12 @@ struct PrepareMoveHints {
 
   /// Segment the move to be able to append correct leveling values
   bool do_segment : 1 = true;
+
+  /// Whether motion limits should be applied (not allowing moves outside of MIN/MAX coordinates)
+  bool apply_motion_limits : 1 = true;
+
+  /// Whether extrusion safety checks (PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE) should be applied
+  bool extrusion_safety_checks : 1 = true;
   
   MoveHints move = {}; 
 
@@ -356,7 +362,7 @@ void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const fe
 uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate_t fr_mm_s=0.0, bool can_move_back_before_homing = false, bool homing_z_with_probe = true);
 
 /// Prepares the move to the target. Can apply segmentation based on MBL and other mechanisms requirements.
-void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHints hints);
+void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hints);
 
 /**
  * Workspace offsets
