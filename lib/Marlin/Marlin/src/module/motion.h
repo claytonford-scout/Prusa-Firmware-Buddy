@@ -267,8 +267,6 @@ enum class Segmented {
     no,
 };
 
-void prepare_move_to_destination(const PrepareMoveHints &hints = {});
-
 void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s=0.0f, const PrepareMoveHints &hints = {});
 
 /// Plans (non-blocking) Z-Manhattan fast (non-linear) move to the specified location

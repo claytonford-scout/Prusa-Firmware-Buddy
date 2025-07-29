@@ -2936,11 +2936,10 @@ void lift_head() {
     static_assert(Z_NOZZLE_PARK_POINT > 0);
 
     if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
-        // Do prepare_move_to_destination, as it segments the move and thus allows better emergency_stop
-        AutoRestore _ar(feedrate_mm_s, MMM_TO_MMS(HOMING_FEEDRATE_INVERTED_Z));
+        // Do prepare_move_to, as it segments the move and thus allows better emergency_stop
         destination = current_position;
         destination.z += distance;
-        prepare_move_to_destination({});
+        prepare_move_to(destination, MMM_TO_MMS(HOMING_FEEDRATE_INVERTED_Z), {});
         planner.synchronize();
 
     } else {

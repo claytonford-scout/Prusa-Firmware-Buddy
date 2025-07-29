@@ -128,7 +128,7 @@ xyze_pos_t current_position = { X_HOME_POS, Y_HOME_POS, Z_HOME_POS };
 /**
  * Cartesian Destination
  *   The destination for a move, filled in by G-code movement commands,
- *   and expected by functions like 'prepare_move_to_destination'.
+ *   and expected by functions like 'prepare_move_to'.
  *   G-codes can set destination using 'get_destination_from_command'
  */
 xyze_pos_t destination; // {0}
@@ -289,9 +289,6 @@ void line_to_current_position(const feedRate_t &fr_mm_s/*=feedrate_mm_s*/) {
 }
 
 void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, const PrepareMoveHints & hints) {
-  const feedRate_t old_feedrate = feedrate_mm_s;
-  if (fr_mm_s) feedrate_mm_s = fr_mm_s;
-
   const uint16_t old_pct = feedrate_percentage;
   feedrate_percentage = 100;
 
@@ -300,9 +297,8 @@ void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, co
      planner.e_factor[active_extruder] = 1.0f;
   #endif
 
-  prepare_move_to_destination(hints);
+  prepare_move_to(destination, fr_mm_s ?: feedrate_mm_s, hints);
 
-  feedrate_mm_s = old_feedrate;
   feedrate_percentage = old_pct;
   #if EXTRUDERS
     planner.e_factor[active_extruder] = old_fac;
@@ -530,21 +526,6 @@ void plan_move_by(const feedRate_t fr, const float dx, const float dy, const flo
   target.z += dz;
   target.e += de;
   planner.buffer_segment(target, fr);
-}
-
-/**
- * Prepare a single move and get ready for the next one
- *
- * This may result in several calls to planner.buffer_line to
- * do smaller moves for mesh moves, etc.
- *
- * Make sure current_position.e and destination.e are good
- * before calling or cold/lengthy extrusion may get missed.
- *
- * Before exit, current_position is set to destination.
- */
-void prepare_move_to_destination(const PrepareMoveHints &hints) {
-  prepare_move_to(destination, feedrate_mm_s, hints);
 }
 
 uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {
