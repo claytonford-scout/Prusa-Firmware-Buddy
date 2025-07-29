@@ -28,6 +28,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             fsm_network_setup.cpp
             fsm_states.cpp
             general_response.cpp
+            hardware_rng.cpp
             hardware_serial.cpp
             heap.cpp
             homing_reporter.cpp
