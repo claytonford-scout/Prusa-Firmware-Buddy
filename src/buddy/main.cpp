@@ -622,7 +622,8 @@ void system_core_error_handler() {
 }
 
 void iwdg_warning_cb(void) {
-    crash_dump::save_message(crash_dump::MsgType::IWDGW, 0, nullptr, nullptr);
+    const auto &e = find_error(ErrCode::ERR_SYSTEM_INTERNAL_ERROR);
+    crash_dump::save_message(crash_dump::MsgType::IWDGW, static_cast<uint16_t>(e.err_code), nullptr, nullptr);
     trigger_crash_dump();
 }
 
