@@ -20,8 +20,8 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/str_utils.hpp ${CMAKE_SOURCE_DIR}/src/lang/string_view_utf8.cpp
   )
 target_include_directories(
-  str_utils_tests PUBLIC # ${CMAKE_SOURCE_DIR}/src/common
-                         ${CMAKE_SOURCE_DIR}/src
+  str_utils_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src
+                         ${CMAKE_SOURCE_DIR}/src/lang
   )
 
 add_executable(timing_tests timing_tests.cpp)
