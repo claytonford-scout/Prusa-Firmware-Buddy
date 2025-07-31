@@ -38,5 +38,9 @@ if(HAS_REMOTE_BED)
   add_subdirectory(remote_bed)
 endif()
 
+if(FILAMENT_SENSOR)
+  add_subdirectory(filament_sensor)
+endif()
+
 add_subdirectory(ramming)
 add_subdirectory(cork)

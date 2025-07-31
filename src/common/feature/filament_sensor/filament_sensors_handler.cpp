@@ -5,7 +5,7 @@
  * I would normally use inheritance, but last time i did that it was rewritten, so I am using this approach now.
  */
 
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "bsod.h"
 #include <tasks.hpp>
 #include <logging/log.hpp>

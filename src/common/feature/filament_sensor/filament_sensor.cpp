@@ -4,7 +4,7 @@
  * @date 2019-12-16
  */
 
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 #include "metric.h"
 
 void IFSensor::check_for_events() {

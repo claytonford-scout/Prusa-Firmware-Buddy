@@ -3,7 +3,7 @@
  * @brief this file contains code for filament sensor api with multi tool support
  */
 
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "filament_sensor_adc.hpp"
 #include "filament_sensor_adc_eval.hpp"
 #include "filters/median_filter.hpp"

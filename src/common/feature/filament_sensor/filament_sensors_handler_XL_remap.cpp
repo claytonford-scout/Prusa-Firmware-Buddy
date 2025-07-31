@@ -3,7 +3,7 @@
 #include <config_store/store_instance.hpp>
 #include <window_msgbox.hpp>
 #include <module/prusa/toolchanger.h>
-#include <filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 
 namespace side_fsensor_remap {
 

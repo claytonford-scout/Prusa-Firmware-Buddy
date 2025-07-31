@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 
 IFSensor *GetExtruderFSensor(uint8_t index);
 IFSensor *GetSideFSensor(uint8_t index);

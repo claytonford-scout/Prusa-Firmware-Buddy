@@ -1,6 +1,6 @@
 #pragma once
 
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 
 /// Side filament sensor for iX, mounted on the back door right before the spool.
 /// Uses ports formerly intended for touchscreen I2C.

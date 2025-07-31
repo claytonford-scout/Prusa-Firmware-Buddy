@@ -5,7 +5,7 @@
 #include <option/has_mmu2.h>
 #include <option/has_xbuddy_extension.h>
 
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <config_store/store_definition.hpp>
 
 #if FILAMENT_SENSOR_IS_ADC()

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 #include <app_metrics.h>
 
 struct metric_s;
