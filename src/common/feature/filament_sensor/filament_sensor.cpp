@@ -7,6 +7,10 @@
 #include <feature/filament_sensor/filament_sensor.hpp>
 #include "metric.h"
 
+IFSensor::IFSensor(FilamentSensorID id)
+    : id_(id) {
+}
+
 void IFSensor::check_for_events() {
     const auto previous_state = last_check_event_state_;
     last_check_event_state_ = state;

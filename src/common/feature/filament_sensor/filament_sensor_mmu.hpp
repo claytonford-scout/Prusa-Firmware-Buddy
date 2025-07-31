@@ -8,6 +8,11 @@
 #include <feature/filament_sensor/filament_sensor.hpp>
 
 class FSensorMMU : public IFSensor {
+
+public:
+    // Inherit constructor
+    using IFSensor::IFSensor;
+
 protected:
     virtual void cycle() override;
 };

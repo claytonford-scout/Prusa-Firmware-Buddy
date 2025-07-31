@@ -51,9 +51,8 @@ void FSensorADC::set_filtered_value_from_IRQ(Value filtered_value) {
     fs_filtered_value.store(filtered_value);
 }
 
-FSensorADC::FSensorADC(uint8_t tool_index, bool is_side_sensor)
-    : tool_index(tool_index)
-    , is_side(is_side_sensor) {
+FSensorADC::FSensorADC(FilamentSensorID id)
+    : IFSensor(id) {
     load_settings();
 }
 
@@ -73,6 +72,9 @@ void FSensorADC::CalibrateInserted(Value filtered_value) {
     if (filtered_value == FSensorADCEval::filtered_value_not_ready) {
         return;
     }
+
+    const bool is_side = (id_.position == FilamentSensorID::Position::side);
+    const uint8_t tool_index = id_.index;
 
     constexpr uint32_t extruder_fs_value_span {
 #if (BOARD_IS_XBUDDY() && defined LOVEBOARD_HAS_PT100)
@@ -111,6 +113,11 @@ void FSensorADC::CalibrateInserted(Value filtered_value) {
 }
 
 void FSensorADC::load_settings() {
+#if HAS_ADC_SIDE_FSENSOR()
+    const bool is_side = (id_.position == FilamentSensorID::Position::side);
+#endif
+    const uint8_t tool_index = id_.index;
+
     fs_ref_ins_value =
 #if HAS_ADC_SIDE_FSENSOR()
         is_side ? config_store().get_side_fs_ref_ins_value(tool_index) :
@@ -127,8 +134,11 @@ void FSensorADC::CalibrateNotInserted(Value value) {
     if (value == FSensorADCEval::filtered_value_not_ready) {
         return;
     }
+
+    const uint8_t tool_index = id_.index;
+
 #if HAS_ADC_SIDE_FSENSOR()
-    if (is_side) {
+    if ((id_.position == FilamentSensorID::Position::side)) {
         config_store().set_side_fs_ref_nins_value(tool_index, value);
     } else
 #endif
@@ -142,7 +152,10 @@ void FSensorADC::CalibrateNotInserted(Value value) {
 }
 
 void FSensorADC::invalidate_calibration() {
+    const uint8_t tool_index = id_.index;
+
 #if HAS_ADC_SIDE_FSENSOR()
+    const bool is_side = (id_.position == FilamentSensorID::Position::side);
     if (is_side) {
         config_store().set_side_fs_ref_ins_value(tool_index, FSensorADCEval::ref_value_not_calibrated);
         config_store().set_side_fs_ref_nins_value(tool_index, FSensorADCEval::ref_value_not_calibrated);
@@ -160,6 +173,9 @@ void FSensorADC::record_state() {
     if (!limit_record.check(ticks_ms())) {
         return;
     }
+
+    const uint8_t tool_index = id_.index;
+    const bool is_side = (id_.position == FilamentSensorID::Position::side);
 
     metric_record_custom(is_side ? &metric_side : &metric_extruder, ",n=%u st=%ui,f=%" PRId32 "i,r=%" PRId32 "i,ri=%" PRId32 "i",
         tool_index, static_cast<unsigned>(get_state()), fs_filtered_value.load(), fs_ref_nins_value, fs_ref_ins_value);

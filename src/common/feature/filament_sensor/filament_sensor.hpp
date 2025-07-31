@@ -13,6 +13,8 @@
 #include "filament_sensor_states.hpp"
 #include "hx717.hpp"
 
+#include "filament_sensor_id.hpp"
+
 class IFSensor {
     friend class FilamentSensors;
 
@@ -25,6 +27,12 @@ public:
         filament_inserted,
         filament_removed
     };
+
+    IFSensor(FilamentSensorID id);
+
+    inline FilamentSensorID id() const {
+        return id_;
+    }
 
     inline FilamentSensorState get_state() const { return state; }
 
@@ -54,9 +62,12 @@ public:
 
 protected:
     // Protected functions are only to be called from FilamentSensors to prevent race conditions
-
     std::atomic<FilamentSensorState> state = FilamentSensorState::Disabled;
 
+    /// Identification of the filament sensor
+    const FilamentSensorID id_;
+
+protected:
     /// Records metrics specific for the sensor
     virtual void record_state() {};
 

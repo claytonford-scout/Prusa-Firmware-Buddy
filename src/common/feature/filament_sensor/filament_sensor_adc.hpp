@@ -30,9 +30,6 @@ protected:
      */
     virtual Value GetFilteredValue() const override { return fs_filtered_value.load(); };
 
-    const uint8_t tool_index;
-    const bool is_side;
-
     CalibrateRequest req_calibrate { CalibrateRequest::NoCalibration };
     bool flg_invalid_calib { false };
 
@@ -51,7 +48,7 @@ protected:
     virtual void record_state() override;
 
 public:
-    FSensorADC(uint8_t tool_index, bool is_side_sensor);
+    FSensorADC(FilamentSensorID id);
 
     /**
      * @brief calibrate filament sensor and store it to eeprom
