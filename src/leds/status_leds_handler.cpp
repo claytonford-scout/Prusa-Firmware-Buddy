@@ -173,9 +173,9 @@ namespace {
 #endif
     constexpr EnumArray<StateAnimation, typename FrameAnimation<3>::Params, static_cast<int>(StateAnimation::_last) + 1> animations {
         { StateAnimation::Idle, { { 0, 0, 0 }, 1000, 0, 400, solid } },
-            { StateAnimation::Printing, { { 0, 150, 255 }, 1000, 0, 400, solid } },
+            { StateAnimation::Printing, { { 0, 255, 0 }, 1000, 0, 400, solid } },
             { StateAnimation::Aborting, { { 0, 0, 0 }, 1000, 0, 400, solid } },
-            { StateAnimation::Finishing, { { 0, 255, 0 }, 1000, 0, 400, solid } },
+            { StateAnimation::Finishing, { { 0, 0, 255 }, 500, 0, 250, pulsing } },
             { StateAnimation::Warning, { { 255, 255, 0 }, 1000, 0, 1000, pulsing } },
             { StateAnimation::PowerPanic, { { 0, 0, 0 }, 1000, 0, 400, solid } },
             { StateAnimation::PowerUp, { { 0, 255, 0 }, 1500, 0, 1500, pulsing } },
