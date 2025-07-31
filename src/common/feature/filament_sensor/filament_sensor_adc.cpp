@@ -45,7 +45,7 @@ void FSensorADC::cycle() {
     }
 }
 
-void FSensorADC::set_filtered_value_from_IRQ(int32_t filtered_value) {
+void FSensorADC::set_filtered_value_from_IRQ(Value filtered_value) {
     fs_filtered_value.store(filtered_value);
 }
 
@@ -81,7 +81,7 @@ void FSensorADC::SetInvalidateCalibrationFlag() {
     flg_invalid_calib = true;
 }
 
-void FSensorADC::CalibrateInserted(int32_t filtered_value) {
+void FSensorADC::CalibrateInserted(Value filtered_value) {
     if (filtered_value == FSensorADCEval::filtered_value_not_ready) {
         return;
     }
@@ -121,7 +121,7 @@ void FSensorADC::load_settings() {
                 config_store().get_extruder_fs_ref_nins_value(tool_index);
 }
 
-void FSensorADC::CalibrateNotInserted(int32_t value) {
+void FSensorADC::CalibrateNotInserted(Value value) {
     if (value == FSensorADCEval::filtered_value_not_ready) {
         return;
     }
