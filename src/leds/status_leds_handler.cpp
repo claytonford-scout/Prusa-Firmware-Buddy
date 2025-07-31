@@ -24,6 +24,8 @@ static StateAnimation marlin_to_anim_state() {
         case PhasesLoadUnload::Ramming_unstoppable:
         case PhasesLoadUnload::Unloading_stoppable:
         case PhasesLoadUnload::Unloading_unstoppable:
+        case PhasesLoadUnload::Ejecting_stoppable:
+        case PhasesLoadUnload::Ejecting_unstoppable:
             return StateAnimation::Unloading;
         // Filament in removal
         case PhasesLoadUnload::UnloadNozzleCleaning:
@@ -71,8 +73,6 @@ static StateAnimation marlin_to_anim_state() {
         case PhasesLoadUnload::MakeSureInserted_stoppable:
         case PhasesLoadUnload::MakeSureInserted_unstoppable:
         case PhasesLoadUnload::IsFilamentInGear:
-        case PhasesLoadUnload::Ejecting_stoppable:
-        case PhasesLoadUnload::Ejecting_unstoppable:
         case PhasesLoadUnload::IsColor:
         case PhasesLoadUnload::IsColorPurge:
         case PhasesLoadUnload::FilamentStuck:
