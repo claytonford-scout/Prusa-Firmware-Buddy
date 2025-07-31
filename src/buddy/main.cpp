@@ -221,7 +221,9 @@ extern "C" void main_cpp(void) {
 
 #if BOARD_IS_BUDDY() || BOARD_IS_XBUDDY()
     hw_tim1_init();
+    #if HAS_LOCAL_ACCELEROMETER()
     hw_tim9_init();
+    #endif
 #endif
 
 #if HAS_PHASE_STEPPING()
