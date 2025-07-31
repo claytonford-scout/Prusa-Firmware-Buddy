@@ -14,7 +14,7 @@ FilamentSensorState evaluate_state(int32_t filtered_value, int32_t fs_ref_nins_v
     };
 
     // filtered value is out of sensible bounds
-    if (filtered_value < lower_limit || filtered_value > upper_limit) {
+    if (!within_limits(filtered_value)) {
         return FilamentSensorState::NotConnected;
     }
 

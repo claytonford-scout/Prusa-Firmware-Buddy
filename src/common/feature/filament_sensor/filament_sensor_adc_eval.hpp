@@ -23,6 +23,10 @@ static constexpr int32_t upper_limit =
     2'000'000;
 #endif
 
+inline bool within_limits(int32_t value) {
+    return value >= lower_limit && value <= upper_limit;
+}
+
 /**
  * @brief Evaluate state of filament sensor
  * @param filtered_value current filtered value from ADC
