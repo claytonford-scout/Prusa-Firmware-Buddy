@@ -29,7 +29,7 @@
 #endif
 
 #include "Marlin/src/feature/pause.h"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "safety_timer_stubbed.hpp"
 #include "marlin_server.hpp"
 #include "fs_event_autolock.hpp"

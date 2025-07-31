@@ -8,8 +8,8 @@
 #include "WindowItemFanLabel.hpp"
 #include "config.h"
 #include <buddy/door_sensor.hpp>
-#include <common/filament_sensor.hpp>
-#include <common/filament_sensor_states.hpp>
+#include <feature/filament_sensor/filament_sensor.hpp>
+#include <feature/filament_sensor/filament_sensor_states.hpp>
 #include <utility_extensions.hpp>
 #include <option/has_door_sensor.h>
 #include <option/has_dwarf.h>

@@ -49,8 +49,8 @@
 #if BOARD_IS_XLBUDDY()
     #include <puppies/Dwarf.hpp>
     #include <Marlin/src/module/prusa/toolchanger.h>
-    #include <filament_sensors_handler.hpp>
-    #include <filament_sensors_handler_XL_remap.hpp>
+    #include <feature/filament_sensor/filament_sensors_handler.hpp>
+    #include <feature/filament_sensor/filament_sensors_handler_XL_remap.hpp>
 #endif
 
 #include <option/has_loadcell.h>

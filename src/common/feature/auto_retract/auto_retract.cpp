@@ -5,7 +5,7 @@
 #include <feature/ramming/standard_ramming_sequence.hpp>
 #include <module/planner.h>
 #include <raii/auto_restore.hpp>
-#include <filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <logging/log.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
 #include <marlin_server.hpp>

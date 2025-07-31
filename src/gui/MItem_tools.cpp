@@ -12,9 +12,9 @@
 #include "i18n.h"
 #include "ScreenHandler.hpp"
 #include "bsod.h"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "liveadjust_z.hpp"
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 #include <buddy/main.h>
 #include "Pin.hpp"
 #include "hwio_pindef.h"

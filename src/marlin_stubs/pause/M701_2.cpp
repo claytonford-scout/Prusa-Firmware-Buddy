@@ -18,7 +18,7 @@
 #include <atomic>
 #include <functional> // std::invoke
 #include <cmath>
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "M70X.hpp"
 #include <config_store/store_instance.hpp>
 #include <filament_to_load.hpp>
