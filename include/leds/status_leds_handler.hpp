@@ -10,8 +10,8 @@ namespace leds {
 enum class StateAnimation : uint8_t {
     Idle,
     Printing,
-    Aborting,
     Finishing,
+    Aborting,
     Warning,
     PowerPanic,
     PowerUp,
