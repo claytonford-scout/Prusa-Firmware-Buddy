@@ -16,6 +16,7 @@ enum class StateAnimation : uint8_t {
     PowerPanic,
     PowerUp,
 #if PRINTER_IS_PRUSA_iX()
+    WaitingForPrinter,
     Unloading,
     WaitingForFilamentRemoval,
     FilamentRemoved,

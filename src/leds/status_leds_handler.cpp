@@ -55,13 +55,14 @@ static StateAnimation marlin_to_anim_state() {
 
         case PhasesLoadUnload::WaitingTemp_stoppable:
         case PhasesLoadUnload::WaitingTemp_unstoppable:
-            return StateAnimation::Idle;
+        case PhasesLoadUnload::Parking_stoppable:
+        case PhasesLoadUnload::Parking_unstoppable:
+        case PhasesLoadUnload::Unparking:
+            return StateAnimation::WaitingForPrinter;
 
         // Other phases, let them be handled by the printer state in next switch
         case PhasesLoadUnload::initial:
         case PhasesLoadUnload::ChangingTool:
-        case PhasesLoadUnload::Parking_stoppable:
-        case PhasesLoadUnload::Parking_unstoppable:
         case PhasesLoadUnload::IsFilamentUnloaded:
         case PhasesLoadUnload::ManualUnload_continuable:
         case PhasesLoadUnload::ManualUnload_uncontinuable:
@@ -74,7 +75,6 @@ static StateAnimation marlin_to_anim_state() {
         case PhasesLoadUnload::Ejecting_unstoppable:
         case PhasesLoadUnload::IsColor:
         case PhasesLoadUnload::IsColorPurge:
-        case PhasesLoadUnload::Unparking:
         case PhasesLoadUnload::FilamentStuck:
         case PhasesLoadUnload::_cnt:
             break;
@@ -180,6 +180,7 @@ namespace {
             { StateAnimation::PowerPanic, { { 0, 0, 0 }, 1000, 0, 400, solid } },
             { StateAnimation::PowerUp, { { 0, 255, 0 }, 1500, 0, 1500, pulsing } },
 #if PRINTER_IS_PRUSA_iX()
+            { StateAnimation::WaitingForPrinter, { { 0, 0, 255 }, 500, 0, 250, alternating } },
             { StateAnimation::Unloading, { { 0, 0, 255 }, 500, 0, 0, pulsing_right } },
             { StateAnimation::WaitingForFilamentRemoval, { { 0, 0, 255 }, 500, 250, 0, running_left } },
             { StateAnimation::FilamentRemoved, { { 0, 0, 255 }, 500, 0, 0, pulsing_left } },
