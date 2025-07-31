@@ -14,6 +14,7 @@
 
 #include <config_store/store_instance.hpp>
 #include <option/has_adc_side_fsensor.h>
+#include <feature/filament_sensor/calibrator/filament_sensor_calibrator_adc.hpp>
 
 static_assert(std::is_same_v<FSensorADC::Value, FSensorADCEval::Value>);
 
@@ -179,4 +180,8 @@ void FSensorADC::record_state() {
 
     metric_record_custom(is_side ? &metric_side : &metric_extruder, ",n=%u st=%ui,f=%" PRId32 "i,r=%" PRId32 "i,ri=%" PRId32 "i",
         tool_index, static_cast<unsigned>(get_state()), fs_filtered_value.load(), fs_ref_nins_value, fs_ref_ins_value);
+}
+
+FilamentSensorCalibrator *FSensorADC::create_calibrator(FilamentSensorCalibrator::Storage &storage) {
+    return storage.emplace<FilamentSensorCalibratorADC>(*this);
 }

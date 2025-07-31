@@ -13,6 +13,7 @@
 struct metric_s;
 
 class FSensorADC final : public IFSensor {
+    friend class FilamentSensorCalibratorADC;
 
 public:
     using Value = int32_t;
@@ -49,6 +50,8 @@ protected:
 
 public:
     FSensorADC(FilamentSensorID id);
+
+    FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage) final;
 
     /**
      * @brief calibrate filament sensor and store it to eeprom

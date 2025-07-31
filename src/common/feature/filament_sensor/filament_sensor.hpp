@@ -14,6 +14,7 @@
 #include "hx717.hpp"
 
 #include "filament_sensor_id.hpp"
+#include <feature/filament_sensor/calibrator/filament_sensor_calibrator.hpp>
 
 class IFSensor {
     friend class FilamentSensors;
@@ -48,6 +49,10 @@ public:
      * @return dimensionless value specific to the inherited class
      */
     virtual int32_t GetFilteredValue() const { return 0; };
+
+    /// Instantiates a class within the \param storage that handles the sensor calibration
+    /// !!! Can return nullptr if the filament sensor cannot be checked in any way
+    virtual FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage);
 
     // interface methods for sensors with calibration
     // meant to use just flags to be thread safe
