@@ -59,7 +59,7 @@ void M1981() {
         case Result::failed:
             // Here I am a bit unsure.
             // Theoretically, we might want to end, but on the other side, the user requested selftest for all the tools, so I guess we should just execute it?
-            break;
+            return;
 
         case Result::aborted:
             // Things are clear here - the test has been aborted, so stop right there
