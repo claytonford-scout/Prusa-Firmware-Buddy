@@ -35,6 +35,7 @@ enum class ClientFSM : uint8_t {
     #if HAS_SELFTEST()
     Selftest,
     FansSelftest,
+    SelftestFSensors,
     #endif
     #if HAS_ESP()
     NetworkSetup,

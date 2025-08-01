@@ -9,6 +9,8 @@
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
 #endif
 
+#include "fsm/selftest_fsensors_phases.hpp"
+
 namespace ClientResponses {
 
 constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM::_count> fsm_phase_responses {
@@ -18,6 +20,7 @@ constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM:
 #if HAS_SELFTEST()
         { ClientFSM::Selftest, SelftestResponses },
         { ClientFSM::FansSelftest, FanSelftestResponses },
+        { ClientFSM::SelftestFSensors, selftest_fsensors_responses },
 #endif
 #if HAS_ESP()
         { ClientFSM::NetworkSetup, network_setup_responses },

@@ -149,6 +149,9 @@ void M1978(); //< Fan Selftest
 #if HAS_DOOR_SENSOR_CALIBRATION()
 void M1980(); //< Door sensor calibration
 #endif
+#if HAS_SELFTEST()
+void M1981(); //< Filament sensors selftest
+#endif
 
 void M9140(); //< Set normal (non-stealth) mode
 void M9141(); //< Get stealth mode status

@@ -245,6 +245,7 @@ DeviceState get_state(bool ready) {
 #if HAS_SELFTEST()
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
+    case ClientFSM::SelftestFSensors:
 #endif
 #if HAS_ESP()
     case ClientFSM::NetworkSetup:
@@ -462,6 +463,7 @@ StateWithDialog get_state_with_dialog(bool ready) {
 #if HAS_SELFTEST()
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
+    case ClientFSM::SelftestFSensors:
 #endif
 #if HAS_ESP()
     case ClientFSM::NetworkSetup:

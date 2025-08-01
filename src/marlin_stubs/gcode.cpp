@@ -306,6 +306,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M1980();
             break;
 #endif
+#if HAS_SELFTEST()
+        case 1981:
+            PrusaGcodeSuite::M1981();
+            break;
+#endif
         case 9140:
             PrusaGcodeSuite::M9140();
             break;

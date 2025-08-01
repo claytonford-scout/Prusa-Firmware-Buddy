@@ -1,3 +1,5 @@
+add_subdirectory(fsensor)
+
 target_include_directories(Marlin_Config INTERFACE include_${PRINTER})
 
 target_sources(
