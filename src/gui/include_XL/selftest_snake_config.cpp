@@ -133,13 +133,6 @@ uint64_t get_test_mask(Action action) {
         return stmHeaters_bed;
     case Action::NozzleHeaters:
         return stmHeaters_noz;
-    case Action::Gears:
-#if HAS_PRECISE_HOMING_COREXY()
-    case Action::PreciseHoming:
-#endif
-        bsod("This should be gcode");
-    case Action::FilamentSensorCalibration:
-        return stmFSensor;
     case Action::Loadcell:
         return stmLoadcell;
     case Action::ZAlign:
@@ -148,15 +141,20 @@ uint64_t get_test_mask(Action action) {
         return stmDocks;
     case Action::ToolOffsetsCalibration:
         return stmToolOffsets;
+
+    case Action::Gears:
+#if HAS_PRECISE_HOMING_COREXY()
+    case Action::PreciseHoming:
+#endif
+    case Action::FilamentSensorCalibration:
     case Action::Fans:
     case Action::PhaseSteppingCalibration:
-        bsod("get_test_mask");
-        break;
     case Action::_count:
-        break;
+        // Implemented as a gcode/invalid
+        bsod_unreachable();
     }
-    assert(false);
-    return stmNone;
+
+    bsod_unreachable();
 }
 
 void ask_config(Action action) {

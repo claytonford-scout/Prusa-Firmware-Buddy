@@ -19,6 +19,7 @@ enum class Action {
     XYCheck,
     ZCheck,
     Heaters,
+    FilamentSensorCalibration,
     FirstLayer,
     _count,
     _last = _count - 1,
@@ -77,6 +78,7 @@ inline constexpr MenuItemText blank_item_texts[] {
     { Action::XYCheck, N_("%d XY Axis Test") },
     { Action::ZCheck, N_("%d Z Axis Test") },
     { Action::Heaters, N_("%d Heater Test") },
+    { Action::FilamentSensorCalibration, N_("%d Filament Sensor Calibration") },
     { Action::FirstLayer, N_("%d First Layer Calibration") },
 };
 

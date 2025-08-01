@@ -154,6 +154,11 @@ void do_snake(Action action, Tool tool = Tool::_first) {
         case Action::Fans:
             marlin_client::gcode("M1978");
             break;
+
+        case Action::FilamentSensorCalibration:
+            marlin_client::gcode_printf("M1981 T%d", static_cast<int>(tool));
+            break;
+
 #if HAS_GEARBOX_ALIGNMENT()
         case Action::Gears:
             marlin_client::gcode_printf("M1979 T%d", static_cast<int>(tool));

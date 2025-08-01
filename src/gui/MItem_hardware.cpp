@@ -51,7 +51,7 @@ void MI_SIDE_FSENSOR_REMAP::OnChange([[maybe_unused]] size_t old_index) {
 
     #if HAS_SELFTEST()
         Validate(); // Do not redraw this switch yet
-        marlin_client::test_start_with_data(stmFSensor, static_cast<ToolMask>(mask)); // Start filament sensor calibration for moved tools
+        marlin_client::gcode_printf("M1981 F%i", (int)mask); // Start filament sensor calibration for moved tools
     #endif
 
     } else {
