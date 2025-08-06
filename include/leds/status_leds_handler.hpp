@@ -17,12 +17,12 @@ enum class StateAnimation : uint8_t {
     PowerUp,
 #if PRINTER_IS_PRUSA_iX()
     WaitingForPrinter,
+    WaitingForUser,
     Unloading,
     WaitingForFilamentRemoval,
     FilamentRemoved,
     Inserting,
     Loading,
-    WaitingForFilamentUserRetraction,
 #endif
     Error,
     _last = Error,

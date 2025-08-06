@@ -60,11 +60,9 @@ static StateAnimation marlin_to_anim_state() {
         case PhasesLoadUnload::Parking_stoppable:
         case PhasesLoadUnload::Parking_unstoppable:
         case PhasesLoadUnload::Unparking:
+        case PhasesLoadUnload::ChangingTool:
             return StateAnimation::WaitingForPrinter;
 
-        // Other phases, let them be handled by the printer state in next switch
-        case PhasesLoadUnload::initial:
-        case PhasesLoadUnload::ChangingTool:
         case PhasesLoadUnload::IsFilamentUnloaded:
         case PhasesLoadUnload::ManualUnload_continuable:
         case PhasesLoadUnload::ManualUnload_uncontinuable:
@@ -75,7 +73,13 @@ static StateAnimation marlin_to_anim_state() {
         case PhasesLoadUnload::IsFilamentInGear:
         case PhasesLoadUnload::IsColor:
         case PhasesLoadUnload::IsColorPurge:
+            return StateAnimation::WaitingForUser;
+
         case PhasesLoadUnload::FilamentStuck:
+            return StateAnimation::Warning;
+
+        // Other phases, let them be handled by the printer state in next switch
+        case PhasesLoadUnload::initial:
         case PhasesLoadUnload::_cnt:
             break;
         }
@@ -186,12 +190,12 @@ namespace {
             { StateAnimation::PowerUp, { { 0, 255, 0 }, 1500, 0, 1500, pulsing } },
 #if PRINTER_IS_PRUSA_iX()
             { StateAnimation::WaitingForPrinter, { { 0, 0, 255 }, 500, 0, 250, alternating } },
+            { StateAnimation::WaitingForUser, { { 0, 0, 255 }, 250, 0, 100, alternating } },
             { StateAnimation::Unloading, { { 0, 0, 255 }, 500, 0, 0, pulsing_right } },
             { StateAnimation::WaitingForFilamentRemoval, { { 0, 0, 255 }, 500, 250, 0, running_left } },
             { StateAnimation::FilamentRemoved, { { 0, 0, 255 }, 500, 0, 0, pulsing_left } },
             { StateAnimation::Inserting, { { 0, 0, 255 }, 500, 250, 0, running_right } },
             { StateAnimation::Loading, { { 0, 0, 255 }, 250, 0, 0, running_right } },
-            { StateAnimation::WaitingForFilamentUserRetraction, { { 0, 0, 255 }, 250, 0, 100, alternating } },
 #endif
             { StateAnimation::Error, { { 255, 0, 0 }, 500, 0, 500, pulsing } },
     };
