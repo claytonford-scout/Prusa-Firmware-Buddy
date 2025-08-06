@@ -54,17 +54,6 @@ public:
     /// !!! Can return nullptr if the filament sensor cannot be checked in any way
     virtual FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage);
 
-    // interface methods for sensors with calibration
-    // meant to use just flags to be thread safe
-    enum class CalibrateRequest {
-        CalibrateHasFilament,
-        CalibrateNoFilament,
-        NoCalibration,
-    };
-    virtual void SetCalibrateRequest(CalibrateRequest) {}
-    virtual bool IsCalibrationFinished() const { return true; }
-    virtual void SetInvalidateCalibrationFlag() {}
-
 protected:
     // Protected functions are only to be called from FilamentSensors to prevent race conditions
     std::atomic<FilamentSensorState> state = FilamentSensorState::Disabled;

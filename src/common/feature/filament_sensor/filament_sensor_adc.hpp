@@ -31,20 +31,7 @@ protected:
      */
     virtual Value GetFilteredValue() const override { return fs_filtered_value.load(); };
 
-    CalibrateRequest req_calibrate { CalibrateRequest::NoCalibration };
-    bool flg_invalid_calib { false };
-
     virtual void cycle() override;
-
-    /**
-     * @brief Calibrate reference value with filament NOT inserted
-     */
-    void CalibrateNotInserted(Value filtered_value);
-
-    /**
-     * @brief Calibrate reference value with filament inserted
-     */
-    void CalibrateInserted(Value filtered_value);
 
     virtual void record_state() override;
 
@@ -53,19 +40,9 @@ public:
 
     FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage) final;
 
-    /**
-     * @brief calibrate filament sensor and store it to eeprom
-     * thread safe, only sets flag --> !!! is not done instantly !!!
-     */
-    virtual void SetCalibrateRequest(CalibrateRequest) override;
-    virtual bool IsCalibrationFinished() const override;
-    virtual void SetInvalidateCalibrationFlag() override;
-
     void load_settings();
 
     void set_filtered_value_from_IRQ(Value filtered_value);
-
-    void invalidate_calibration();
 
 private:
     // Limit metrics recording for each tool
