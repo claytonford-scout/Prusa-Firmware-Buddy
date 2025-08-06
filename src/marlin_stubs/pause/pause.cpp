@@ -109,11 +109,11 @@ static void report_progress(Pause &pause, ProgressPercent progress) {
 }
 
 /// During its lifetime, automatically reports progress based on the current FSM state (thanks to ProgressMapper) and value of the specified marlin variable (hooks into marlin idle())
-class PauseFsmNotifier : public CallbackHookGuard<> {
+class PauseFsmNotifier : public Subscriber<> {
 
 public:
     PauseFsmNotifier(Pause &pause, float min, float max, const MarlinVariable<float> &var)
-        : CallbackHookGuard<>(marlin_server::idle_hook_point, [this, &var] {
+        : Subscriber<>(marlin_server::idle_publisher, [this, &var] {
             const auto progress = pause_.progress_mapper.update_progress(pause_.get_state(), to_normalized_progress(min_, max_, var.get()));
             report_progress(pause_, progress);
         })
@@ -127,11 +127,11 @@ private:
 };
 
 /// Same as PauseFSMNotifier, but ties the progress to elapsed time instead of marlin variable
-class PauseFsmDurationNotifier : public CallbackHookGuard<> {
+class PauseFsmDurationNotifier : public Subscriber<> {
 
 public:
     PauseFsmDurationNotifier(Pause &pause, uint32_t duration_ms)
-        : CallbackHookGuard<>(marlin_server::idle_hook_point, [this, duration_ms] {
+        : Subscriber<>(marlin_server::idle_publisher, [this, duration_ms] {
             const auto progress = pause_.progress_mapper.update_progress(pause_.get_state(), to_normalized_progress(0, duration_ms, ticks_ms() - start_ms_));
             report_progress(pause_, progress);
         })
@@ -144,11 +144,11 @@ private:
 };
 
 // TODO Removeme; only for parking moves, which are not part of the actual FSM, so they cannot use the ProgressMapper
-class PauseFsmExplicitProgressNotifier : public CallbackHookGuard<> {
+class PauseFsmExplicitProgressNotifier : public Subscriber<> {
 
 public:
     PauseFsmExplicitProgressNotifier(Pause &pause, float min, float max, ProgressPercent progress_min, ProgressPercent progress_max, const MarlinVariable<float> &var)
-        : CallbackHookGuard<>(marlin_server::idle_hook_point, [this, &var] {
+        : Subscriber<>(marlin_server::idle_publisher, [this, &var] {
             const auto progress = progress_span_.map(to_normalized_progress(min_, max_, var.get()));
             report_progress(pause_, progress);
         })
