@@ -31,6 +31,7 @@ static const constexpr Rect16 title_line_rect = GuiDefaults::EnableDialogBigLayo
 static const constexpr Rect16 fw_version_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(210, 250, 240, 20) : Rect16(10, 300, 220, 13);
 static const constexpr Rect16 scan_me_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(350, 190, 100, 20) : Rect16(160, 267, 70, 13);
 static const constexpr Rect16 debug_info_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 290, 420, 20) : Rect16(10, 285, 220, 13);
+static const constexpr Rect16 bsod_msg_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, GuiDefaults::RedscreenDescriptionRect.Top(), GuiDefaults::RedscreenDescriptionRect.Width(), 40) : Rect16(10, GuiDefaults::RedscreenDescriptionRect.Top(), GuiDefaults::RedscreenDescriptionRect.Width(), 26);
 
 static constexpr const char *const txt_error = N_("ERROR");
 static constexpr const char *const txt_help = N_("More details at");
@@ -46,6 +47,7 @@ ScreenError::ScreenError()
     , txt_helper(this, help_txt_rect, is_multiline::no, is_closed_on_click_t::no, _(txt_help))
     , txt_scan_me(this, scan_me_rect, is_multiline::no, is_closed_on_click_t::no, _(txt_scanme))
     , txt_debug_info(this, debug_info_rect, is_multiline::no)
+    , txt_bsod_msg(this, bsod_msg_rect, is_multiline::yes)
     , txt_help_link(this, link_rect, ErrCode::ERR_UNDEF)
     , qr(this, QR_rect, ErrCode::ERR_UNDEF)
     , title_line(this, title_line_rect) {
@@ -61,6 +63,7 @@ ScreenError::ScreenError()
     if constexpr (!GuiDefaults::EnableDialogBigLayout) {
         txt_err_desc.set_font(Font::small);
         txt_scan_me.set_font(Font::small);
+        txt_bsod_msg.set_font(Font::small);
     }
     txt_fw_version.set_font(Font::small);
     txt_help_link.set_font(Font::small);
@@ -121,8 +124,13 @@ ScreenError::ScreenError()
         case MsgType::BSOD: {
             StringBuilder sb(debug_info_buff);
             sb.append_printf("BSOD %s", err_title_buff.data());
-            StringBuilder sb2(err_title_buff);
-            sb2.append_string(internal_error.err_title);
+
+            auto rect = txt_err_desc.GetRect();
+            rect += Rect16::Top_t(bsod_msg_rect.Height());
+            rect -= Rect16::Height_t(bsod_msg_rect.Height());
+            txt_err_desc.SetRect(rect);
+            txt_bsod_msg.SetText(string_view_utf8::MakeRAM(err_msg_buff.data()));
+
         } break;
         case MsgType::STACK_OVF: {
             StringBuilder sb(debug_info_buff);
@@ -135,7 +143,7 @@ ScreenError::ScreenError()
             break;
         }
 
-        if (msg_type == MsgType::RSOD || msg_type == MsgType::FATAL_WARNING || msg_type == MsgType::BSOD) {
+        if (msg_type == MsgType::RSOD || msg_type == MsgType::FATAL_WARNING) {
             txt_err_title.SetText(_(err_title_buff.data()));
             txt_err_desc.SetText(_(err_msg_buff.data()));
         } else {
@@ -145,6 +153,9 @@ ScreenError::ScreenError()
         txt_debug_info.SetText(string_view_utf8::MakeRAM(debug_info_buff.data()));
     }
 
+    if (msg_type != MsgType::BSOD) {
+        txt_bsod_msg.Hide();
+    }
     if (msg_type != MsgType::RSOD) {
         // Set up Black error layout
         txt_debug_info.SetTextColor(COLOR_GRAY);

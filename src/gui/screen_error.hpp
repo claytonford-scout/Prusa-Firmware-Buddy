@@ -34,6 +34,7 @@ protected:
     window_text_t txt_helper;
     window_text_t txt_scan_me;
     window_text_t txt_debug_info;
+    window_text_t txt_bsod_msg;
 
     TextErrorUrlWindow txt_help_link;
     QRErrorUrlWindow qr;
