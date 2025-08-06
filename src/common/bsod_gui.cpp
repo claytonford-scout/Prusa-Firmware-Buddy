@@ -379,7 +379,7 @@ const char *get_hardfault_reason() {
     }
 }
 
-size_t get_task_name(char *&buffer, size_t buffer_size) {
+size_t get_task_name(char *buffer, size_t buffer_size) {
     crash_dump::CrashCatcherDumpParser parser;
 
     // Get task name from dump
