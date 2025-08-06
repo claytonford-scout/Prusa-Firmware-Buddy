@@ -90,7 +90,7 @@ ScreenError::ScreenError()
     auto msg_type = message_get_type();
     const auto &internal_error = find_error(ErrCode::ERR_SYSTEM_INTERNAL_ERROR);
 
-    // Red layout, code, title & msg from xflash, QR from error code
+    // Extract crash dump info
     if (!load_message(err_msg_buff.data(), MSG_MAX_LEN, err_title_buff.data(), MSG_TITLE_MAX_LEN)
         || error_code / 1000 != ERR_PRINTER_CODE) {
         // Fallback to default error message
@@ -100,6 +100,7 @@ ScreenError::ScreenError()
         txt_debug_info.Hide();
         msg_type = MsgType::EMPTY; // Extracting crash dump was not successful, show generic BSOD
     } else {
+        // Parse debug info & set error screen layout
         switch (msg_type) {
         case MsgType::RSOD:
             SetRedLayout();
@@ -116,20 +117,23 @@ ScreenError::ScreenError()
         case MsgType::BSOD: {
             StringBuilder sb(debug_info_buff);
             sb.append_printf("BSOD %s", err_title_buff.data());
+            StringBuilder sb2(err_title_buff);
+            sb2.append_string(internal_error.err_title);
         } break;
         case MsgType::STACK_OVF: {
             StringBuilder sb(debug_info_buff);
             sb.append_printf("STACK_OVF %s", err_title_buff.data());
         } break;
         case MsgType::FATAL_WARNING:
+            txt_debug_info.Hide();
+            break;
         case MsgType::EMPTY:
             break;
         }
 
-        if (msg_type == MsgType::RSOD || msg_type == MsgType::FATAL_WARNING) {
+        if (msg_type == MsgType::RSOD || msg_type == MsgType::FATAL_WARNING || msg_type == MsgType::BSOD) {
             txt_err_title.SetText(_(err_title_buff.data()));
             txt_err_desc.SetText(_(err_msg_buff.data()));
-            txt_debug_info.Hide();
         } else {
             txt_err_title.SetText(_(internal_error.err_title));
             txt_err_desc.SetText(_(internal_error.err_text));
@@ -138,6 +142,7 @@ ScreenError::ScreenError()
     }
 
     if (msg_type != MsgType::RSOD) {
+        // Set up Black error layout
         txt_debug_info.SetTextColor(COLOR_GRAY);
         txt_printer_code.SetTextColor(COLOR_GRAY);
         txt_fw_version.SetTextColor(COLOR_GRAY);
