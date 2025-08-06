@@ -31,10 +31,6 @@ if(PRINTER STREQUAL "MINI" OR PRINTER STREQUAL "MK3.5")
   target_sources(firmware PRIVATE selftest_firstlayer.cpp selftest_firstlayer_interface.cpp)
 endif()
 
-if(FILAMENT_SENSOR STREQUAL ADC)
-  target_sources(firmware PRIVATE selftest_fsensor.cpp selftest_fsensor_interface.cpp)
-endif()
-
 if(HAS_DWARF)
   target_sources(
     firmware PRIVATE selftest_dock.cpp selftest_dock_interface.cpp selftest_tool_offsets.cpp

@@ -274,19 +274,6 @@ enum class PhasesSelftest : PhaseUnderlyingType {
     _first_Loadcell = Loadcell_prepare,
     _last_Loadcell = Loadcell_fail,
 
-    FSensor_ask_unload,
-    FSensor_wait_tool_pick,
-    FSensor_unload_confirm,
-    FSensor_calibrate,
-    FSensor_insertion_wait,
-    FSensor_insertion_ok,
-    FSensor_insertion_calibrate,
-    Fsensor_enforce_remove,
-    FSensor_done,
-    FSensor_fail,
-    _first_FSensor = FSensor_ask_unload,
-    _last_FSensor = FSensor_fail,
-
     CalibZ,
     _first_CalibZ = CalibZ,
     _last_CalibZ = CalibZ,
@@ -823,17 +810,6 @@ inline constexpr EnumArray<PhasesSelftest, PhaseResponses, CountPhases<PhasesSel
     { PhasesSelftest::Loadcell_user_tap_ok, {} },
     { PhasesSelftest::Loadcell_fail, {} },
 
-    { PhasesSelftest::FSensor_ask_unload, { Response::Continue, Response::Unload, Response::Abort } },
-    { PhasesSelftest::FSensor_wait_tool_pick, {} },
-    { PhasesSelftest::FSensor_unload_confirm, { Response::Yes, Response::No } },
-    { PhasesSelftest::FSensor_calibrate, {} },
-    { PhasesSelftest::FSensor_insertion_wait, { Response::Abort_invalidate_test } },
-    { PhasesSelftest::FSensor_insertion_ok, { Response::Continue, Response::Abort_invalidate_test } },
-    { PhasesSelftest::FSensor_insertion_calibrate, { Response::Abort_invalidate_test } },
-    { PhasesSelftest::Fsensor_enforce_remove, { Response::Abort_invalidate_test } },
-    { PhasesSelftest::FSensor_done, {} },
-    { PhasesSelftest::FSensor_fail, {} },
-
     { PhasesSelftest::CalibZ, {} },
 
     { PhasesSelftest::Axis, {} },
@@ -1162,9 +1138,6 @@ enum class SelftestParts {
     #endif
     CalibZ,
     Heaters,
-    #if FILAMENT_SENSOR_IS_ADC()
-    FSensor,
-    #endif
     FirstLayer,
     FirstLayerQuestions,
     #if HAS_TOOLCHANGER()
@@ -1183,10 +1156,6 @@ inline constexpr PhasesSelftest SelftestGetFirstPhaseFromPart(SelftestParts part
     #if HAS_LOADCELL()
     case SelftestParts::Loadcell:
         return PhasesSelftest::_first_Loadcell;
-    #endif
-    #if FILAMENT_SENSOR_IS_ADC()
-    case SelftestParts::FSensor:
-        return PhasesSelftest::_first_FSensor;
     #endif
     case SelftestParts::CalibZ:
         return PhasesSelftest::_first_CalibZ;
@@ -1218,10 +1187,6 @@ inline constexpr PhasesSelftest SelftestGetLastPhaseFromPart(SelftestParts part)
     #if HAS_LOADCELL()
     case SelftestParts::Loadcell:
         return PhasesSelftest::_last_Loadcell;
-    #endif
-    #if FILAMENT_SENSOR_IS_ADC()
-    case SelftestParts::FSensor:
-        return PhasesSelftest::_last_FSensor;
     #endif
     case SelftestParts::CalibZ:
         return PhasesSelftest::_last_CalibZ;
@@ -1265,11 +1230,6 @@ inline constexpr SelftestParts SelftestGetPartFromPhase(PhasesSelftest ph) {
     }
     #endif
 
-    #if FILAMENT_SENSOR_IS_ADC()
-    if (SelftestPartContainsPhase(SelftestParts::FSensor, ph)) {
-        return SelftestParts::FSensor;
-    }
-    #endif
     if (SelftestPartContainsPhase(SelftestParts::Axis, ph)) {
         return SelftestParts::Axis;
     }

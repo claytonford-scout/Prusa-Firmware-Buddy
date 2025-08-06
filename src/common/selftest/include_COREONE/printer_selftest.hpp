@@ -17,8 +17,6 @@ enum SelftestState_t : uint8_t {
     stsHeaters_bed_ena,
     stsHeaters,
     stsWait_heaters,
-    stsFSensor_calibration,
-    stsFSensor_flip_mmu_at_the_end,
     stsSelftestStop,
     stsFinish,
     stsFinished,
@@ -43,8 +41,6 @@ enum SelftestMask_t : uint32_t {
     stmHeaters_bed = to_one_hot(stsHeaters) | to_one_hot(stsHeaters_bed_ena),
     stmHeaters = stmHeaters_bed | stmHeaters_noz,
     stmWait_heaters = to_one_hot(stsWait_heaters),
-    stmFSensor = to_one_hot(stsFSensor_calibration),
-    stmFSensor_flip_mmu_at_the_end = to_one_hot(stsFSensor_calibration) | to_one_hot(stsFSensor_flip_mmu_at_the_end),
     stmSelftestStart = to_one_hot(stsSelftestStart),
     stmSelftestStop = to_one_hot(stsSelftestStop),
 };
