@@ -29,7 +29,7 @@ static const constexpr Rect16 printer_code_rect = GuiDefaults::EnableDialogBigLa
 static const constexpr Rect16 help_txt_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 250, 170, 20) : Rect16(10, 210, 160, 13);
 static const constexpr Rect16 title_line_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 70, 420, 1) : Rect16(10, 44, 220, 1);
 static const constexpr Rect16 fw_version_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(210, 250, 240, 20) : Rect16(10, 300, 220, 13);
-static const constexpr Rect16 scan_me_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(350, 190, 100, 20) : Rect16(150, 260, 80, 20);
+static const constexpr Rect16 scan_me_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(350, 190, 100, 20) : Rect16(160, 267, 70, 13);
 static const constexpr Rect16 debug_info_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 290, 420, 20) : Rect16(10, 285, 220, 13);
 
 static constexpr const char *const txt_error = N_("ERROR");
@@ -58,13 +58,17 @@ ScreenError::ScreenError()
     Sound_Stop();
     Sound_Play(eSOUND_TYPE::CriticalAlert);
 
+    if constexpr (!GuiDefaults::EnableDialogBigLayout) {
+        txt_err_desc.set_font(Font::small);
+        txt_scan_me.set_font(Font::small);
+    }
     txt_fw_version.set_font(Font::small);
     txt_help_link.set_font(Font::small);
     txt_printer_code.set_font(Font::small);
     txt_helper.set_font(Font::small);
     txt_debug_info.set_font(Font::small);
     qr.SetAlignment(Align_t::Right());
-    txt_scan_me.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Center() : Align_t::Right());
+    txt_scan_me.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Center() : Align_t::Center());
     txt_fw_version.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Right() : Align_t::Left());
     txt_printer_code.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Right() : Align_t::Left());
     txt_debug_info.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Right() : Align_t::Left());
