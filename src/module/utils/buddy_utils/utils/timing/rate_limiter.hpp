@@ -2,9 +2,11 @@
 #pragma once
 
 #include <algorithm>
+#include <type_traits>
+#include <limits>
 
 /// Utility class for making sure that something is not run too often
-template <typename T>
+template <typename T, T max_value = std::numeric_limits<T>::max()>
 class RateLimiter {
 
 public:
@@ -19,7 +21,15 @@ public:
 
     /// \returns true if we can perform an action (and also marks the current time as the last event)
     [[nodiscard]] bool check(T now) {
-        if (static_cast<T>(now - last_event_) < min_delay_ && last_event_ != 0) {
+        T diff = 0;
+
+        if (std::is_signed_v<T> && now < last_event_) {
+            diff = max_value - last_event_ + now;
+        } else {
+            diff = static_cast<T>(now - last_event_);
+        }
+
+        if (diff < min_delay_ && last_event_ != 0) {
             return false;
         }
 
@@ -33,7 +43,15 @@ public:
             return 0;
         }
 
-        return min_delay_ - std::min<T>(now - last_event_, min_delay_);
+        T diff = 0;
+
+        if (std::is_signed_v<T> && now < last_event_) {
+            diff = max_value - last_event_ + now;
+        } else {
+            diff = static_cast<T>(now - last_event_);
+        }
+
+        return min_delay_ - std::min<T>(diff, min_delay_);
     }
 
 private:
