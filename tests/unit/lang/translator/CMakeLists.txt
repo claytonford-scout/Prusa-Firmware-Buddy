@@ -30,9 +30,7 @@ add_executable(
 
 add_dependencies(translator_tests translations_pofiles_dump)
 
-# target_link_libraries(translator_tests Buddy::Lang)
-
-target_link_libraries(translator_tests Buddy::Lang::Translations)
+target_link_libraries(translator_tests Buddy::Lang::Translations fmt)
 
 # define required search paths
 target_include_directories(
