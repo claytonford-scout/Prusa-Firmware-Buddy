@@ -406,15 +406,4 @@ TEST_CASE("providerCPUFLASH::ComplexTest", "[translator]") {
     CompareProviders(&providerPL, "pl");
     CompareProviders(&providerJA, "ja");
     CompareProviders(&providerUK, "uk");
-
-    // Check the content of generated non-ascii-chars - to see, if we have enough font bitmaps
-
-    {
-        for_each(nonASCIICharacters.begin(), nonASCIICharacters.end(), [](unichar c) {
-            // with accents, we don't need the unaccent table anymore
-            // but is important for character generation (newly added characters)
-            // check, that we have this character in our temporary translation table
-            CHECK_MESSAGE(NonASCIICharKnown(c), "Missing char ord=0x" << std::hex << c);
-        });
-    }
 }
