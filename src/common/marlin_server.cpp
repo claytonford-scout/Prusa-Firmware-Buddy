@@ -227,7 +227,7 @@ namespace {
         uint16_t flags; // server flags (MARLIN_SFLG)
         uint32_t knob_click_counter = 0; // Hold user knob clicks for safety timer
         uint32_t knob_move_counter = 0; // Holds user knob moves for safety timer
-
+        KnobMove last_knob_move = KnobMove::NoMove; // Last knob move direction (used for belt tuning)
 #if ENABLED(AXIS_MEASURE)
         /// length of axes measured after crash
         /// negative numbers represent undefined length
@@ -240,7 +240,6 @@ namespace {
         bool mmu_maintenance_checked = false;
 #endif
     };
-
     std::atomic<uint32_t> request_flags = 0;
     static_assert(std::to_underlying(RequestFlag::_cnt) <= 32, "There are more flags than bits");
 
@@ -3095,6 +3094,12 @@ extern uint32_t get_user_move_count(void) {
     return server.knob_move_counter;
 }
 
+extern KnobMove get_last_knob_move(void) {
+    KnobMove move = server.last_knob_move;
+    server.last_knob_move = KnobMove::NoMove; // reset after reading
+    return move;
+}
+
 //-----------------------------------------------------------------------------
 // private functions
 
@@ -3413,7 +3418,12 @@ static void process_request_flags() {
         case RequestFlag::PrintExit:
             print_exit();
             break;
-        case RequestFlag::KnobMove:
+        case RequestFlag::KnobMoveUp:
+            server.last_knob_move = KnobMove::Up;
+            server.knob_move_counter++;
+            break;
+        case RequestFlag::KnobMoveDown:
+            server.last_knob_move = KnobMove::Down;
             server.knob_move_counter++;
             break;
         case RequestFlag::KnobClick:
