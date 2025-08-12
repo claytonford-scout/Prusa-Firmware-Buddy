@@ -377,14 +377,14 @@ TEST_CASE("providerCPUFLASH::ComplexTest", "[translator]") {
     // prepare a map for comparison
     set<unichar> nonASCIICharacters;
     {
-        // explicitly add characters from language names
+        // explicitly check characters from language names
         // Čeština, Español, Français, Japanese, Ukrainian
         static const uint8_t na[] = "ČšñçニホンゴУкраїнсьмов";
         string_view_utf8 nas = string_view_utf8::MakeRAM(na);
         StringReaderUtf8 reader(nas);
         unichar c;
         while ((c = reader.getUtf8Char()) != 0) {
-            nonASCIICharacters.insert(c);
+            CHECK_MESSAGE(NonASCIICharKnown(c), "Missing char ord=0x" << std::hex << c);
         }
     }
     REQUIRE(CheckAllTheStrings(rawStringKeys, csStrings, providerCS, nonASCIICharacters, "cs"));
