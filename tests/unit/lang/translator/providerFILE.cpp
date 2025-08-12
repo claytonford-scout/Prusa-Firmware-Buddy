@@ -40,18 +40,6 @@ TEST_CASE("providerFILE::Translations test", "[translator]") {
     REQUIRE(stringKeys.size() <= jaStrings.size());
     REQUIRE(stringKeys.size() <= ukStrings.size());
 
-    set<unichar> nonASCIICharacters;
-    {
-        // explicitly add characters from language names
-        // Čeština, Español, Français, Japanese, Ukrainian
-        static const uint8_t na[] = "ČšñçニホンゴУкраїнсьмов";
-        string_view_utf8 nas = string_view_utf8::MakeRAM(na);
-        StringReaderUtf8 reader(nas);
-        unichar c;
-        while ((c = reader.getUtf8Char()) != 0) {
-            nonASCIICharacters.insert(c);
-        }
-    }
     REQUIRE(providerCS.EnsureFile());
     REQUIRE(providerDE.EnsureFile());
     REQUIRE(providerES.EnsureFile());
@@ -61,14 +49,14 @@ TEST_CASE("providerFILE::Translations test", "[translator]") {
     REQUIRE(providerJA.EnsureFile());
     REQUIRE(providerUK.EnsureFile());
 
-    REQUIRE(CheckAllTheStrings(stringKeys, csStrings, providerCS, nonASCIICharacters, "cs"));
-    REQUIRE(CheckAllTheStrings(stringKeys, deStrings, providerDE, nonASCIICharacters, "de"));
-    REQUIRE(CheckAllTheStrings(stringKeys, esStrings, providerES, nonASCIICharacters, "es"));
-    REQUIRE(CheckAllTheStrings(stringKeys, frStrings, providerFR, nonASCIICharacters, "fr"));
-    REQUIRE(CheckAllTheStrings(stringKeys, itStrings, providerIT, nonASCIICharacters, "it"));
-    REQUIRE(CheckAllTheStrings(stringKeys, plStrings, providerPL, nonASCIICharacters, "pl"));
-    REQUIRE(CheckAllTheStrings(stringKeys, jaStrings, providerJA, nonASCIICharacters, "ja"));
-    REQUIRE(CheckAllTheStrings(stringKeys, ukStrings, providerUK, nonASCIICharacters, "uk"));
+    REQUIRE(CheckAllTheStrings(stringKeys, csStrings, providerCS, "cs"));
+    REQUIRE(CheckAllTheStrings(stringKeys, deStrings, providerDE, "de"));
+    REQUIRE(CheckAllTheStrings(stringKeys, esStrings, providerES, "es"));
+    REQUIRE(CheckAllTheStrings(stringKeys, frStrings, providerFR, "fr"));
+    REQUIRE(CheckAllTheStrings(stringKeys, itStrings, providerIT, "it"));
+    REQUIRE(CheckAllTheStrings(stringKeys, plStrings, providerPL, "pl"));
+    REQUIRE(CheckAllTheStrings(stringKeys, jaStrings, providerJA, "ja"));
+    REQUIRE(CheckAllTheStrings(stringKeys, ukStrings, providerUK, "uk"));
 
     CAPTURE(stringKeys.size());
 }
@@ -84,7 +72,6 @@ TEST_CASE("providerFILE::bad files test", "[translator]") {
     REQUIRE(!badMagic.EnsureFile());
     REQUIRE(!bigEnd.EnsureFile());
     static const char *key = "Language";
-    set<unichar> chars;
     // the file is short and should return key string
-    REQUIRE(CompareStringViews(shortFile.GetText(key), string_view_utf8::MakeRAM(key), chars, "ts"));
+    REQUIRE(CompareStringViews(shortFile.GetText(key), string_view_utf8::MakeRAM(key), "ts"));
 }

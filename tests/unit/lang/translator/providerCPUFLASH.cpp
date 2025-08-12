@@ -374,8 +374,6 @@ TEST_CASE("providerCPUFLASH::ComplexTest", "[translator]") {
     FillStringTable<StringTableJATest>(jaStrings);
     FillStringTable<StringTableUKTest>(ukStrings);
 
-    // prepare a map for comparison
-    set<unichar> nonASCIICharacters;
     {
         // explicitly check characters from language names
         // Čeština, Español, Français, Japanese, Ukrainian
@@ -387,14 +385,14 @@ TEST_CASE("providerCPUFLASH::ComplexTest", "[translator]") {
             CHECK_MESSAGE(NonASCIICharKnown(c), "Missing char ord=0x" << std::hex << c);
         }
     }
-    REQUIRE(CheckAllTheStrings(rawStringKeys, csStrings, providerCS, nonASCIICharacters, "cs"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, deStrings, providerDE, nonASCIICharacters, "de"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, esStrings, providerES, nonASCIICharacters, "es"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, frStrings, providerFR, nonASCIICharacters, "fr"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, itStrings, providerIT, nonASCIICharacters, "it"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, plStrings, providerPL, nonASCIICharacters, "pl"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, jaStrings, providerJA, nonASCIICharacters, "ja"));
-    REQUIRE(CheckAllTheStrings(rawStringKeys, ukStrings, providerUK, nonASCIICharacters, "uk"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, csStrings, providerCS, "cs"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, deStrings, providerDE, "de"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, esStrings, providerES, "es"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, frStrings, providerFR, "fr"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, itStrings, providerIT, "it"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, plStrings, providerPL, "pl"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, jaStrings, providerJA, "ja"));
+    REQUIRE(CheckAllTheStrings(rawStringKeys, ukStrings, providerUK, "uk"));
 
     CompareHashTables();
 
