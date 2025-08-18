@@ -1125,8 +1125,8 @@
 
     #define DETECT_PRINT_SHEET
     #if ENABLED(DETECT_PRINT_SHEET)
-        #define DETECT_PRINT_SHEET_X_POINT (245)
-        #define DETECT_PRINT_SHEET_Y_POINT (0)
+        #define DETECT_PRINT_SHEET_X_POINT (220)
+        #define DETECT_PRINT_SHEET_Y_POINT (-7)
         #define DETECT_PRINT_SHEET_Z_POINT (-1)
         #define DETECT_PRINT_SHEET_Z_AFTER_FAILURE (100)
     #endif
