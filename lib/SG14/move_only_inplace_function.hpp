@@ -32,7 +32,7 @@
  
  #ifndef SG14_INPLACE_FUNCTION_THROW
     #include <bsod/bsod.h>
-    #define SG14_INPLACE_FUNCTION_THROW(x) bsod("%s", (x).what())
+    #define SG14_INPLACE_FUNCTION_THROW(x) bsod(#x)
  #endif
  
  namespace stdext {

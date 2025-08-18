@@ -40,7 +40,7 @@
 
 #ifndef SG14_INPLACE_VECTOR_THROW
     #include <bsod/bsod.h>
-    #define SG14_INPLACE_VECTOR_THROW(x) bsod("%s", (x).what())
+    #define SG14_INPLACE_VECTOR_THROW(x) bsod(#x)
 #endif
 
 #ifndef SG14_INPLACE_VECTOR_TRIVIALLY_RELOCATABLE_IF
