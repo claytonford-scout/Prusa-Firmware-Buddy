@@ -3,6 +3,8 @@
 
 #include <inplace_function.hpp>
 
+#include <utils/uncopyable.hpp>
+
 template <typename... Args>
 class Subscriber;
 
@@ -10,7 +12,7 @@ class Subscriber;
 /// Represented as a linked list
 /// !!! Not thread-safe
 template <typename... Args>
-class Publisher {
+class Publisher : Uncopyable {
 
 public:
     using Item = Subscriber<Args...>;
@@ -49,7 +51,7 @@ private:
 /// The hook gets removed when the function is destroyed
 /// !!! Not thread safe
 template <typename... Args>
-class Subscriber {
+class Subscriber : Uncopyable {
     friend class Publisher<Args...>;
 
 public:
