@@ -266,7 +266,6 @@
 #define TEMP_SENSOR_CHAMBER 2000 // TODO: Unknown thermistor, set properly
 
 #define TEMP_SENSOR_HEATBREAK 5
-#define HEATER_CHAMBER_PIN -1 // On/off pin for enclosure heating system
 #define TEMP_SENSOR_BOARD 2000
 
 

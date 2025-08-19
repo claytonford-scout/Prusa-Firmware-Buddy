@@ -246,7 +246,6 @@
 
 #define TEMP_SENSOR_BOARD 2000
 #define TEMP_SENSOR_CHAMBER 0
-#define HEATER_CHAMBER_PIN -1 // On/off pin for enclosure heating system
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
 #define DUMMY_THERMISTOR_998_VALUE 25
