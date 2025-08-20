@@ -32,4 +32,6 @@ bool is_loader_buffering();
  */
 bool execute();
 
+void reset();
+
 } // namespace nozzle_cleaner

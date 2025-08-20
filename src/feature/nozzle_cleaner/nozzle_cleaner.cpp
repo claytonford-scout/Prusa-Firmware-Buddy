@@ -1,5 +1,6 @@
 #include "nozzle_cleaner.hpp"
 #include "Marlin/src/gcode/gcode.h"
+#include "raii/scope_guard.hpp"
 
 namespace nozzle_cleaner {
 
@@ -95,16 +96,21 @@ bool execute() {
     }
 
     auto loader_result = nozzle_cleaner_gcode_loader_instance().get_result();
+    ScopeGuard resetLoader = [&] { // Ensure the loader is always reset (the exception is if we are buffering or not idle, which is handled above)
+        reset();
+    };
 
     // this means the gcode was loaded successfully -> ready to execute it
     if (loader_result.has_value()) {
         GcodeSuite::process_subcommands_now(loader_result.value());
-        nozzle_cleaner_gcode_loader_instance().reset();
         return true;
     } else { // Here we have an error so we finished unsuccessfully and need to reset the loader for the next use
-        nozzle_cleaner_gcode_loader_instance().reset();
         return false;
     }
+}
+
+void reset() {
+    nozzle_cleaner_gcode_loader_instance().reset();
 }
 
 } // namespace nozzle_cleaner
