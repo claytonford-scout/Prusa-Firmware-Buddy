@@ -776,14 +776,10 @@ define_boolean_option(DEBUG_WITH_BEEPS ${DEBUG_WITH_BEEPS})
 #
 # Eventually, this'll become the only used and supported way to talk to Connect. At that point, both
 # this option and the "old" code will be removed.
-#
-# MINI + JA ran out of FLASH so we sacrifice websockets. This will be hopefully fixed in next
-# version.
-if(PRINTER STREQUAL "MINI" AND TRANSLATIONS_LIST STREQUAL "ja")
-  set(WEBSOCKET NO)
-else()
-  set(WEBSOCKET YES)
-endif()
+set(WEBSOCKET
+    "OFF"
+    CACHE BOOL "Use websocket to talk to connect. In development"
+    )
 define_boolean_option(WEBSOCKET ${WEBSOCKET})
 
 set(MDNS
