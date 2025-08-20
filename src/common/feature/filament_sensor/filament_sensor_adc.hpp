@@ -69,9 +69,5 @@ public:
 
 private:
     // Limit metrics recording for each tool
-    RateLimiter<uint32_t> limit_record;
-
-    uint32_t value_span = 0;
-
-    static constexpr float fs_selftest_span_multipler { 1.2 };
+    RateLimiter<uint32_t> limit_record { 49 /*ms*/ };
 };
