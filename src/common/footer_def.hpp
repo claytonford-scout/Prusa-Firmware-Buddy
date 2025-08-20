@@ -100,10 +100,8 @@ inline constexpr std::array item_list {
         Item::chamber_temp,
 #endif
 
-    // Filament sensors
-#if _DEBUG
+        // Filament sensors
         Item::f_s_value,
-#endif
         Item::f_sensor,
         Item::speed,
 #if HAS_SIDE_FSENSOR()
