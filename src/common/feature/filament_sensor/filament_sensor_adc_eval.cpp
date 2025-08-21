@@ -4,12 +4,12 @@
 
 namespace FSensorADCEval {
 
-FilamentSensorState evaluate_state(int32_t filtered_value, int32_t fs_ref_nins_value, int32_t fs_ref_ins_value, FilamentSensorState previous_state, int32_t value_span_hack) {
+FilamentSensorState evaluate_state(Value filtered_value, Value fs_ref_nins_value, Value fs_ref_ins_value, FilamentSensorState previous_state, Value value_span_hack) {
     if (filtered_value == filtered_value_not_ready) {
         return FilamentSensorState::NotInitialized;
     }
 
-    const auto is_calibrated = [](int32_t val) {
+    const auto is_calibrated = [](Value val) {
         return val >= lower_limit && val <= upper_limit;
     };
 

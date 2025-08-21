@@ -15,6 +15,8 @@
 #include <config_store/store_instance.hpp>
 #include <option/has_adc_side_fsensor.h>
 
+static_assert(std::is_same_v<FSensorADC::Value, FSensorADCEval::Value>);
+
 LOG_COMPONENT_REF(FSensor);
 
 // min_interval_ms is 0, that is intended here.
