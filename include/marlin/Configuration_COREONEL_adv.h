@@ -1237,8 +1237,8 @@
 //#define SENSORLESS_PROBING
 
     #if EITHER(SENSORLESS_HOMING, SENSORLESS_PROBING)
-        #define X_STALL_SENSITIVITY  -2
-        #define Y_STALL_SENSITIVITY  -2
+        #define X_STALL_SENSITIVITY  0
+        #define Y_STALL_SENSITIVITY  0
         #define Z_STALL_SENSITIVITY  4
 
         // #define STALL_THRESHOLD_TMC2130 400 // Instead determined by get_homing_stall_threshold
