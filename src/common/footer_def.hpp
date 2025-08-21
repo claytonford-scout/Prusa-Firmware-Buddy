@@ -72,6 +72,7 @@ enum class Item : uint8_t { // stored in eeprom, must fit to footer::eeprom::val
     nozzle_diameter = 22,
     nozzle_pwm = 23,
     chamber_temp = 24,
+    f_s_value_side = 25,
     _count,
 };
 
@@ -106,6 +107,7 @@ inline constexpr std::array item_list {
         Item::speed,
 #if HAS_SIDE_FSENSOR()
         Item::f_sensor_side,
+        Item::f_s_value_side,
 #endif
 #if HAS_MMU2()
         Item::finda,
