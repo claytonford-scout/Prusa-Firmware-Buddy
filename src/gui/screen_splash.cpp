@@ -254,6 +254,12 @@ ScreenSplash::ScreenSplash()
                 { BootstrapStage::flashing_xbuddy_extension, 10 },
                 { BootstrapStage::verifying_xbuddy_extension, 1 },
     #endif
+    #if HAS_AC_CONTROLLER()
+                { BootstrapStage::ac_controller_unknown, 1 },
+                { BootstrapStage::ac_controller_verify, 1 },
+                { BootstrapStage::ac_controller_flash, 10 },
+                { BootstrapStage::ac_controller_ready, 1 },
+    #endif
 #endif
         }) };
 
@@ -309,6 +315,16 @@ static const char *message(BootstrapStage stage) {
         return "Flashing xbuddy extension";
     case BootstrapStage::verifying_xbuddy_extension:
         return "Verifying xbuddy extension";
+    #endif
+    #if HAS_AC_CONTROLLER()
+    case BootstrapStage::ac_controller_unknown:
+        return "AC controller: unknown";
+    case BootstrapStage::ac_controller_verify:
+        return "AC controller: verifying";
+    case BootstrapStage::ac_controller_flash:
+        return "AC controller: flashing";
+    case BootstrapStage::ac_controller_ready:
+        return "AC controller: ready";
     #endif
 #endif
     }
