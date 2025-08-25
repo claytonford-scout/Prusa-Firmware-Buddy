@@ -8,11 +8,11 @@
 #include <option/has_nextruder.h>
 #include <gui/menu_item/menu_item_select_menu.hpp>
 
-class MI_MMU_PRELOAD_ADVANCED : public IWindowMenuItem {
-    static constexpr const char *const label = N_("Preload to MMU Advanced");
+class MI_MMU_PRELOAD : public IWindowMenuItem {
+    static constexpr const char *const label = N_("Preload to MMU");
 
 public:
-    MI_MMU_PRELOAD_ADVANCED();
+    MI_MMU_PRELOAD();
 
 protected:
     virtual void click(IWindowMenu &window_menu) override;
