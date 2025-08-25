@@ -677,9 +677,7 @@ void ToolsMappingBody::update_bottom_guide() {
     static constexpr const char *unassigned_gcodes_pre_translated = N_("Unassigned G-Code filament(s)");
     static constexpr const char *unloaded_tools_pre_translated = N_("Assigned tool(s) without filament");
     static constexpr const char *mismatched_nozzles_pre_translated = N_("Mismatching nozzle diameters");
-#if not HAS_MMU2()
     static constexpr const char *mismatched_filaments_pre_translated = N_("Mismatching filament types");
-#endif
 
     string_view_utf8 strview;
 
@@ -700,11 +698,8 @@ void ToolsMappingBody::update_bottom_guide() {
         print_alert_part_of_guide(unloaded_tools_pre_translated, unloaded_tools_icon);
     } else if (num_mismatched_nozzles > 0) {
         print_alert_part_of_guide(mismatched_nozzles_pre_translated, mismatched_nozzles_icon);
-#if not HAS_MMU2()
     } else if (num_mismatched_filaments > 0) {
-        // disabled for MMU upon request from Content
         print_alert_part_of_guide(mismatched_filaments_pre_translated, mismatched_filaments_icon);
-#endif
     } else {
         bottom_icon.Hide();
         bottom_icon.Invalidate();
@@ -831,10 +826,8 @@ void ToolsMappingBody::update_icons() {
             right_phys_icons[real_physical].SetRes(unloaded_tools_icon);
         } else if (validity.mismatched_nozzles.test(real_physical)) {
             right_phys_icons[real_physical].SetRes(mismatched_nozzles_icon);
-#if not HAS_MMU2()
         } else if (validity.mismatched_filaments.test(real_physical)) {
             right_phys_icons[real_physical].SetRes(mismatched_filaments_icon);
-#endif
         } else {
             right_phys_icons[real_physical].SetRes(nullptr);
         }
@@ -1187,14 +1180,12 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
             if (num_unloaded_tools > 0) {
                 disable_fs = true;
                 warning_text = _("There are printing tools with no filament loaded, this could ruin the print.\nDisable filament sensor and print anyway?");
-#if not HAS_MMU2()
             } else if (num_mismatched_filaments > 0) {
                 // Hide warning about mismatching filament types for MMU prints
                 // - it is yet to be decided how shall we set filament types and work with them in the FW.
                 // Contrary to the XL, the MMU is rarely used to switch among different filament types
                 // in the same print due to filament mixing in the melt zone.
                 warning_text = _("Detected mismatching loaded filament types, this could ruin the print.\nPrint anyway?");
-#endif
             } else if (num_mismatched_nozzles > 0) {
                 warning_text = _("Detected mismatching nozzle diameters, this could ruin the print.\nPrint anyway?");
             }
