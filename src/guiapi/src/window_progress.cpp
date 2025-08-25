@@ -9,23 +9,20 @@
 window_numberless_progress_t::window_numberless_progress_t(window_t *parent, Rect16 rect, Color cl_progress, Color cl_back, int corner_radius)
     : window_t(parent, rect)
     , color_progress(cl_progress)
-    , corner_radius(corner_radius) {
-    SetProgressInPixels(0);
+    , corner_radius(corner_radius)
+    , progress_in_pixels { 0 } {
     SetBackColor(cl_back);
-}
-
-void window_numberless_progress_t::SetProgressInPixels(uint16_t px) {
-    if (px != progress_in_pixels) {
-        progress_in_pixels = px;
-        Invalidate();
-    }
 }
 
 void window_numberless_progress_t::SetProgressPercent(float val) {
     const float min = 0;
     const float max = 100;
     const float value = std::max(min, std::min(val, max));
-    SetProgressInPixels((value * Width()) / max);
+    uint16_t px = (value * Width()) / max;
+    if (px != progress_in_pixels) {
+        progress_in_pixels = px;
+        Invalidate();
+    }
 }
 
 uint16_t window_numberless_progress_t::GetProgressPixels() const {

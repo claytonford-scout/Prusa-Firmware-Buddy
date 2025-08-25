@@ -15,7 +15,6 @@ protected:
 public:
     window_numberless_progress_t(window_t *parent, Rect16 rect, Color cl_progress, Color cl_back, int corner_radius);
 
-    void SetProgressInPixels(uint16_t px);
     void SetProgressPercent(float val);
     uint16_t GetProgressPixels() const;
 };
