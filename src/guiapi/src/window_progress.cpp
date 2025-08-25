@@ -25,13 +25,9 @@ void window_numberless_progress_t::SetProgressPercent(float val) {
     }
 }
 
-uint16_t window_numberless_progress_t::GetProgressPixels() const {
-    return progress_in_pixels;
-}
-
 void window_numberless_progress_t::unconditionalDraw() {
     Rect16 rc = GetRect();
-    const uint16_t progress_w = std::min(GetProgressPixels(), uint16_t(rc.Width()));
+    const uint16_t progress_w = std::min(progress_in_pixels, uint16_t(rc.Width()));
     rc += Rect16::Left_t(progress_w);
     rc -= Rect16::Width_t(progress_w);
 
@@ -51,7 +47,7 @@ void window_numberless_progress_t::unconditionalDraw() {
     // Draw progress
     if (rc.Width()) {
         if (corner_radius) {
-            Color secondary_clr = GetProgressPixels() == GetRect().Width() ? screen_background : GetBackColor();
+            Color secondary_clr = progress_in_pixels == GetRect().Width() ? screen_background : GetBackColor();
             display::draw_rounded_rect(rc, screen_background, color_progress, corner_radius,
                 MIC_ALL_CORNERS | MIC_ALT_CL_TOP_RIGHT | MIC_ALT_CL_BOT_RIGHT, secondary_clr);
         } else {
