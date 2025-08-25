@@ -29,7 +29,6 @@ SelftestFrameFirstLayer::SelftestFrameFirstLayer(window_t *parent, PhasesSelftes
     , live_z(this, { int16_t(WizardDefaults::MarginLeft), 190 }, Width() - WizardDefaults::MarginLeft * 2) {
     CaptureNormalWindow(live_z);
     live_z.Idle();
-    progress.SetColor(COLOR_LIME);
 }
 
 void SelftestFrameFirstLayer::change() {

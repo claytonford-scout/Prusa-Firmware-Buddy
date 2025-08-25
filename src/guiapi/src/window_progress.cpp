@@ -32,13 +32,6 @@ uint16_t window_numberless_progress_t::GetProgressPixels() const {
     return progress_in_pixels;
 }
 
-void window_numberless_progress_t::SetColor(Color clr) {
-    if (clr != color_progress) {
-        color_progress = clr;
-        Invalidate();
-    }
-}
-
 void window_numberless_progress_t::unconditionalDraw() {
     Rect16 rc = GetRect();
     const uint16_t progress_w = std::min(GetProgressPixels(), uint16_t(rc.Width()));

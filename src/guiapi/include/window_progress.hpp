@@ -18,8 +18,6 @@ public:
     void SetProgressInPixels(uint16_t px);
     void SetProgressPercent(float val);
     uint16_t GetProgressPixels() const;
-
-    void SetColor(Color clr);
 };
 
 /**

@@ -7,9 +7,8 @@
 // WindowPrintProgress
 #include "marlin_client.hpp"
 WindowPrintProgress::WindowPrintProgress(window_t *parent, Rect16 rect)
-    : window_numberless_progress_t(parent, rect, COLOR_LIME, COLOR_GRAY, 0)
+    : window_numberless_progress_t(parent, rect, COLOR_ORANGE, COLOR_GRAY, 0)
     , last_sd_percent_done(-1) {
-    SetColor(COLOR_ORANGE);
 }
 
 void WindowPrintProgress::windowEvent(window_t *sender, GUI_event_t event, void *param) {
