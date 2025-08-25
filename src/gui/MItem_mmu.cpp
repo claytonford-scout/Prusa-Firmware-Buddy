@@ -11,7 +11,6 @@
     #include "ScreenSelftest.hpp"
 #endif
 
-#include "screen_menu_mmu_preload_to_mmu.hpp"
 #include "screen_menu_mmu_load_test_filament.hpp"
 #include "screen_menu_mmu_eject_filament.hpp"
 #include "screen_menu_mmu_cut_filament.hpp"
@@ -34,18 +33,6 @@ MI_MMU_PRELOAD_ADVANCED::MI_MMU_PRELOAD_ADVANCED()
 }
 void MI_MMU_PRELOAD_ADVANCED::click(IWindowMenu & /*window_menu*/) {
     Screens::Access()->Open(ScreenFactory::Screen<ScreenChangeAllFilaments>);
-}
-
-/**********************************************************************************************/
-// MI_MMU_PRELOAD
-MI_MMU_PRELOAD::MI_MMU_PRELOAD()
-    : IWindowMenuItem(_(label), nullptr,
-        FSensors_instance().WhereIsFilament() == MMU2::FilamentState::AT_FSENSOR ? is_enabled_t::no : is_enabled_t::yes,
-        is_hidden_t::no,
-        expands_t::yes) {
-}
-void MI_MMU_PRELOAD::click(IWindowMenu & /*window_menu*/) {
-    Screens::Access()->Open(ScreenFactory::Screen<ScreenMenuMMUPreloadToMMU>);
 }
 
 /**********************************************************************************************/

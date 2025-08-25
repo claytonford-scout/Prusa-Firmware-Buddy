@@ -26,7 +26,6 @@ void ScreenMenuFilamentMMU::windowEvent(window_t *sender, GUI_event_t event, voi
         // theory by a gcode sent remotely from eg. Connect.
         Item<MI_MMU_CUT_FILAMENT>().set_enabled(!filament_in_nozzle);
         Item<MI_MMU_EJECT_FILAMENT>().set_enabled(!filament_in_nozzle);
-        Item<MI_MMU_PRELOAD>().set_enabled(!filament_in_nozzle);
         Item<MI_MMU_PRELOAD_ADVANCED>().set_enabled(!filament_in_nozzle);
     }
 
