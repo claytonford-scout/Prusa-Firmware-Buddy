@@ -5,11 +5,12 @@
 #include "window_frame.hpp"
 
 class window_numberless_progress_t : public window_t {
+private:
     Color color_progress;
     int corner_radius; //< radius of rounded corner
+    uint16_t progress_in_pixels;
 
 protected:
-    uint16_t progress_in_pixels;
     virtual void unconditionalDraw() override;
 
 public:
