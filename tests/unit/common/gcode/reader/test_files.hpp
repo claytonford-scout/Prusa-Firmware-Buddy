@@ -9,5 +9,8 @@ constexpr static const char *BINARY_HEATSHRINK_MEATPACK_FILE = "test_binary_heat
 constexpr static const char *NEW_PLAIN = "box_new.gcode";
 constexpr static const char *NEW_BINARY = "box_new.bgcode";
 constexpr static const char *NEW_ENCRYPTED = "box_new_enc.bgcode";
+// Encrypted for multiple printers
+// (our being the second)
+constexpr static const char *NEW_ENCRYPTED_MULTI = "box_new_enc_multiple.bgcode";
 
 } // namespace

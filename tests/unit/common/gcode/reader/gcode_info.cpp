@@ -8,7 +8,7 @@ namespace {
 
 // Test both on plaintext and binary readers. They behave slightly differently
 // on the outside. No need to do different compressions or so, though, these shoud be the same.
-const std::vector<const char *> test_files = { NEW_PLAIN, NEW_BINARY, NEW_ENCRYPTED };
+const std::vector<const char *> test_files = { NEW_PLAIN, NEW_BINARY, NEW_ENCRYPTED, NEW_ENCRYPTED_MULTI };
 
 } // namespace
 
@@ -26,7 +26,7 @@ TEST_CASE("GCodeInfo") {
             CHECK(info.has_preview_thumbnail());
             CHECK(info.has_progress_thumbnail());
             CHECK(info.has_filament_described());
-            if (filename != NEW_ENCRYPTED) { // Yes, pointer-compare is enough
+            if (filename != NEW_ENCRYPTED && filename != NEW_ENCRYPTED_MULTI) { // Yes, pointer-compare is enough
                 // BUG: These are in the encrypted section. The gcode info
                 // doesn't open this (on purpose). But these are not accessible
                 // for us in this case.
