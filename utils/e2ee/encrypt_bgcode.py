@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import os
 import io
@@ -324,12 +325,20 @@ def rsa_sha256_sign_block_decrypt(slicer_pub_key, printer_pub_key,
 
 
 def readHashWriteMetadata(file_header: FileHeader, in_file: io.BufferedReader,
-                          out_file: io.BufferedWriter) -> bytes:
+                          out_file: io.BufferedWriter,
+                          encrypt_all: bool) -> bytes:
     metadata_hash = sha256(file_header.bytes())
     out_file.write(file_header.bytes())
+
+    def stop(block_type):
+        if encrypt_all:
+            return True
+        else:
+            return block_header.type == 1
+
     while True:
         block_header = readBlockHeader(in_file)
-        if block_header.type == 1:
+        if stop(block_header.type):
             in_file.seek(-block_header.size(), 1)
             break
 
@@ -462,7 +471,7 @@ def readEncryptAndWriteGcodeBlocks(out_file: io.BufferedWriter,
 
 def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
                    slicer_private_key: PrivateKeyTypes, identity_name: str,
-                   one_time_identity: bool):
+                   one_time_identity: bool, encrypt_all: bool):
     print("Reading bgcode from:", in_filename)
     in_file = open(in_filename, mode='rb')
     print("Writing encrypted bgcode to:", out_filename)
@@ -471,7 +480,8 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
     file_header = FileHeader(in_file)
     file_header.check()
 
-    metadata_hash = readHashWriteMetadata(file_header, in_file, out_file)
+    metadata_hash = readHashWriteMetadata(file_header, in_file, out_file,
+                                          encrypt_all)
 
     enc_aes_key = os.urandom(16)
     key_blocks = []
@@ -698,6 +708,10 @@ def main():
     parser.add_argument("-ppk", "--printer-private-key", type=Path)
     parser.add_argument("-ppubk", "--printer-public-key", type=Path)
     parser.add_argument("-id", "--identity-name", type=str)
+    parser.add_argument("-all",
+                        "--encrypt-all",
+                        action=argparse.BooleanOptionalAction,
+                        default=False)
 
     args = parser.parse_args()
     if args.encrypt and args.decrypt:
@@ -726,7 +740,7 @@ def main():
         printer_keys.append(printer_public_key)
         encrypt_bgcode(args.input_file, args.output_file, printer_keys,
                        slicer_private_key, args.identity_name,
-                       args.one_time_identity)
+                       args.one_time_identity, args.encrypt_all)
 
     elif args.decrypt:
         with open(args.printer_private_key, "br") as key_file:
