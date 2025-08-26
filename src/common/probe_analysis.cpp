@@ -134,10 +134,10 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
 
     // Check all features are within expected range
     {
-        const char *feature;
+        const char *feature = "feature-out-of-range";
         float value;
         if (HasOutOfRangeFeature(features, &feature, &value)) {
-            return Result::Bad("feature-out-of-range");
+            return Result::Bad(feature);
         }
     }
 
