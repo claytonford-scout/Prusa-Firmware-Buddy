@@ -18,7 +18,6 @@ public:
     virtual Result_t stream_get_line(GcodeBuffer &buffer, Continuations) override;
     virtual uint32_t get_gcode_stream_size_estimate() override;
     virtual uint32_t get_gcode_stream_size() override;
-    virtual FileVerificationResult verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const override;
     virtual bool valid_for_print(bool) override;
     virtual StreamRestoreInfo get_restore_info() override { return {}; }
     virtual void set_restore_info(const StreamRestoreInfo &) override {}

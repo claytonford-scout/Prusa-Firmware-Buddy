@@ -43,8 +43,6 @@ public:
     virtual uint32_t get_gcode_stream_size_estimate() override;
     virtual uint32_t get_gcode_stream_size() override;
 
-    virtual FileVerificationResult verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const override;
-
     StreamRestoreInfo get_restore_info() override {
         return { .data = stream_restore_info };
     }

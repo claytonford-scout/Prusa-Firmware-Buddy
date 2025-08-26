@@ -867,29 +867,6 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size() {
     return size_context.gcode_stream_size_uncompressed;
 }
 
-IGcodeReader::FileVerificationResult PrusaPackGcodeReader::verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const {
-    // Every binary gcode has to start a magic sequence
-    if (!check_file_starts_with_BGCODE_magic()) {
-        return { .error_str = N_("The file is not a valid bgcode file.") };
-    }
-
-    // Further checks are for FileVerificationLevel::full
-    if (int(level) < int(FileVerificationLevel::full)) {
-        return { .is_ok = true };
-    }
-
-    // Check CRC
-    {
-        // todo: this doesn't respect file validity
-        rewind(file.get());
-        if (bgcode::core::is_valid_binary_gcode(*file, true, crc_calc_buffer.data(), crc_calc_buffer.size()) != bgcode::core::EResult::Success) {
-            return { .error_str = N_("The file is not a valid bgcode file.") };
-        }
-    }
-
-    return { .is_ok = true };
-}
-
 bool PrusaPackGcodeReader::init_decompression() {
     // first setup decompression step
     const ECompressionType compression = static_cast<ECompressionType>(stream.current_plain_block_header.compression);

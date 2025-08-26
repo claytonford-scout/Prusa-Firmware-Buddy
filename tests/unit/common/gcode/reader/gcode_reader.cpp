@@ -104,10 +104,6 @@ struct DummyReader : public GcodeReaderCommon {
         return 0;
     }
 
-    virtual FileVerificationResult verify_file(FileVerificationLevel, std::span<uint8_t>) const override {
-        return FileVerificationResult { true };
-    }
-
     virtual bool valid_for_print([[maybe_unused]] bool full_check) override {
         return true;
     }
@@ -174,7 +170,6 @@ TEST_CASE("Extract data", "[GcodeReader]") {
         SECTION(std::string("Test-file: ") + test.filename) {
             AnyGcodeFormatReader reader(test.filename);
             REQUIRE(reader.is_open());
-            REQUIRE(reader.get()->verify_file(IGcodeReader::FileVerificationLevel::full));
             run_test(reader.get(), test.filename, !test.has_qoi_thumbnails);
         }
     }
@@ -185,7 +180,6 @@ TEST_CASE("Indexed readers", "[GcodeReader]") {
         SECTION(std::string("Test-file: ") + test.filename) {
             AnyGcodeFormatReader reader(test.filename);
             REQUIRE(reader.is_open());
-            REQUIRE(reader.get()->verify_file(IGcodeReader::FileVerificationLevel::full));
             IGcodeReader::Index index;
             REQUIRE(!index.indexed());
             // Note: These sizes are for mk4, tests are something like mini.
@@ -246,7 +240,6 @@ TEST_CASE("Mixed vs split readers", "[GcodeReader]") {
         SECTION(std::string("Test-file: ") + test.filename) {
             AnyGcodeFormatReader reader(test.filename);
             REQUIRE(reader.is_open());
-            REQUIRE(reader.get()->verify_file(IGcodeReader::FileVerificationLevel::full));
             REQUIRE(reader->valid_for_print(true));
 
             bool seen_meta = false;

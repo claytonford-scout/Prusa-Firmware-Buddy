@@ -226,21 +226,6 @@ bool PlainGcodeReader::IsBeginThumbnail(GcodeBuffer &buffer, uint16_t expected_w
     return true;
 }
 
-IGcodeReader::FileVerificationResult PlainGcodeReader::verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const {
-    // If plain gcode starts with bgcode magic, that means it's most like a binary gcode -> it's not a valid plain gcode
-    if (check_file_starts_with_BGCODE_magic()) {
-        return { .error_str = N_("The file seems to be a binary gcode with a wrong suffix.") };
-    }
-
-    // Plain GCode does not have CRC checking
-    (void)crc_calc_buffer;
-
-    // No more checks for different levels for now
-    (void)level;
-
-    return { .is_ok = true };
-}
-
 bool PlainGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {
     // if entire file valid (for short files), or head and tail valid (for long files)
     uint32_t tail_start = (file_size > search_last_x_bytes) ? (file_size - search_last_x_bytes) : 0;
