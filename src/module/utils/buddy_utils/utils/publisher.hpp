@@ -15,13 +15,13 @@ template <typename... Args>
 class Publisher : Uncopyable {
 
 public:
-    using Item = Subscriber<Args...>;
-    friend Item;
+    using Subscriber = ::Subscriber<Args...>;
+    friend Subscriber;
 
 public:
-    /// Calls all registered hooks
+    /// Calls callbacks of all registered Subscribers
     /// The execution order depends on the insertion order - newer hooks execute first.
-    /// Warning - if a hook removes itself during the call, it will cause UB or crash.
+    /// Warning - if a hook removes itself during the call, it can cause UB or crash.
     void call_all(Args &&...args) {
         for (auto it = first_; it; it = it->next_) {
             it->callback_(std::forward<Args>(args)...);
@@ -29,13 +29,13 @@ public:
     }
 
 private:
-    void insert(Item *item) {
+    void insert(Subscriber *item) {
         item->next_ = first_;
         first_ = item;
     }
 
-    void remove(Item *item) {
-        Item **current = &first_;
+    void remove(Subscriber *item) {
+        Subscriber **current = &first_;
         while (*current != item) {
             assert(*current);
             current = &((*current)->next_);
@@ -44,7 +44,7 @@ private:
     }
 
 private:
-    Item *first_ = nullptr;
+    Subscriber *first_ = nullptr;
 };
 
 /// Guard that registers the provided callback to the specified point
@@ -52,26 +52,26 @@ private:
 /// !!! Not thread safe
 template <typename... Args>
 class Subscriber : Uncopyable {
-    friend class Publisher<Args...>;
 
 public:
     using Callback = stdext::inplace_function<void(Args...)>;
-    using Point = Publisher<Args...>;
+    using Publisher = ::Publisher<Args...>;
+    friend Publisher;
 
 public:
     // Note: Template deducation problems without the "auto"
-    Subscriber(Publisher<Args...> &point, const auto &cb)
-        : point_(point)
+    Subscriber(Publisher &publisher, const auto &cb)
+        : publisher_(publisher)
         , callback_(cb) {
-        point_.insert(this);
+        publisher.insert(this);
     }
 
     ~Subscriber() {
-        point_.remove(this);
+        publisher_.remove(this);
     }
 
 private:
-    Point &point_;
+    Publisher &publisher_;
     Subscriber *next_ = nullptr;
     Callback callback_;
 };
