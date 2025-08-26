@@ -47,7 +47,7 @@ class DialogLoadUnload final : public IDialogMarlin {
 private:
     window_frame_t progress_frame;
     window_text_t title;
-    window_numberless_progress_t progress_bar;
+    WindowRoundedProgressBar progress_bar;
     window_numb_t progress_number;
     window_text_t label;
     std::optional<PhasesLoadUnload> current_phase = std::nullopt;

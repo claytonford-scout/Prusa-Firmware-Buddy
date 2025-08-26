@@ -322,8 +322,8 @@ ToolsMappingBody::ToolsMappingBody(window_t *parent, GCodeInfo &gcode_info)
           _("MMU filament")
 #endif
               )
-    , left_line(parent, left_line_rect, COLOR_ORANGE, COLOR_GRAY, 0)
-    , right_line(parent, right_line_rect, COLOR_ORANGE, COLOR_GRAY, 0)
+    , left_line(parent, left_line_rect, COLOR_ORANGE, COLOR_GRAY)
+    , right_line(parent, right_line_rect, COLOR_ORANGE, COLOR_GRAY)
     , middle_connector(parent, middle_connectors_rect)
     , left_gcode_texts(make_left_gcode_text(std::make_index_sequence<max_item_rows>(), parent, left_gcode_label_buffers, gcode_info, drawing_nozzles))
     , right_phys_texts(make_right_phys_text(std::make_index_sequence<max_item_rows>(), parent, right_phys_label_buffers, drawing_nozzles))
@@ -553,16 +553,16 @@ void ToolsMappingBody::go_left() {
     // if all gcode tools are reasonably mapped, go to done state to allow one-click-through
     if (are_all_gcode_tools_mapped()) {
         bottom_radio.Change(responses_with_print);
-        left_line.SetProgressPercent(0.f);
-        right_line.SetProgressPercent(0.f);
+        left_line.set_progress_percent(0.f);
+        right_line.set_progress_percent(0.f);
         current_idx = gcode.UsedExtrudersCount() + print_response_idx;
         set_radio_idx(bottom_radio, print_response_idx);
         state = State::done;
     } else {
         // go to left
         bottom_radio.Change(responses_no_print);
-        left_line.SetProgressPercent(100.f);
-        right_line.SetProgressPercent(0.f);
+        left_line.set_progress_percent(100.f);
+        right_line.set_progress_percent(0.f);
         auto idx = std::distance(std::begin(left_gcode_idx_to_real), std::find(std::begin(left_gcode_idx_to_real), std::begin(left_gcode_idx_to_real) + gcode.UsedExtrudersCount(), last_left_real));
         assert(idx >= 0 && idx < gcode.UsedExtrudersCount());
         current_idx = idx;
@@ -580,8 +580,8 @@ void ToolsMappingBody::go_left() {
 
 void ToolsMappingBody::go_right() {
     bottom_radio.Change(responses_no_print);
-    left_line.SetProgressPercent(0.f);
-    right_line.SetProgressPercent(100.f);
+    left_line.set_progress_percent(0.f);
+    right_line.set_progress_percent(100.f);
     if (auto real_physical = mapper.to_physical(last_left_real);
         real_physical == ToolMapper::NO_TOOL_MAPPED) {
         // if left has nothing assigned on the right

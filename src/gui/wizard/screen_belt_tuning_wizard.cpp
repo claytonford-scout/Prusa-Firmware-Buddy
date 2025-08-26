@@ -86,7 +86,7 @@ public:
 
     void update(const fsm::PhaseData &data_) {
         const auto data = fsm::deserialize_data<BeltTuningWizardCalibratingData>(data_);
-        progress_bar.SetProgressPercent(static_cast<float>(data.progress_0_255) / 255.0f * 100.0f);
+        progress_bar.set_progress_percent(static_cast<float>(data.progress_0_255) / 255.0f * 100.0f);
     }
 };
 
@@ -123,7 +123,7 @@ public:
     void update(const fsm::PhaseData &data_) {
         const auto data = fsm::deserialize_data<BeltTuninigWizardMeasuringData>(data_);
         const float frequency = static_cast<float>(data.encoded_frequency) / data.frequency_mult;
-        progress_bar.SetProgressPercent(data.progress_0_255 / 255.0f * 100.0f);
+        progress_bar.set_progress_percent(data.progress_0_255 / 255.0f * 100.0f);
 
         if (data.encoded_frequency) {
             info.SetText(string_view_utf8::MakeCPUFLASH("%.1f Hz").formatted(info_params, frequency));

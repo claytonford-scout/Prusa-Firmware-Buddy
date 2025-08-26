@@ -5,7 +5,7 @@
 FrameProgressPrompt::FrameProgressPrompt(window_t *parent, FSMAndPhase fsm_phase, const string_view_utf8 &txt_title, const string_view_utf8 &txt_info, Align_t info_alignment)
     : window_frame_t(parent, parent->GetRect())
     , title(this, {}, is_multiline::yes, is_closed_on_click_t::no, txt_title)
-    , progress_bar(this, {}, COLOR_ORANGE, COLOR_GRAY, 0)
+    , progress_bar(this, {}, COLOR_ORANGE, COLOR_GRAY)
     , info(this, {}, is_multiline::yes, is_closed_on_click_t::no, txt_info)
     , radio(this, {}, fsm_phase) //
 {

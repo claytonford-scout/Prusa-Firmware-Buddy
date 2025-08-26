@@ -22,7 +22,7 @@ public:
 
 protected:
     window_text_t title;
-    window_numberless_progress_t progress_bar;
+    WindowProgressBar progress_bar;
     window_text_t info;
     RadioButtonFSM radio;
 };

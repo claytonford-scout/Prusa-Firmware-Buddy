@@ -65,7 +65,7 @@ SelftestFrameFSensor::SelftestFrameFSensor(window_t *parent, PhasesSelftest ph, 
     , animation(this, { int16_t(GuiDefaults::ScreenWidth / 2), int16_t(row_2) })
     , text_animation(this, Rect16(WizardDefaults::col_0, row_3, WizardDefaults::X_space, WizardDefaults::row_h), is_multiline::no, is_closed_on_click_t::no, _("in progress"))
     , text_result(this, ChangeableRect, is_multiline::no) {
-    progress.SetProgressPercent(100); // just orange line
+    progress.set_progress_percent(100); // just orange line
     animation.SetRect(animation.GetRect() - Rect16::Left_t(animation.GetRect().Width() / 2));
     text_animation.SetAlignment(Align_t::Center());
     text_left.SetAlignment(Align_t::LeftCenter());

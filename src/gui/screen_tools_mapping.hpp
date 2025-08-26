@@ -79,8 +79,8 @@ private:
 
     window_text_t left_header;
     window_text_t right_header;
-    window_numberless_progress_t left_line;
-    window_numberless_progress_t right_line;
+    WindowProgressBar left_line;
+    WindowProgressBar right_line;
 
     window_line_connector middle_connector;
 

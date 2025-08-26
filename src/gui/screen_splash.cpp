@@ -77,7 +77,7 @@ screen_splash_data_t::screen_splash_data_t()
 
     snprintf(text_progress_buffer, sizeof(text_progress_buffer), "Firmware %s", version::project_version_full);
     text_progress.SetText(string_view_utf8::MakeRAM(text_progress_buffer));
-    progress.SetProgressPercent(0);
+    progress.set_progress_percent(0);
 
 #if ENABLED(POWER_PANIC)
     // don't present any screen or wizard if there is a powerpanic pending
@@ -302,6 +302,6 @@ void screen_splash_data_t::windowEvent(window_t *, GUI_event_t event, void *) {
         text_progress.SetText(bootstrap_state.stage == BootstrapStage::initial
                 ? string_view_utf8::MakeRAM(text_progress_buffer)
                 : string_view_utf8::MakeCPUFLASH(message(bootstrap_state.stage)));
-        progress.SetProgressPercent(bootstrap_state.percent);
+        progress.set_progress_percent(bootstrap_state.percent);
     }
 }

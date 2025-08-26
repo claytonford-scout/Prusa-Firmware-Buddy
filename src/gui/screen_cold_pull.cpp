@@ -106,7 +106,7 @@ namespace frame {
     /** common base class for two text frame with progress bar */
     class ProgressFrame : public TextFrame {
     protected:
-        window_numberless_progress_t progress_bar;
+        WindowRoundedProgressBar progress_bar;
         window_numb_t progress_number;
 
     public:
@@ -247,7 +247,7 @@ namespace frame {
 
         void update(fsm::PhaseData fsm_data) {
             const cold_pull::TemperatureProgressData data { fsm_data };
-            progress_bar.SetProgressPercent(data.percent);
+            progress_bar.set_progress_percent(data.percent);
             progress_number.SetValue(data.percent);
         }
         static_assert(common_frames::is_update_callable<Deretract>);
@@ -264,7 +264,7 @@ namespace frame {
 
         void update(fsm::PhaseData fsm_data) {
             const cold_pull::TemperatureProgressData data { fsm_data };
-            progress_bar.SetProgressPercent(data.percent);
+            progress_bar.set_progress_percent(data.percent);
             if (data.time_sec > TAKING_TOO_LONG_TIMEOUT_SEC) {
                 progress_number.SetValue(data.percent);
             } else {
@@ -294,7 +294,7 @@ namespace frame {
 
         void update(fsm::PhaseData fsm_data) {
             const cold_pull::TemperatureProgressData data { fsm_data };
-            progress_bar.SetProgressPercent(data.percent);
+            progress_bar.set_progress_percent(data.percent);
             progress_number.SetValue(data.percent);
         }
 

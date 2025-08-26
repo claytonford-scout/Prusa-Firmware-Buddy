@@ -5,7 +5,7 @@
 
 class screen_splash_data_t : public screen_t {
     window_text_t text_progress;
-    window_numberless_progress_t progress;
+    WindowRoundedProgressBar progress;
 
     char text_progress_buffer[32];
 

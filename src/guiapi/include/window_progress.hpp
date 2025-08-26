@@ -1,22 +1,44 @@
-// window_progress.hpp
-
+/// @file
 #pragma once
 
-#include "window_frame.hpp"
+#include "window.hpp"
+#include "color.hpp"
+#include "Rect16.h"
+#include <cstdint>
 
-class window_numberless_progress_t : public window_t {
-private:
-    Color color_progress;
-    int corner_radius; //< radius of rounded corner
+class WindowProgressBarBase : public window_t {
+protected:
+    Color fg_color;
     uint16_t progress_in_pixels;
+
+    WindowProgressBarBase(window_t *parent, Rect16 rect, Color fg_color, Color bg_color);
+
+public:
+    void set_progress_percent(float val);
+};
+
+/// Progress bar widget
+class WindowProgressBar : public WindowProgressBarBase {
+protected:
+    virtual void unconditionalDraw() override;
+
+public:
+    WindowProgressBar(window_t *parent, Rect16 rect, Color fg_color, Color bg_color)
+        : WindowProgressBarBase { parent, rect, fg_color, bg_color } {}
+};
+
+/// Progress bar widget with rounded corners
+class WindowRoundedProgressBar : public WindowProgressBarBase {
+private:
+    int corner_radius;
 
 protected:
     virtual void unconditionalDraw() override;
 
 public:
-    window_numberless_progress_t(window_t *parent, Rect16 rect, Color cl_progress, Color cl_back, int corner_radius);
-
-    void SetProgressPercent(float val);
+    WindowRoundedProgressBar(window_t *parent, Rect16 rect, Color fg_color, Color bg_color, int corner_radius)
+        : WindowProgressBarBase { parent, rect, fg_color, bg_color }
+        , corner_radius { corner_radius } {}
 };
 
 /**

@@ -272,7 +272,7 @@ namespace frame {
         }
 
         void update(const fsm::PhaseData &data) {
-            progress.SetProgressPercent(static_cast<float>(data[0]));
+            progress.set_progress_percent(static_cast<float>(data[0]));
         }
     };
 

@@ -166,10 +166,10 @@ void SelftestFrameLoadcell::change() {
     case PhasesSelftest::Loadcell_user_tap_countdown:
     case PhasesSelftest::Loadcell_user_tap_check:
     case PhasesSelftest::Loadcell_user_tap_ok:
-        progress.SetProgressPercent(dt.progress);
+        progress.set_progress_percent(dt.progress);
         break;
     default:
-        progress.SetProgressPercent(0);
+        progress.set_progress_percent(0);
         break;
     }
 };

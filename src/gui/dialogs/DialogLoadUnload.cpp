@@ -461,7 +461,7 @@ void DialogLoadUnload::Change(fsm::BaseData base_data) {
     // Must be after the notice code, some phases do not use FSMLoadUnloadData
     auto deserialized_data = fsm::deserialize_data<FSMLoadUnloadData>(data);
     title.SetText(_(get_name(deserialized_data.mode)));
-    progress_bar.SetProgressPercent(deserialized_data.progress);
+    progress_bar.set_progress_percent(deserialized_data.progress);
     progress_number.SetValue(deserialized_data.progress);
     mode = deserialized_data.mode;
 
