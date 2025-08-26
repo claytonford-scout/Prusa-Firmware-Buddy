@@ -24,12 +24,12 @@ enum class Error : uint8_t {
  * @tparam Args Additional arguments to pass to the subscribers.
  */
 template <typename Publication, size_t QueueSize, typename... Args>
-class QueuedPublisher : public Publisher<std::expected<Publication, queued_publisher::Error>, Args...> {
+class QueuedPublisher : public Publisher<const std::expected<Publication, queued_publisher::Error> &, Args...> {
 
 public:
     using Error = queued_publisher::Error;
     using Expected = std::expected<Publication, Error>;
-    using Publisher = ::Publisher<Expected, Args...>;
+    using Publisher = ::Publisher<const Expected &, Args...>;
 
 public:
     /// Can be called from a thread different to the one calling `call_all()`.
@@ -54,17 +54,23 @@ public:
      * If the queue is empty, it will not call any subscribers.
      *
      * @param args additional arguments to pass to the subscribers
+     * @returns true if the publishers have been called
      */
-    void call_all(Args &&...args) {
-        Publication data;
-        if (data_to_publish.dequeue(data)) {
+    bool call_all(Args &&...args) {
+        Expected value {};
+        if (data_to_publish.dequeue(*value)) {
             // Call all subscribers with the data and additional arguments
-            Publisher::call_all(data, args...);
+
         } else if (overflow_flag) {
-            // Call all subscribers with the overflow status
-            Publisher::call_all(std::unexpected(Error::overflow), std::forward<Args>(args)...);
+            value = std::unexpected(Error::overflow);
             overflow_flag = false; // Reset the overflow flag after reporting
+
+        } else {
+            return false;
         }
+
+        Publisher::call_all(value, std::forward<Args>(args)...);
+        return true;
     }
 
     bool is_empty() const {
