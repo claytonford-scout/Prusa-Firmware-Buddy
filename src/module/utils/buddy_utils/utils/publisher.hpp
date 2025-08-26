@@ -12,13 +12,13 @@ class Subscriber;
 /// Represented as a linked list
 /// !!! Not thread-safe
 template <typename... Args>
-class Publisher : Uncopyable {
+class PublisherBase : Uncopyable {
 
 public:
     using Subscriber = ::Subscriber<Args...>;
     friend Subscriber;
 
-public:
+protected:
     /// Calls callbacks of all registered Subscribers
     /// The execution order depends on the insertion order - newer hooks execute first.
     /// Warning - if a hook removes itself during the call, it can cause UB or crash.
@@ -47,6 +47,13 @@ private:
     Subscriber *first_ = nullptr;
 };
 
+template <typename... Args>
+class Publisher : public PublisherBase<Args...> {
+
+public:
+    using PublisherBase<Args...>::call_all;
+};
+
 /// Guard that registers the provided callback to the specified point
 /// The hook gets removed when the function is destroyed
 /// !!! Not thread safe
@@ -55,7 +62,7 @@ class Subscriber : Uncopyable {
 
 public:
     using Callback = stdext::inplace_function<void(Args...)>;
-    using Publisher = ::Publisher<Args...>;
+    using Publisher = ::PublisherBase<Args...>;
     friend Publisher;
 
 public:
