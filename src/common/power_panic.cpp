@@ -117,6 +117,10 @@ void ac_fault_task_main([[maybe_unused]] void const *argument) {
 
     // stop & disable endstops
     marlin_server::print_quick_stop_powerpanic();
+#if HAS_REMOTE_BED()
+    remote_bed::safe_state();
+#endif
+
     endstops.enable_globally(false);
 
     // disable unnecessary threads
@@ -861,9 +865,6 @@ void ac_fault_isr() {
     power_panic_state = PPState::Triggered;
 
     // power off devices in order of power draw
-#if HAS_REMOTE_BED()
-    remote_bed::safe_state();
-#endif
     runtime_state.orig_axes_home_level = axes_home_level;
     disable_XY();
     buddy::hw::hsUSBEnable.write(buddy::hw::Pin::State::high);
