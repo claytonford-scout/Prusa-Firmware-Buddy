@@ -21,8 +21,63 @@
 #include "../Marlin/src/module/planner.h"
 #include "../Marlin/src/module/endstops.h"
 #include "feature/prusa/e-stall_detector.h"
+#include <metric_handlers.h>
 
 LOG_COMPONENT_DEF(Loadcell, logging::Severity::info);
+
+METRIC_DEF(metric_loadcell, "loadcell", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
+METRIC_DEF(metric_loadcell_hp, "loadcell_hp", METRIC_VALUE_FLOAT, 0, METRIC_ENABLED);
+METRIC_DEF(metric_loadcell_xy, "loadcell_xy", METRIC_VALUE_FLOAT, 0, METRIC_ENABLED);
+METRIC_DEF(metric_loadcell_age, "loadcell_age", METRIC_VALUE_INTEGER, 0, METRIC_ENABLED);
+METRIC_DEF(metric_loadcell_value, "loadcell_value", METRIC_VALUE_FLOAT, 0, METRIC_ENABLED);
+
+LOG_COMPONENT_REF(Loadcell);
+
+namespace {
+
+struct MetricsData {
+    /// Timestamp of the data
+    uint32_t time_us;
+
+    int32_t raw_value;
+    int32_t offset;
+    float scale;
+
+    // Loads are in grams
+    float filtered_z_load;
+    float filtered_xy_load;
+
+    constexpr inline float tared_z_load() const {
+        return Loadcell::get_tared_z_load(raw_value, scale, offset);
+    }
+};
+
+StaticTimer_t metrics_timer_storage;
+TimerHandle_t metrics_timer;
+
+AtomicCircularQueue<MetricsData, uint8_t, 8> metrics_queue;
+static_assert(sizeof(metrics_queue) == 196); // Note - the queue is quite big
+
+void report_loadcell_metrics(tmrTimerControl *) {
+    MetricsData d;
+
+    if (metrics_queue.isFull()) {
+        log_warning(Loadcell, "Loadcell metrics overflow");
+    }
+
+    while (metrics_queue.dequeue(d)) {
+        // Do the varargs passing around only if we have to
+        if (metric_record_is_due(&metric_loadcell)) {
+            metric_record_custom_at_time(&metric_loadcell, d.time_us, " r=%" PRId32 "i,o=%" PRId32 "i,s=%0.4f", d.raw_value, d.offset, static_cast<double>(d.scale));
+        }
+
+        metric_record_float_at_time(&metric_loadcell_hp, d.time_us, d.filtered_z_load);
+        metric_record_float_at_time(&metric_loadcell_xy, d.time_us, d.filtered_xy_load);
+        metric_record_integer_at_time(&metric_loadcell_age, d.time_us, ticks_diff(d.time_us, ticks_us()));
+        metric_record_float_at_time(&metric_loadcell_value, d.time_us, d.tared_z_load());
+    }
+}
+} // namespace
 
 Loadcell loadcell;
 
@@ -34,6 +89,9 @@ Loadcell::Loadcell()
     , z_filter()
     , xy_filter() {
     Clear();
+
+    metrics_timer = xTimerCreateStatic("loadcell_metrics", 1, false, nullptr, &report_loadcell_metrics, &metrics_timer_storage);
+    assert(metrics_timer);
 }
 
 void Loadcell::WaitBarrier(uint32_t ticks_us) {
@@ -171,14 +229,33 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     // save sample timestamp/age
     last_sample_time_us = time_us;
 
+    const float filtered_z_load = get_filtered_z_load();
+    const float filtered_xy_load = get_filtered_xy();
     const float tared_z_load = get_tared_z_load();
+
+    const MetricsData metrics_data {
+        .time_us = time_us,
+        .raw_value = loadcellRaw,
+        .offset = offset,
+        .scale = scale,
+        .filtered_z_load = filtered_z_load,
+        .filtered_xy_load = filtered_xy_load,
+    };
+    if (are_metrics_enabled()) {
+        if (metrics_queue.isEmpty()) {
+            if (!xTimerStartFromISR(metrics_timer, nullptr)) {
+                bsod("metrics_timer failed");
+            }
+        }
+        if (!metrics_queue.enqueue(metrics_data)) {
+            metrics_queue.clear();
+        }
+    }
+
     sensor_data().loadCell = tared_z_load;
     if (!std::isfinite(tared_z_load)) {
         fatal_error(ErrCode::ERR_SYSTEM_LOADCELL_INFINITE_LOAD);
     }
-
-    const float filtered_z_load = get_filtered_z_load();
-    const float filtered_xy_load = get_filtered_xy();
 
     if (tareCount != 0) {
         // Undergoing tare process, only use valid samples

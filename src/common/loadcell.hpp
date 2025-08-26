@@ -92,7 +92,8 @@ public:
     bool GetXYEndstop() const;
 
     // return loadcell load in grams
-    inline float get_tared_z_load() const { return (scale * (loadcellRaw - offset)); }
+    inline static float get_tared_z_load(int32_t raw_sample, float scale, float offset) { return (scale * (raw_sample - offset)); }
+    inline float get_tared_z_load() const { return get_tared_z_load(loadcellRaw, scale, offset); }
     inline float get_filtered_z_load() const { return z_filter.get_output() * scale; }
     inline float get_filtered_xy() const { return xy_filter.get_output() * scale; }
 
