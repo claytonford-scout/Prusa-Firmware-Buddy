@@ -25,10 +25,11 @@ enum class Error : uint8_t {
  */
 template <typename Publication, size_t QueueSize, typename... Args>
 class QueuedPublisher : public Publisher<std::expected<Publication, queued_publisher::Error>, Args...> {
+
+public:
     using Error = queued_publisher::Error;
     using Expected = std::expected<Publication, Error>;
-    using Unexpected = std::unexpected<Error>;
-    using PublisherArgs = Publisher<Expected, Args...>;
+    using Publisher = ::Publisher<Expected, Args...>;
 
 public:
     /// Can be called from a thread different to the one calling `call_all()`.
@@ -58,10 +59,10 @@ public:
         Publication data;
         if (data_to_publish.dequeue(data)) {
             // Call all subscribers with the data and additional arguments
-            PublisherArgs::call_all(Expected(data), args...);
+            Publisher::call_all(data, args...);
         } else if (overflow_flag) {
             // Call all subscribers with the overflow status
-            PublisherArgs::call_all(Unexpected(Error::overflow), std::forward<Args>(args)...);
+            Publisher::call_all(std::unexpected(Error::overflow), std::forward<Args>(args)...);
             overflow_flag = false; // Reset the overflow flag after reporting
         }
     }
