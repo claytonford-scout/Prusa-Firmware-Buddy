@@ -12,5 +12,8 @@ constexpr static const char *NEW_ENCRYPTED = "box_new_enc.bgcode";
 // Encrypted for multiple printers
 // (our being the second)
 constexpr static const char *NEW_ENCRYPTED_MULTI = "box_new_enc_multiple.bgcode";
+// Encrypted for multiple printers with different algorithms
+// (the other printer has an algorithm we don't support)
+constexpr static const char *NEW_ENCRYPTED_POLY = "box_new_enc_poly.bgcode";
 
 } // namespace

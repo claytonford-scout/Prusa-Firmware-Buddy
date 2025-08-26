@@ -96,5 +96,6 @@ file(
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc_multiple.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc_poly.bgcode
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
   )
