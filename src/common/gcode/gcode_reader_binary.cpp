@@ -300,9 +300,9 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     const bool check_crc = verify && !ignore_crc;
 
     if (offset == 0) {
-        const auto res = seek_block_header(start_block, index ? index->gcode : Index::not_indexed, check_crc, [](BlockHeader &block_header) {
+        const auto res = seek_block_header(start_block, index ? index->gcode : Index::not_indexed, check_crc, [this](BlockHeader &block_header) {
             // check if correct type, if so, return this block
-            if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode || (bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
+            if (is_of_type(block_header, bgcode::core::EBlockType::GCode)) {
                 return IterateResult_t::Return;
             }
 
@@ -580,8 +580,11 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_getc_decrypted(char &out) {
 }
 
 void PrusaPackGcodeReader::init_decryption() {
-    stream.decryptor = std::unique_ptr<e2ee::Decryptor>(new e2ee::Decryptor);
-    stream.decryptor->set_cipher_info(symmetric_info);
+    if (!stream.decryptor) {
+        // Only if needed...
+        stream.decryptor = std::unique_ptr<e2ee::Decryptor>(new e2ee::Decryptor);
+        stream.decryptor->set_cipher_info(symmetric_info);
+    }
 }
 #endif
 
@@ -1097,4 +1100,33 @@ void PrusaPackGcodeReader::stream_t::reset() {
     uncompressed_offset = 0; //< offset of next char that will be outputted
     hs_decoder.reset();
     meatpack.reset_state();
+}
+
+bool PrusaPackGcodeReader::is_of_type(const bgcode::core::BlockHeader &block_header, bgcode::core::EBlockType type) {
+    if (static_cast<bgcode::core::EBlockType>(block_header.type) == type) {
+        return true;
+    }
+
+#if HAS_E2EE_SUPPORT()
+    if (static_cast<bgcode::core::EBlockType>(block_header.type) == bgcode::core::EBlockType::EncryptedBlock) {
+        // It is encrypted, it's worth looking inside.
+        // Does init only in case we need it.
+        //
+        // Note: We do _not_ check the integrity of this block right now and
+        // here. If we become interested in it, it'll get checked properly
+        // later on.
+        auto block_start = ftell(file.get());
+        init_decryption();
+        if (init_encrypted_block_streaming(block_header) != Result_t::RESULT_OK) {
+            return false;
+        }
+        if (fseek(file.get(), block_start, SEEK_SET) != 0) {
+            return false;
+        }
+
+        return static_cast<bgcode::core::EBlockType>(stream.current_plain_block_header.type) == type;
+    }
+#endif
+
+    return false;
 }

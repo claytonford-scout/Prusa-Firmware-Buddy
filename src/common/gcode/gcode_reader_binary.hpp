@@ -201,4 +201,14 @@ private:
     ThumbnailReader thumbnail_reader;
 
     std::optional<ThumbnailDetails> thumbnail_details(const bgcode::core::BlockHeader &block_header);
+
+    /**
+     * @brief Is this block of the correct type?
+     *
+     * This considers the inner encrypted type in case we have encrypted blocks.
+     *
+     * Defaults to false in case there are errors (eg. corrupt block or block
+     * we are unable to decrypt isn't of the correct type).
+     */
+    bool is_of_type(const bgcode::core::BlockHeader &block_header, bgcode::core::EBlockType type);
 };

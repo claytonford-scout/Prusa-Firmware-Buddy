@@ -19,5 +19,10 @@ constexpr static const char *NEW_ENCRYPTED_POLY = "box_new_enc_poly.bgcode";
 // That is, encrypted symmetrically by a key that's present in plain in the
 // file (mostly just to preserve the format and allow the signing)
 constexpr static const char *NEW_SIGNED = "box_new_signed.bgcode";
+// Fully encrypted - including metadata and thumbnails.
+//
+// We currently have no way to utilize these, but we should at least act like a
+// gcode without any of these.
+constexpr static const char *NEW_ENCRYPTED_FULLY = "box_new_enc_fully.bgcode";
 
 } // namespace
