@@ -59,19 +59,46 @@ public:
     friend Publisher;
 
 public:
+    Subscriber() {
+    }
+
+    Subscriber(const auto &callback) {
+        set_callback(callback);
+    }
+
     // Note: Template deducation problems without the "auto"
-    Subscriber(Publisher &publisher, const auto &cb)
-        : publisher_(publisher)
-        , callback_(cb) {
-        publisher.insert(this);
+    Subscriber(Publisher &publisher, const auto &callback) {
+        set_callback(callback);
+        bind(publisher);
     }
 
     ~Subscriber() {
-        publisher_.remove(this);
+        unbind();
+    }
+
+public:
+    void bind(Publisher &publisher) {
+        unbind();
+
+        assert(callback_);
+        publisher.insert(this);
+        publisher_ = &publisher;
+    }
+
+    void unbind() {
+        if (publisher_) {
+            publisher_->remove(this);
+            publisher_ = nullptr;
+        }
+    }
+
+    // Note: Template deducation problems without the "auto"
+    void set_callback(const auto &callback) {
+        callback_ = callback;
     }
 
 private:
-    Publisher &publisher_;
+    Publisher *publisher_ = nullptr;
     Subscriber *next_ = nullptr;
-    Callback callback_;
+    Callback callback_ = {};
 };
