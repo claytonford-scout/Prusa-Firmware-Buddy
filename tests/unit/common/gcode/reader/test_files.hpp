@@ -15,5 +15,9 @@ constexpr static const char *NEW_ENCRYPTED_MULTI = "box_new_enc_multiple.bgcode"
 // Encrypted for multiple printers with different algorithms
 // (the other printer has an algorithm we don't support)
 constexpr static const char *NEW_ENCRYPTED_POLY = "box_new_enc_poly.bgcode";
+// Only signed
+// That is, encrypted symmetrically by a key that's present in plain in the
+// file (mostly just to preserve the format and allow the signing)
+constexpr static const char *NEW_SIGNED = "box_new_signed.bgcode";
 
 } // namespace

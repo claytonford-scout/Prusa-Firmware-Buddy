@@ -19,6 +19,7 @@ const std::vector<TestFile> test_files = {
     { NEW_ENCRYPTED, true },
     { NEW_ENCRYPTED_MULTI, true },
     { NEW_ENCRYPTED_POLY, true },
+    { NEW_SIGNED, /* technically, yes, encrypted */ true },
 };
 
 } // namespace

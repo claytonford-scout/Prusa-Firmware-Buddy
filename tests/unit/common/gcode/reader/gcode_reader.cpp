@@ -54,6 +54,7 @@ const std::vector<TestFile> test_files = {
     { NEW_ENCRYPTED, true, false, true, true },
     { NEW_ENCRYPTED_MULTI, true, false, true, true },
     { NEW_ENCRYPTED_POLY, true, false, true, true },
+    { NEW_SIGNED, true, false, true, true },
 };
 
 using State = transfers::PartialFile::State;

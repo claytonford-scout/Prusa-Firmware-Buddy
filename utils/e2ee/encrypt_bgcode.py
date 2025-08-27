@@ -397,11 +397,15 @@ class KeyBlock:
     def __init__(self, enc_aes_key: bytes, printer_pub_key: PublicKeyTypes,
                  slicer_private_key: PrivateKeyTypes) -> None:
         sign_key = os.urandom(16)
-        self.params = KeyBlockEncryption.RSA_ENC_SHA256_SIGN.to_bytes(
-            2, 'little')
         self.plain_key_block = enc_aes_key + sign_key
-        self.enc_key_block = rsa_sha256_sign_block_encrypt(
-            slicer_private_key, printer_pub_key, self.plain_key_block)
+        if printer_pub_key:
+            encryption = KeyBlockEncryption.RSA_ENC_SHA256_SIGN
+            self.enc_key_block = rsa_sha256_sign_block_encrypt(
+                slicer_private_key, printer_pub_key, self.plain_key_block)
+        else:
+            encryption = KeyBlockEncryption.No
+            self.enc_key_block = self.plain_key_block
+        self.params = encryption.to_bytes(2, 'little')
         self.header = BlockHeader(BlockType.KeyBlock, Compression.No,
                                   len(self.enc_key_block),
                                   len(self.enc_key_block))
@@ -486,10 +490,17 @@ def encrypt_bgcode(in_filename: str, out_filename: str, printer_pub_keys: list,
     enc_aes_key = os.urandom(16)
     key_blocks = []
     key_blocks_hash = sha256()
-    for key in printer_pub_keys:
+
+    def do_key(key):
         key_block = KeyBlock(enc_aes_key, key, slicer_private_key)
         key_blocks.append(key_block)
         key_blocks_hash.update(key_block.bytes(file_header.checksumType))
+
+    if printer_pub_keys:
+        for key in printer_pub_keys:
+            do_key(key)
+    else:
+        do_key(None)
 
     identity_block = generateIdentityBlock(key_blocks_hash.digest(),
                                            slicer_private_key, metadata_hash,
@@ -712,6 +723,10 @@ def main():
                         "--encrypt-all",
                         action=argparse.BooleanOptionalAction,
                         default=False)
+    parser.add_argument("-so",
+                        "--sign-only",
+                        action=argparse.BooleanOptionalAction,
+                        default=False)
 
     args = parser.parse_args()
     if args.encrypt and args.decrypt:
@@ -721,8 +736,9 @@ def main():
         generateKeys()
 
     if args.encrypt and (not args.slicer_private_key
-                         or not args.printer_public_key or not args.input_file
-                         or not args.output_file or not args.identity_name):
+                         or not (args.printer_public_key or args.sign_only)
+                         or not args.input_file or not args.output_file
+                         or not args.identity_name):
         parser.error("Invalid arguments")
     if args.decrypt and (not args.printer_private_key or not args.input_file
                          or not args.output_file):
@@ -732,12 +748,14 @@ def main():
         with open(args.slicer_private_key, "br") as key_file:
             slicer_private_key = crypto_serialization.load_der_private_key(
                 key_file.read(), None)
-        with open(args.printer_public_key, "br") as key_file:
-            printer_public_key = crypto_serialization.load_der_public_key(
-                key_file.read())
-
         printer_keys = []
-        printer_keys.append(printer_public_key)
+        if not args.sign_only:
+            with open(args.printer_public_key, "br") as key_file:
+                printer_public_key = crypto_serialization.load_der_public_key(
+                    key_file.read())
+
+            printer_keys.append(printer_public_key)
+
         encrypt_bgcode(args.input_file, args.output_file, printer_keys,
                        slicer_private_key, args.identity_name,
                        args.one_time_identity, args.encrypt_all)
