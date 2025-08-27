@@ -21,10 +21,6 @@
 
 #include <cmath>
 
-#if !PRINTER_IS_PRUSA_COREONE()
-    #error "A lot of magic number values in this file are CoreONE specific. Belt tuning has not been tested on any other printers, hence the values are probably not correct for them. Revise them at manual_belt_tuning_config.hpp"
-#endif
-
 using namespace marlin_server;
 using namespace manual_belt_tuning;
 

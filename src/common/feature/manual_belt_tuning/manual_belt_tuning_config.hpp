@@ -1,5 +1,7 @@
 #pragma once
 
+#include <printers.h>
+
 namespace manual_belt_tuning {
 
 // the limit of valid frequency diff in Hz
@@ -15,6 +17,8 @@ constexpr uint16_t accel_max = 10500;
 
 // 1m length belt waight
 constexpr float nominal_weight_kg_m = 0.007569f;
+
+#if PRINTER_IS_PRUSA_COREONE()
 
 // avg belt length (vibrating part)
 constexpr float length_belt = 0.267f;
@@ -36,6 +40,13 @@ constexpr uint16_t freq_result_max = 98;
 constexpr uint16_t belt_hz_per_rev = 15;
 // this constants represents average frequency change of the belt per one revolution of second belt screw
 constexpr uint16_t belt_hz_per_rev2 = 12;
+
+// optimal belt tension for the printer
+constexpr uint16_t tension_optimal_N = 19;
+
+#else
+    #error
+#endif
 
 // Calculates belt tension from their resonant frequency.
 // returns tension (in Newtons)
@@ -69,9 +80,6 @@ constexpr float calc_revs_from_freq(float df1, float df2, float k1, float k2) {
 constexpr float floor_to_half(float val) {
     return static_cast<float>(static_cast<int>(val * 2)) / 2.0f;
 }
-
-// optimal belt tension for the printer
-constexpr uint16_t tension_optimal_N = 19;
 
 // optimal frequency for top belt (in some cases lower belt has higher freq and optimal frequencies are switched)
 constexpr float higher_freq_belt_optimal = floor_to_half(tension_to_freq(tension_optimal_N, length_top_belt));
