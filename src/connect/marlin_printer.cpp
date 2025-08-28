@@ -579,7 +579,7 @@ bool MarlinPrinter::is_printing() const {
 }
 
 bool MarlinPrinter::is_in_error() const {
-    // This is true in redscreens, bluescreens and similar. These don't even
+    // This is true in error screens. These don't even
     // initialize a MarlinPrinter but ErrorPrinter.
     return false;
 }

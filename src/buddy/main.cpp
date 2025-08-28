@@ -286,7 +286,7 @@ extern "C" void main_cpp(void) {
         init_error_screen();
 
 #if BUDDY_ENABLE_WUI() && BUDDY_ENABLE_CONNECT()
-        // We want to send the redscreen/bluescreen/error to Connect to show there.
+        // We want to send the error screen to Connect to show there.
         //
         // For that we need networking (and some other peripherals). We do not
         // init the rest - including the USB stack.
