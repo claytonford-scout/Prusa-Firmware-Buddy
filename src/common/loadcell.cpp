@@ -30,6 +30,7 @@ METRIC_DEF(metric_loadcell_hp, "loadcell_hp", METRIC_VALUE_FLOAT, 0, METRIC_DISA
 METRIC_DEF(metric_loadcell_xy, "loadcell_xy", METRIC_VALUE_FLOAT, 0, METRIC_DISABLED);
 METRIC_DEF(metric_loadcell_age, "loadcell_age", METRIC_VALUE_INTEGER, 0, METRIC_DISABLED);
 METRIC_DEF(metric_loadcell_value, "loadcell_value", METRIC_VALUE_FLOAT, 0, METRIC_DISABLED);
+METRIC_DEF(mbl, "mbl", METRIC_VALUE_CUSTOM, 0, METRIC_DISABLED);
 
 LOG_COMPONENT_REF(Loadcell);
 
@@ -47,6 +48,8 @@ struct MetricsData {
     float filtered_z_load;
     float filtered_xy_load;
 
+    float z_pos;
+
     constexpr inline float tared_z_load() const {
         return Loadcell::get_tared_z_load(raw_value, scale, offset);
     }
@@ -56,7 +59,10 @@ StaticTimer_t metrics_timer_storage;
 TimerHandle_t metrics_timer;
 
 AtomicCircularQueue<MetricsData, uint8_t, 8> metrics_queue;
-static_assert(sizeof(metrics_queue) == 196); // Note - the queue is quite big
+
+// Note - the queue is quite big
+// The only purpose of this assert is this comment
+static_assert(sizeof(metrics_queue) == 228);
 
 void report_loadcell_metrics(tmrTimerControl *) {
     MetricsData d;
@@ -75,6 +81,7 @@ void report_loadcell_metrics(tmrTimerControl *) {
         metric_record_float_at_time(&metric_loadcell_xy, d.time_us, d.filtered_xy_load);
         metric_record_integer_at_time(&metric_loadcell_age, d.time_us, ticks_diff(d.time_us, ticks_us()));
         metric_record_float_at_time(&metric_loadcell_value, d.time_us, d.tared_z_load());
+        metric_record_custom(&mbl, " z=%0.3f,l=%0.3f", (double)d.z_pos, (double)d.tared_z_load());
     }
 }
 } // namespace
@@ -233,6 +240,8 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     const float filtered_xy_load = get_filtered_xy();
     const float tared_z_load = get_tared_z_load();
 
+    const float z_pos = buddy::probePositionLookback.get_position_at(time_us, []() { return planner.get_axis_position_mm(AxisEnum::Z_AXIS); });
+
     const MetricsData metrics_data {
         .time_us = time_us,
         .raw_value = loadcellRaw,
@@ -240,6 +249,7 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
         .scale = scale,
         .filtered_z_load = filtered_z_load,
         .filtered_xy_load = filtered_xy_load,
+        .z_pos = z_pos,
     };
     if (are_metrics_enabled()) {
         const bool needs_timer_start = metrics_queue.isEmpty();
@@ -315,7 +325,6 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     }
 
     // push sample for analysis
-    float z_pos = buddy::probePositionLookback.get_position_at(time_us, []() { return planner.get_axis_position_mm(AxisEnum::Z_AXIS); });
     if (!std::isnan(z_pos)) {
         analysis.StoreSample(time_us, z_pos, tared_z_load);
     } else {
