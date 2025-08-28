@@ -227,18 +227,69 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
         }
     }
 
+    const float tared_z_load = get_tared_z_load();
+
+    float filtered_z_load = NAN;
+    float filtered_xy_load = NAN;
+
     // handle filters only in high precision mode
     if (highPrecision) {
         z_filter.filter(this->loadcellRaw);
         xy_filter.filter(this->loadcellRaw);
+
+        filtered_z_load = get_filtered_z_load();
+        filtered_xy_load = get_filtered_xy();
+
+        if (tareCount != 0) {
+            // Undergoing tare process, only use valid samples
+            if (loadcellRaw != undefined_value) {
+                tareSum += loadcellRaw;
+                tareCount -= 1;
+            }
+        } else {
+            // Trigger Z endstop/probe
+            float loadForEndstops, threshold;
+            if (tareMode == TareMode::Static) {
+                loadForEndstops = tared_z_load;
+                threshold = thresholdStatic;
+            } else {
+                assert(!Endstops::is_z_probe_enabled() || z_filter.settled());
+                loadForEndstops = filtered_z_load;
+                threshold = thresholdContinuous;
+            }
+
+            if (endstop) {
+                if (loadForEndstops >= (threshold + hysteresis)) {
+                    endstop = false;
+                }
+                buddy::hw::zMin.isr();
+            } else {
+                if (loadForEndstops <= threshold) {
+                    endstop = true;
+                    buddy::hw::zMin.isr();
+                }
+            }
+
+            // Trigger XY endstop/probe
+            if (xy_endstop_enabled) {
+                assert(xy_filter.settled());
+
+                // Everything as absolute values, watch for changes.
+                // Load perpendicular to the sensor sense vector is not guaranteed to have defined sign.
+                if (abs(filtered_xy_load) > abs(XY_PROBE_THRESHOLD)) {
+                    xy_endstop = true;
+                    buddy::hw::zMin.isr();
+                }
+                if (abs(filtered_xy_load) < abs(XY_PROBE_THRESHOLD) - abs(XY_PROBE_HYSTERESIS)) {
+                    xy_endstop = false;
+                    buddy::hw::zMin.isr();
+                }
+            }
+        }
     }
 
     // save sample timestamp/age
     last_sample_time_us = time_us;
-
-    const float filtered_z_load = get_filtered_z_load();
-    const float filtered_xy_load = get_filtered_xy();
-    const float tared_z_load = get_tared_z_load();
 
     const float z_pos = buddy::probePositionLookback.get_position_at(time_us, []() { return planner.get_axis_position_mm(AxisEnum::Z_AXIS); });
 
@@ -265,53 +316,6 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     sensor_data().loadCell = tared_z_load;
     if (!std::isfinite(tared_z_load)) {
         fatal_error(ErrCode::ERR_SYSTEM_LOADCELL_INFINITE_LOAD);
-    }
-
-    if (tareCount != 0) {
-        // Undergoing tare process, only use valid samples
-        if (loadcellRaw != undefined_value) {
-            tareSum += loadcellRaw;
-            tareCount -= 1;
-        }
-    } else {
-        // Trigger Z endstop/probe
-        float loadForEndstops, threshold;
-        if (tareMode == TareMode::Static) {
-            loadForEndstops = tared_z_load;
-            threshold = thresholdStatic;
-        } else {
-            assert(!Endstops::is_z_probe_enabled() || z_filter.settled());
-            loadForEndstops = filtered_z_load;
-            threshold = thresholdContinuous;
-        }
-
-        if (endstop) {
-            if (loadForEndstops >= (threshold + hysteresis)) {
-                endstop = false;
-            }
-            buddy::hw::zMin.isr();
-        } else {
-            if (loadForEndstops <= threshold) {
-                endstop = true;
-                buddy::hw::zMin.isr();
-            }
-        }
-
-        // Trigger XY endstop/probe
-        if (xy_endstop_enabled) {
-            assert(xy_filter.settled());
-
-            // Everything as absolute values, watch for changes.
-            // Load perpendicular to the sensor sense vector is not guaranteed to have defined sign.
-            if (abs(filtered_xy_load) > abs(XY_PROBE_THRESHOLD)) {
-                xy_endstop = true;
-                buddy::hw::zMin.isr();
-            }
-            if (abs(filtered_xy_load) < abs(XY_PROBE_THRESHOLD) - abs(XY_PROBE_HYSTERESIS)) {
-                xy_endstop = false;
-                buddy::hw::zMin.isr();
-            }
-        }
     }
 
     if (Endstops::is_z_probe_enabled()) {

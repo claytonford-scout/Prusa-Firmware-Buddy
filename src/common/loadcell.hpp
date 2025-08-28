@@ -108,6 +108,8 @@ public:
     inline void DisableHighPrecision() {
         assert(highPrecision); // ensure HP is not recursively disabled
         highPrecision = false;
+        endstop = false;
+        xy_endstop = false;
     }
     inline bool IsHighPrecisionEnabled() const { return highPrecision; }
 
