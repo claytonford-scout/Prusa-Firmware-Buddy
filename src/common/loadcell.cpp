@@ -242,12 +242,12 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
         .filtered_xy_load = filtered_xy_load,
     };
     if (are_metrics_enabled()) {
-        if (metrics_queue.isEmpty()) {
-            if (!xTimerStartFromISR(metrics_timer, nullptr)) {
-                bsod("metrics_timer failed");
-            }
-        }
+        const bool needs_timer_start = metrics_queue.isEmpty();
         if (!metrics_queue.enqueue(metrics_data)) {
+            metrics_queue.clear();
+        }
+        if (needs_timer_start && !xTimerStartFromISR(metrics_timer, nullptr)) {
+            // If we failed to start the timer, clear the queue so that we can try starting it again next time
             metrics_queue.clear();
         }
     }
