@@ -314,6 +314,7 @@ set_feature_for_printers(
   )
 set_feature_for_printers(HAS_HUMAN_INTERACTIONS "MINI" "MK4" "MK3.5" "XL" "COREONE")
 set_feature_for_printers_master_board(HAS_LOADCELL "MK4" "iX" "XL" "XL_DEV_KIT" "COREONE")
+set_feature_for_printers_master_board(HAS_NEXTRUDER "MK4" "iX" "XL" "XL_DEV_KIT" "COREONE")
 set_feature_for_printers_master_board(HAS_SHEET_PROFILES "MK3.5" "MINI")
 set_feature_for_printers_master_board(HAS_HEATBREAK_TEMP "MK4" "iX" "XL" "XL_DEV_KIT" "COREONE")
 set_feature_for_printers_master_board(HAS_FILAMENT_HEATBREAK_PARAM "iX")

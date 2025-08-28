@@ -100,6 +100,7 @@
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_emergency_stop.h>
 #include <option/has_uneven_bed_prompt.h>
+#include <option/has_nextruder.h>
 
 #if HAS_DWARF()
     #include <puppies/Dwarf.hpp>
@@ -2083,12 +2084,14 @@ static void _server_print_loop(void) {
                 bool is_relative = gcode.axis_is_relative(AxisEnum::E_AXIS);
 
                 enqueue_gcode("M82"); // set E to absolute positions
-    #if HAS_LOADCELL()
+    #if HAS_NEXTRUDER()
                 enqueue_gcode("G1 E25 F1860"); // push filament into the nozzle - load distance from fsensor into nozzle tuned (hardcoded) for now
                 enqueue_gcode("G1 E35 F300"); // slowly push another 10mm (absolute E)
-    #else
+    #elif PRINTER_IS_PRUSA_MK3_5()
                 enqueue_gcode("G1 E50 F1860"); // push filament into the nozzle - load distance from fsensor into nozzle tuned (hardcoded) for now
                 enqueue_gcode("G1 E62 F300"); // slowly push another 12mm (absolute E)
+    #else
+        #error
     #endif
                 if (is_relative) {
                     enqueue_gcode("M83"); // set E back to relative positions

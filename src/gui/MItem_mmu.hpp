@@ -5,7 +5,7 @@
 #include "WindowMenuInfo.hpp"
 #include "WindowItemFormatableLabel.hpp"
 #include "i18n.h"
-#include <option/has_loadcell.h>
+#include <option/has_nextruder.h>
 #include <gui/menu_item/menu_item_select_menu.hpp>
 
 class MI_MMU_PRELOAD_ADVANCED : public IWindowMenuItem {
@@ -300,7 +300,7 @@ public:
 };
 
 class MI_DONE_EXTRUDER_MAINTENANCE : public IWindowMenuItem {
-#if HAS_LOADCELL()
+#if HAS_NEXTRUDER()
     constexpr static const char *const label = N_("Nextruder Maintenance");
 #else
     constexpr static const char *const label = N_("Extruder Maintenance");
