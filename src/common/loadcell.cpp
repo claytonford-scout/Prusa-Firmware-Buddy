@@ -227,18 +227,15 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
         }
     }
 
-    const float tared_z_load = get_tared_z_load();
+    const float tared_z_load = get_tared_z_load(loadcellRaw, scale, offset);
 
     float filtered_z_load = NAN;
     float filtered_xy_load = NAN;
 
     // handle filters only in high precision mode
     if (highPrecision) {
-        z_filter.filter(this->loadcellRaw);
-        xy_filter.filter(this->loadcellRaw);
-
-        filtered_z_load = get_filtered_z_load();
-        filtered_xy_load = get_filtered_xy();
+        filtered_z_load = z_filter.filter(this->loadcellRaw) * scale;
+        filtered_xy_load = xy_filter.filter(this->loadcellRaw) * scale;
 
         if (tareCount != 0) {
             // Undergoing tare process, only use valid samples

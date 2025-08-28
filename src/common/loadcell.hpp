@@ -93,9 +93,6 @@ public:
 
     // return loadcell load in grams
     inline static float get_tared_z_load(int32_t raw_sample, float scale, float offset) { return (scale * (raw_sample - offset)); }
-    inline float get_tared_z_load() const { return get_tared_z_load(loadcellRaw, scale, offset); }
-    inline float get_filtered_z_load() const { return z_filter.get_output() * scale; }
-    inline float get_filtered_xy() const { return xy_filter.get_output() * scale; }
 
     int32_t get_raw_value() const;
 
@@ -213,7 +210,7 @@ private:
             samples = 0;
         }
 
-        inline float filter(float input) {
+        [[nodiscard]] inline float filter(float input) {
             static_assert(NZEROS == 4, "This code works only for NZEROS == 4");
             static_assert(NPOLES == 4, "This code works only for NPOLES == 4");
             static_assert(A[0] == 1, "This code works only A[0] == 1");
@@ -232,10 +229,6 @@ private:
             yv[3] = yv[4];
             yv[4] = xv[0] + -2 * xv[2] + xv[4] - A[4] * yv[0] - A[3] * yv[1] - A[2] * yv[2] - A[1] * yv[3];
             return yv[4];
-        }
-
-        inline float get_output() const {
-            return yv[std::size(yv) - 1];
         }
 
         inline bool settled() const {

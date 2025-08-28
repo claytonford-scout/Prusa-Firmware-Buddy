@@ -17,6 +17,7 @@
 #include "i_selftest.hpp"
 #include "algorithm_scale.hpp"
 #include <climits>
+#include <sensor_data.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -237,7 +238,7 @@ LoopResult CSelftestPart_Loadcell::stateTapCheckCountDownInit() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateTapCheckCountDown() {
-    const int32_t load = -1 * loadcell.get_tared_z_load(); // Positive when pushing the nozzle up
+    const int32_t load = -1 * sensor_data().loadCell; // Positive when pushing the nozzle up
     loadcell_value_range.min = std::min(loadcell_value_range.min, load);
     loadcell_value_range.max = std::max(loadcell_value_range.max, load);
 
@@ -285,7 +286,7 @@ LoopResult CSelftestPart_Loadcell::stateTapCheck() {
         return LoopResult::GoToMark0; // timeout, retry entire touch sequence
     }
 
-    int32_t load = -1 * loadcell.get_tared_z_load(); // Positive when pushing the nozzle up
+    int32_t load = -1 * sensor_data().loadCell; // Positive when pushing the nozzle up
     bool pass = (load >= rConfig.tap_min_load_ok) && (load <= rConfig.tap_max_load_ok);
     if (pass) {
         log_info(Selftest, "%s tap check, load %dg successful in range <%d, %d>",
