@@ -684,16 +684,19 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
         METRIC_DEF(analysis_result, "probe_analysis", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
         auto result = loadcell.analysis.Analyse();
 
-        if (result.isGood) {
+        if (result.has_value()) {
           success = true;
-          last_probe_z = result.zCoordinate;
+          last_probe_z = result->z_coordinate;
           metric_record_custom(&analysis_result, " ok=%i,desc=\"all-good\"", true);
           SERIAL_ECHO_MSG("Probe classified as clean and OK");
           break;
+
         } else {
-          metric_record_custom(&analysis_result, " ok=%i,desc=\"%s\"", false, result.description);
+          const auto &err = result.error();
+          metric_record_custom(&analysis_result, " ok=%i,desc=\"%s\",arg=%f", false, err.description, err.arg);
           SERIAL_ECHO_START();
-          SERIAL_ECHOPAIR("Probe classified as NOK (", result.description);
+          SERIAL_ECHOPAIR("Probe classified as NOK (", err.description);
+          SERIAL_ECHOPAIR(", ", err.arg);
           SERIAL_ECHOLN(")");
         }
       #elif TOTAL_PROBING > 2

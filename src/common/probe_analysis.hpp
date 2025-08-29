@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cmath>
 #include <atomic>
+#include <expected>
 #if __has_include("metric.h") && !defined(PROBE_ANALYSIS_DISABLE_METRICS) && !defined(UNITTESTS)
     #define PROBE_ANALYSIS_WITH_METRICS
     #include "metric.h"
@@ -29,28 +30,20 @@ public:
     /// Zero is at the beginning of the window. Xth sample has time of samplingInterval * X.
     using Time = float;
 
-    /// Analysis result
-    struct Result {
-        /// True if the probe is considered precise/good and zCoordinate is set.
-        bool isGood;
+    struct AnalysisResult {
+        /// Coordinate of the bed
+        float z_coordinate;
+    };
 
-        /// Explanation for the classification result. Might be nullptr.
+    struct AnalysisError {
+        /// Explanation for the classification result.
         const char *description;
 
-        /// Coordinate of the bed (if isGood == true)
-        float zCoordinate;
-
-    public:
-        /// Create a result where the probe is classified as good
-        static inline Result Good(float zCoordinate) {
-            return Result { true, nullptr, zCoordinate };
-        }
-
-        /// Create a result where the probe is classified as bad
-        static inline Result Bad(const char *description) {
-            return Result { false, description, std::numeric_limits<float>::quiet_NaN() };
-        }
+        /// Value of the failed parameter
+        float arg = 0;
     };
+
+    using Result = std::expected<AnalysisResult, AnalysisError>;
 
     /// Entry of the moving window used for analysis.
     struct Record {

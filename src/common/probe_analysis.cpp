@@ -32,14 +32,14 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
 
     // First of all, shift Z coordinates in order to compansate for the system's delay.
     if (!CompensateForSystemDelay()) {
-        return Result::Bad("not-ready");
+        return std::unexpected(AnalysisError { "not-ready" });
     }
 
     // Next, calculate all the features
     Features features;
     CalculateHaltSpan(features);
     if (!CalculateAnalysisRange(features)) {
-        return Result::Bad("not-ready");
+        return std::unexpected(AnalysisError { "not-ready" });
     }
 
 #ifdef PROBE_ANALYSIS_WITH_METRICS
@@ -55,13 +55,13 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
 #endif
 
     if (CalculateLoadLineApproximationFeatures(features) == false) {
-        return Result::Bad("load-lines");
+        return std::unexpected(AnalysisError { "load-lines" });
     }
     if (CalculateZLineApproximationFeatures(features) == false) {
-        return Result::Bad("z-lines");
+        return std::unexpected(AnalysisError { "z-lines" });
     }
     if (!CheckLineSanity(features)) {
-        return Result::Bad("sanity-check");
+        return std::unexpected(AnalysisError { "sanity-check" });
     }
     CalculateLoadMeans(features);
     CalculateLoadAngles(features);
@@ -136,7 +136,7 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
         const char *feature = "feature-out-of-range";
         float value;
         if (HasOutOfRangeFeature(features, &feature, &value)) {
-            return Result::Bad(feature);
+            return std::unexpected(AnalysisError { .description = feature, .arg = value });
         }
     }
 
@@ -145,10 +145,10 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
     if (isGood) {
         float zCoordinate = InterpolateFinalZCoordinate(features);
         log_features_metrics(features, zCoordinate);
-        return Result::Good(zCoordinate);
+        return AnalysisResult { .z_coordinate = zCoordinate };
     } else {
         log_features_metrics(features, std::nullopt);
-        return Result::Bad("low-precision");
+        return std::unexpected(AnalysisError { "low-precision" });
     }
 }
 
