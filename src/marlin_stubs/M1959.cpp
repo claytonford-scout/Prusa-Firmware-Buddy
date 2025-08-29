@@ -122,8 +122,9 @@ struct Context {
 #endif
 };
 
-static PhasesInputShaperCalibration info_proceed() {
 #if HAS_ATTACHABLE_ACCELEROMETER()
+
+static PhasesInputShaperCalibration info_proceed() {
     // Check the accelerometer now. It would be annoying to do all the homing
     // and parking moves and then tell the user to turn off the printer, just
     // to do all the moves after the reboot again.
@@ -132,19 +133,9 @@ static PhasesInputShaperCalibration info_proceed() {
         return PhasesInputShaperCalibration::parking;
     }
     return PhasesInputShaperCalibration::connect_to_board;
-#else
-    // Proceed straight to parking stage, any accelerometer error will be reported
-    // after it happens.
-    return PhasesInputShaperCalibration::parking;
-#endif
 }
 
 static PhasesInputShaperCalibration info() {
-#if PRINTER_IS_PRUSA_XL()
-    // On XL, we don't need to be shown the info that asks the user to "ensure that the accelerometer is installed" - it's always on the board
-    return info_proceed();
-
-#else
     switch (wait_for_response(PhasesInputShaperCalibration::info)) {
     case Response::Continue:
         return info_proceed();
@@ -154,8 +145,9 @@ static PhasesInputShaperCalibration info() {
     default:
         std::terminate();
     }
-#endif
 }
+
+#endif
 
 // Note: This is only relevant for printers which HAS_ATTACHABLE_ACCELEROMETER()
 //       which coincidentally only have one hotend.
@@ -510,11 +502,9 @@ static PhasesInputShaperCalibration finish(Context &context) {
 
 static PhasesInputShaperCalibration get_next_phase(Context &context, const PhasesInputShaperCalibration phase) {
     switch (phase) {
+#if HAS_ATTACHABLE_ACCELEROMETER()
     case PhasesInputShaperCalibration::info:
         return info();
-    case PhasesInputShaperCalibration::parking:
-        return parking(context);
-#if HAS_ATTACHABLE_ACCELEROMETER()
     case PhasesInputShaperCalibration::connect_to_board:
         return connect_to_board(context);
     case PhasesInputShaperCalibration::wait_for_extruder_temperature:
@@ -524,6 +514,8 @@ static PhasesInputShaperCalibration get_next_phase(Context &context, const Phase
     case PhasesInputShaperCalibration::attach_to_bed:
         return attach_to_bed(context);
 #endif
+    case PhasesInputShaperCalibration::parking:
+        return parking(context);
     case PhasesInputShaperCalibration::measuring_x_axis:
         return measuring_x_axis(context);
     case PhasesInputShaperCalibration::measuring_y_axis:
@@ -560,7 +552,15 @@ namespace PrusaGcodeSuite {
 
 void M1959() {
     Context context;
-    PhasesInputShaperCalibration phase = PhasesInputShaperCalibration::info;
+    PhasesInputShaperCalibration phase =
+#if HAS_ATTACHABLE_ACCELEROMETER()
+        // On printers without permanently attached accelerometer, we need to asks user to "ensure that the accelerometer is installed"
+        PhasesInputShaperCalibration::info;
+#else
+        // Proceed straight to parking stage, any accelerometer error will be reported after it happens.
+        PhasesInputShaperCalibration::parking;
+#endif
+
     marlin_server::FSM_Holder holder { phase };
     do {
         phase = get_next_phase(context, phase);

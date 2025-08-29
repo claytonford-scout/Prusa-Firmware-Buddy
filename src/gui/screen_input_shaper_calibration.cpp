@@ -49,6 +49,8 @@ public:
     }
 };
 
+#if HAS_ATTACHABLE_ACCELEROMETER()
+
 class FrameInfo {
 private:
     window_text_t text;
@@ -81,6 +83,8 @@ private:
         "Attention: Ensure the accelerometer is properly connected. Follow the step-by-step guide in the link below:");
     std::array<char, 32> link_buffer;
 };
+
+#endif
 
 class FrameParking final {
 private:
@@ -230,14 +234,14 @@ public:
 };
 
 using Frames = FrameDefinitionList<ScreenInputShaperCalibration::FrameStorage,
-    FrameDefinition<PhasesInputShaperCalibration::info, FrameInfo>,
-    FrameDefinition<PhasesInputShaperCalibration::parking, FrameParking>,
 #if HAS_ATTACHABLE_ACCELEROMETER()
+    FrameDefinition<PhasesInputShaperCalibration::info, FrameInfo>,
     FrameDefinition<PhasesInputShaperCalibration::connect_to_board, FrameConnectToBoard>,
     FrameDefinition<PhasesInputShaperCalibration::wait_for_extruder_temperature, FrameWaitForExtruderTemperature>,
     FrameDefinition<PhasesInputShaperCalibration::attach_to_extruder, FrameAttachToExtruder>,
     FrameDefinition<PhasesInputShaperCalibration::attach_to_bed, FrameAttachToBed>,
 #endif
+    FrameDefinition<PhasesInputShaperCalibration::parking, FrameParking>,
     FrameDefinition<PhasesInputShaperCalibration::measuring_x_axis, FrameMeasuringExtruder>,
     FrameDefinition<PhasesInputShaperCalibration::measuring_y_axis, FrameMeasuringBed>,
     FrameDefinition<PhasesInputShaperCalibration::measurement_failed, FrameMeasurementFailed>,

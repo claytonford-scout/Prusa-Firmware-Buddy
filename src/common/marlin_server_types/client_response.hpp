@@ -543,14 +543,14 @@ constexpr inline ClientFSM client_fsm_from_phase(PhasesPhaseStepping) { return C
 
 #if HAS_INPUT_SHAPER_CALIBRATION()
 enum class PhasesInputShaperCalibration : PhaseUnderlyingType {
-    info,
-    parking,
     #if HAS_ATTACHABLE_ACCELEROMETER()
+    info,
     connect_to_board,
     wait_for_extruder_temperature,
     attach_to_extruder,
     attach_to_bed,
     #endif
+    parking,
     measuring_x_axis,
     measuring_y_axis,
     measurement_failed,
@@ -1038,14 +1038,14 @@ inline constexpr EnumArray<PhasesPhaseStepping, PhaseResponses, CountPhases<Phas
 
 #if HAS_INPUT_SHAPER_CALIBRATION()
 inline constexpr EnumArray<PhasesInputShaperCalibration, PhaseResponses, CountPhases<PhasesInputShaperCalibration>()> input_shaper_calibration_responses {
-    { PhasesInputShaperCalibration::info, { Response::Continue, Response::Abort } },
-        { PhasesInputShaperCalibration::parking, {} },
     #if HAS_ATTACHABLE_ACCELEROMETER()
+    { PhasesInputShaperCalibration::info, { Response::Continue, Response::Abort } },
         { PhasesInputShaperCalibration::connect_to_board, { Response::Abort } },
         { PhasesInputShaperCalibration::wait_for_extruder_temperature, { Response::Abort } },
         { PhasesInputShaperCalibration::attach_to_extruder, { Response::Continue, Response::Abort } },
         { PhasesInputShaperCalibration::attach_to_bed, { Response::Continue, Response::Abort } },
     #endif
+        { PhasesInputShaperCalibration::parking, {} },
         { PhasesInputShaperCalibration::measuring_x_axis, { Response::Abort } },
         { PhasesInputShaperCalibration::measuring_y_axis, { Response::Abort } },
         { PhasesInputShaperCalibration::measurement_failed, { Response::Retry, Response::Abort } },
