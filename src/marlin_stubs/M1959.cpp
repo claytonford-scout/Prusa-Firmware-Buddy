@@ -169,7 +169,6 @@ static PhasesInputShaperCalibration parking(Context &context) {
     GcodeSuite::G28_no_parser(true, true, true,
         {
             .only_if_needed = true,
-            .z_raise = 0,
             .precise = false, // We don't need precise position for this procedure
         });
 
