@@ -296,7 +296,7 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     // save sample timestamp/age
     last_sample_time_us = time_us;
 
-    const float z_pos = buddy::probePositionLookback.get_position_at(time_us, []() { return planner.get_axis_position_mm(AxisEnum::Z_AXIS); });
+    const float z_pos = buddy::probePositionLookback.get_position_at(time_us);
 
     const MetricsData metrics_data {
         .time_us = time_us,

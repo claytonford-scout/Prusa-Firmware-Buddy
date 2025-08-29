@@ -303,7 +303,7 @@ void adc_tick_1ms(void) {
 #endif
 
 #if HAS_LOADCELL()
-    buddy::probePositionLookback.update(planner.get_axis_position_mm(AxisEnum::Z_AXIS));
+    buddy::probePositionLookback.update();
 #endif
 }
 
