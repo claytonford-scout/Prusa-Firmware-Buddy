@@ -35,6 +35,15 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
         return std::unexpected(AnalysisError { "not-ready" });
     }
 
+    for (const auto &sample : window) {
+        if (std::isnan(sample.load)) {
+            return std::unexpected(AnalysisError { "load-nan" });
+        }
+        if (std::isnan(sample.z)) {
+            return std::unexpected(AnalysisError { "z-nan" });
+        }
+    }
+
     // Next, calculate all the features
     Features features;
     CalculateHaltSpan(features);

@@ -334,9 +334,10 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     }
 
     // push sample for analysis
-    if (!std::isnan(z_pos)) {
-        analysis.StoreSample(time_us, z_pos, tared_z_load);
-    } else {
+    // If the sample is nan, the analysis should detect it and fail
+    analysis.StoreSample(time_us, z_pos, tared_z_load);
+
+    if (std::isnan(z_pos)) {
         // Temporary disabled as this causes positive feedback loop by blocking the calling thread if the logs are
         // being uploaded to a remote server. This does not solve the problem entirely. There are other logs that
         // can block. Still this should fix most of the issues and allow us to test the rest of the functionality
