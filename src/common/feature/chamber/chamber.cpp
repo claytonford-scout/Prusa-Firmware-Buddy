@@ -54,7 +54,7 @@ void Chamber::step() {
     thermistor_temperature_ = xbuddy_extension().chamber_temperature();
 #endif
 
-    METRIC_DEF(metric_chamber_temp, "chamber_temp", METRIC_VALUE_FLOAT, 1000, METRIC_DISABLED);
+    METRIC_DEF(metric_chamber_temp, "chamber_temp", METRIC_VALUE_FLOAT, 1000, METRIC_ENABLED);
     if (thermistor_temperature_.has_value()) {
         metric_record_float(&metric_chamber_temp, thermistor_temperature_.value());
     } else {
