@@ -69,6 +69,9 @@ public:
      */
     void reset_filters();
 
+    /// Resets endstops to not triggered state
+    void reset_endstops();
+
     float GetScale() const;
 
     void set_xy_endstop(const bool enabled);
@@ -105,8 +108,7 @@ public:
     inline void DisableHighPrecision() {
         assert(highPrecision); // ensure HP is not recursively disabled
         highPrecision = false;
-        endstop = false;
-        xy_endstop = false;
+        reset_endstops();
     }
     inline bool IsHighPrecisionEnabled() const { return highPrecision; }
 

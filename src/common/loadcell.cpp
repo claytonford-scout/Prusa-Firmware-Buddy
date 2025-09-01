@@ -156,8 +156,7 @@ float Loadcell::Tare(TareMode mode) {
         offset = tareSum / requestedTareCount;
     }
 
-    endstop = false;
-    xy_endstop = false;
+    reset_endstops();
 
     return offset * scale; // Return offset scaled to output grams
 }
@@ -168,14 +167,26 @@ void Loadcell::Clear() {
     undefinedCnt = -UNDEFINED_INIT_MAX_CNT;
     offset = 0;
     reset_filters();
-    endstop = false;
-    xy_endstop = false;
+    reset_endstops();
 }
 
 void Loadcell::reset_filters() {
     z_filter.reset();
     xy_filter.reset();
     loadcell.analysis.Reset();
+}
+
+void Loadcell::reset_endstops() {
+    const bool changed = endstop || xy_endstop;
+
+    endstop = false;
+    xy_endstop = false;
+
+    if (changed) {
+        // Warning: Calling endstops from outside of ISR - needs to be reworked
+        // BFW-7674
+        buddy::hw::zMin.isr();
+    }
 }
 
 bool Loadcell::GetMinZEndstop() const {
