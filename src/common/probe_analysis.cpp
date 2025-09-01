@@ -31,8 +31,8 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
     };
 
     // First of all, shift Z coordinates in order to compansate for the system's delay.
-    if (!CompensateForSystemDelay()) {
-        return std::unexpected(AnalysisError { "not-ready" });
+    if (auto r = CompensateForSystemDelay(); !r) {
+        return std::unexpected(r.error());
     }
 
     for (const auto &sample : window) {
@@ -47,8 +47,8 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
     // Next, calculate all the features
     Features features;
     CalculateHaltSpan(features);
-    if (!CalculateAnalysisRange(features)) {
-        return std::unexpected(AnalysisError { "not-ready" });
+    if (auto r = CalculateAnalysisRange(features); !r) {
+        return std::unexpected(r.error());
     }
 
 #ifdef PROBE_ANALYSIS_WITH_METRICS
@@ -260,12 +260,12 @@ std::tuple<ProbeAnalysisBase::Sample, ProbeAnalysisBase::Line, ProbeAnalysisBase
     return std::make_tuple(bestSplit, leftLine, rightLine);
 }
 
-bool ProbeAnalysisBase::CompensateForSystemDelay() {
+std::expected<void, ProbeAnalysisBase::AnalysisError> ProbeAnalysisBase::CompensateForSystemDelay() {
     // Shift Z samples right (to the future)
     int samplesToShift = loadDelay / samplingInterval;
 
     if (window.size() <= static_cast<size_t>(samplesToShift) + 2) {
-        return false;
+        return std::unexpected(AnalysisError { .description = "small-window", .arg = (float)window.size() });
     }
 
     auto it = window.rbegin();
@@ -278,7 +278,7 @@ bool ProbeAnalysisBase::CompensateForSystemDelay() {
         it->z = (it - 1)->z + diff;
     }
 
-    return true;
+    return {};
 }
 
 void ProbeAnalysisBase::CalculateHaltSpan(Features &features) {
@@ -321,20 +321,20 @@ void ProbeAnalysisBase::CalculateHaltSpan(Features &features) {
     features.riseEnd = riseEnd;
 }
 
-bool ProbeAnalysisBase::CalculateAnalysisRange(Features &features) {
+std::expected<void, ProbeAnalysisBase::AnalysisError> ProbeAnalysisBase::CalculateAnalysisRange(Features &features) {
     int lookbackSamples = analysisLookback / samplingInterval;
     int lookaheadSamples = analysisLookahead / samplingInterval;
 
-    if (features.fallEnd - window.begin() < lookbackSamples) {
-        return false;
+    if (auto sz = features.fallEnd - window.begin(); sz < lookbackSamples) {
+        return std::unexpected(AnalysisError { .description = "small-lookback", .arg = (float)sz });
     }
-    if (window.end() - features.riseStart < lookaheadSamples) {
-        return false;
+    if (auto sz = window.end() - features.riseStart; sz < lookaheadSamples) {
+        return std::unexpected(AnalysisError { .description = "small-lookahead", .arg = (float)sz });
     }
 
     features.analysisStart = features.fallEnd - lookbackSamples;
     features.analysisEnd = features.riseStart + lookaheadSamples;
-    return true;
+    return {};
 }
 
 bool ProbeAnalysisBase::CalculateLoadLineApproximationFeatures(Features &features) {

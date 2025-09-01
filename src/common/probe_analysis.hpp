@@ -296,7 +296,7 @@ public:
     std::tuple<Sample, Line, Line> FindBestTwoLinesApproximation(SamplesRange samples, size_t gapSamples);
 
     /// Compensate for the fact that loadcell data are delayed in respect to Z axis coordinates.
-    bool CompensateForSystemDelay();
+    std::expected<void, AnalysisError> CompensateForSystemDelay();
 
     /// Calculate fallEnd and riseStart features
     void CalculateHaltSpan(Features &features);
@@ -304,7 +304,7 @@ public:
     /// Calculates the analysisStart and analysisEnd features.
     ///
     /// Returns true if we have enough data in the window. False otherwise.
-    bool CalculateAnalysisRange(Features &features);
+    std::expected<void, AnalysisError> CalculateAnalysisRange(Features &features);
 
     bool CalculateLoadLineApproximationFeatures(Features &features);
 

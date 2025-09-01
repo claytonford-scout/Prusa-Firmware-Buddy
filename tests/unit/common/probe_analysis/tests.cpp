@@ -60,7 +60,7 @@ SCENARIO("Analysis properly handles its sample window", "[probe_analysis]") {
             THEN("reports it's not ready for analysis") {
                 auto result = analysis.Analyse();
                 REQUIRE(!result);
-                REQUIRE_THAT(result.error().description, Catch::Equals("not-ready"));
+                REQUIRE_THAT(result.error().description, Catch::Equals("small-window"));
             }
         }
 
@@ -75,7 +75,7 @@ SCENARIO("Analysis properly handles its sample window", "[probe_analysis]") {
             THEN("it is still not ready") {
                 auto result = analysis.Analyse();
                 REQUIRE(!result);
-                REQUIRE_THAT(result.error().description, Catch::Equals("not-ready"));
+                REQUIRE_THAT(result.error().description, Catch::Equals("small-window"));
             }
         }
 
@@ -165,7 +165,7 @@ SCENARIO("Analysis properly handles its sample window", "[probe_analysis]") {
             THEN("the instance is no longer ready") {
                 auto result = analysis.Analyse();
                 REQUIRE(!result);
-                REQUIRE_THAT(result.error().description, Catch::Equals("not-ready"));
+                REQUIRE_THAT(result.error().description, Catch::Equals("small-window"));
             }
 
             THEN("the instance has an empty window") {
