@@ -179,7 +179,7 @@ void Loadcell::reset_filters() {
 }
 
 bool Loadcell::GetMinZEndstop() const {
-    return endstop && endstops.is_z_probe_enabled();
+    return endstop;
 }
 
 bool Loadcell::GetXYEndstop() const {
@@ -255,16 +255,13 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
                 threshold = thresholdContinuous;
             }
 
-            if (endstop) {
-                if (loadForEndstops >= (threshold + hysteresis)) {
-                    endstop = false;
-                }
+            if (endstop && loadForEndstops >= (threshold + hysteresis)) {
+                endstop = false;
                 buddy::hw::zMin.isr();
-            } else {
-                if (loadForEndstops <= threshold) {
-                    endstop = true;
-                    buddy::hw::zMin.isr();
-                }
+
+            } else if (!endstop && loadForEndstops <= threshold && endstops.is_z_probe_enabled()) {
+                endstop = true;
+                buddy::hw::zMin.isr();
             }
 
             // Trigger XY endstop/probe
