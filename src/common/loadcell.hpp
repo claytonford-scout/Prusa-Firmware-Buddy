@@ -265,8 +265,8 @@ private:
     int32_t loadcellRaw; // current sample
     int undefinedCnt; // undefined sample run length
 
-    bool endstop;
-    std::atomic<bool> xy_endstop;
+    bool endstop = false;
+    std::atomic<bool> xy_endstop = false;
     static_assert(std::atomic<decltype(xy_endstop)::value_type>::is_always_lock_free, "Lock free type must be used from ISR.");
     bool highPrecision;
 
