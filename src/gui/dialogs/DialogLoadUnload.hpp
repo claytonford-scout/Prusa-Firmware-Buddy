@@ -67,14 +67,6 @@ public:
     static const char *get_name(LoadUnloadMode mode);
     LoadUnloadMode get_mode() { return mode; }
 
-public:
-#if HAS_MMU2()
-    /// Returns whether there is a dialog open on an MMU error screen (that is waiting for user input)
-    static inline bool is_mmu2_error_screen_running() {
-        return instance && instance->current_phase == PhasesLoadUnload::MMU_ERRWaitingForUser;
-    }
-#endif
-
 protected:
     void notice_update(uint16_t errCode, const char *errTitle, const char *errDesc, ErrType type);
     void phaseEnter();
