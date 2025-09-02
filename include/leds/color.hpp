@@ -1,8 +1,6 @@
 #pragma once
-#include <stdint.h>
-#include <cmath>
-#include <tuple>
-#include "bsod.h"
+
+#include <cstdint>
 
 namespace leds {
 
