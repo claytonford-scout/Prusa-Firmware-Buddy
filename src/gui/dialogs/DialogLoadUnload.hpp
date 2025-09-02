@@ -1,96 +1,36 @@
 #pragma once
 
-#include "client_response.hpp"
-#include "error_codes_mmu.hpp"
-#include "i18n.h"
 #include "IDialogMarlin.hpp"
-#include "radio_button_fsm.hpp"
-#include "status_footer.hpp"
-#include "window_colored_rect.hpp"
-#include "window_icon.hpp"
-#include "window_numb.hpp"
-#include "window_progress.hpp"
-#include "window_text.hpp"
-#include <gui/text_error_url.hpp>
-#include <gui/qr.hpp>
-#include <optional>
+#include "client_response.hpp"
+#include "common/static_storage.hpp"
+#include "window_header.hpp"
 
-/**
- * @brief radio button for red screens
- * workaround - DialogLoadUnload already has an automatic radio button
- * but MMU red screens are many states masked as single state
- * automatic radio button cannot handle that
- */
-class RadioButtonNotice : public RadioButton {
-    PhasesLoadUnload current_phase;
-
-public:
-    /**
-     * @brief Construct a new Radio Button Mmu Err object
-     *
-     * @param parent window containing this object
-     * @param rect   rectangle enclosing all buttons
-     */
-    RadioButtonNotice(window_t *parent, Rect16 rect);
-    void ChangePhase(PhasesLoadUnload phase, PhaseResponses responses);
-
-protected:
-    void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
-};
-
-/**
- * @brief load unload and change filament dialog
- * with MMU support
- * MMU error are handled extra and are red
- */
-class DialogLoadUnload final : public IDialogMarlin {
+class DialogLoadUnload : public IDialogMarlin {
 private:
-    window_frame_t progress_frame;
-    window_text_t title;
-    WindowRoundedProgressBar progress_bar;
-    window_numb_t progress_number;
-    window_text_t label;
-    std::optional<PhasesLoadUnload> current_phase = std::nullopt;
-    RadioButtonFSM radio;
+    static constexpr size_t frame_static_storage_size = 1324;
 
 public:
-    void Change(fsm::BaseData data) override final;
-
-    static constexpr uint8_t MaxErrorCodeDigits = 10;
-
     DialogLoadUnload(fsm::BaseData data);
     ~DialogLoadUnload();
 
-    static void phaseAlertSound();
-    static void phaseWaitSound();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    using FrameStorage = StaticStorage<frame_static_storage_size>;
+#pragma GCC diagnostic pop
 
-    static const char *get_name(LoadUnloadMode mode);
-    LoadUnloadMode get_mode() { return mode; }
+    void Change(fsm::BaseData data) override;
 
 protected:
-    void notice_update(uint16_t errCode, const char *errTitle, const char *errDesc, ErrType type);
-    void phaseEnter();
+    void create_frame();
+    void destroy_frame();
+    void update_frame();
 
 private:
-    StatusFooter footer;
+    fsm::BaseData fsm_base_data;
+    FrameStorage frame_storage;
+    window_frame_t inner_frame;
 
-    window_frame_t notice_frame;
-
-    window_text_t notice_title;
-    window_text_t notice_text;
-    TextErrorUrlWindow notice_link;
-    window_icon_t notice_icon_hand;
-    window_icon_t notice_icon_type;
-    QRErrorUrlWindow notice_qr;
-    RadioButtonNotice notice_radio_button; // workaround, see RadioButtonNotice comment
-
-    window_text_t filament_type_text;
-    window_colored_rect filament_color_icon;
-
-    LoadUnloadMode mode = static_cast<LoadUnloadMode>(-1); // Set to some invalid value by default
-
-    // Needs to be held in memory because we're rendering the name from it
-    FilamentTypeParameters filament_type_parameters;
-
-    static DialogLoadUnload *instance; // needed for sounds
+    inline PhasesLoadUnload get_phase() const {
+        return GetEnumFromPhaseIndex<PhasesLoadUnload>(fsm_base_data.GetPhase());
+    }
 };
