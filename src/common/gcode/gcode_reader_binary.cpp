@@ -179,10 +179,15 @@ bool PrusaPackGcodeReader::stream_metadata_start(const Index *index) {
     {
         BlockHeader header;
 
-        const auto res = seek_block_header(header, index ? index->metadata : Index::not_indexed, false, [](BlockHeader &block_header) {
+        const auto res = seek_block_header(header, index ? index->metadata : Index::not_indexed, false, [this](BlockHeader &block_header) {
             switch (bgcode::core::EBlockType(block_header.type)) {
-            case bgcode::core::EBlockType::PrinterMetadata:
-                return IterateResult_t::Return;
+            case bgcode::core::EBlockType::PrinterMetadata: {
+                if (is_readable_metadata(block_header)) {
+                    return IterateResult_t::Return;
+                } else {
+                    return IterateResult_t::Continue;
+                }
+            }
             case bgcode::core::EBlockType::GCode:
             case bgcode::core::EBlockType::EncryptedBlock:
                 // No chance of finding it past this point.
@@ -200,6 +205,9 @@ bool PrusaPackGcodeReader::stream_metadata_start(const Index *index) {
         stream.current_plain_block_header = header;
     }
 
+    // Note: We have already checked the encoding previously (either in
+    // building the index or in the closure above). But we need to skip it to
+    // start at the actual data.
     uint16_t encoding;
     if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
         return false;
@@ -243,10 +251,14 @@ void PrusaPackGcodeReader::generate_index(Index &out, bool ignore_crc) {
             out.gcode = header.get_position();
             // All the interesting stuff is before actual gcodes. No reason to index further.
             return IterateResult_t::End;
-        case EBlockType::PrinterMetadata:
-            // Note: We are not really interested in the other metadata blocks.
-            out.metadata = header.get_position();
+        case EBlockType::PrinterMetadata: {
+            auto position = header.get_position();
+            if (is_readable_metadata(header)) {
+                // Note: We are not really interested in the other metadata blocks.
+                out.metadata = position;
+            }
             return IterateResult_t::Continue;
+        }
         case EBlockType::Thumbnail: {
             const auto details = thumbnail_details(header);
             if (!details.has_value()) {
@@ -696,6 +708,32 @@ std::optional<PrusaPackGcodeReader::ThumbnailDetails> PrusaPackGcodeReader::thum
         .num_bytes = block_header.uncompressed_size,
         .type = thumbnail_format_to_type(static_cast<bgcode::core::EThumbnailFormat>(thumb_header.format)),
     };
+}
+
+bool PrusaPackGcodeReader::is_readable_metadata(const BlockHeader &header) {
+    if ((ECompressionType)header.compressed_size != bgcode::core::ECompressionType::None) {
+        // We don't support compressed metadata (at least not now). Ignore this
+        // particular metadata block.
+        return false;
+    }
+
+    uint16_t encoding;
+    if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
+        return false;
+    }
+
+    if (fseek(file.get(), -sizeof(encoding), SEEK_CUR) == -1) {
+        return false;
+    }
+
+    if (encoding != (uint16_t)bgcode::core::EMetadataEncodingType::INI) {
+        // We don't know metadata headers of other formats. They could exist,
+        // but we don't know what to do about them - ignore this particular
+        // block. Maybe there'll be other block with metadata we can read.
+        return false;
+    }
+
+    return true;
 }
 
 AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger) {

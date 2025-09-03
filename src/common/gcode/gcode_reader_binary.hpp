@@ -211,4 +211,10 @@ private:
      * we are unable to decrypt isn't of the correct type).
      */
     bool is_of_type(const bgcode::core::BlockHeader &block_header, bgcode::core::EBlockType type);
+    /**
+     * @brief Is the printer metadata block readable to us?
+     *
+     * That is, format we can handle, compression we can handle.
+     */
+    bool is_readable_metadata(const bgcode::core::BlockHeader &block_header);
 };
