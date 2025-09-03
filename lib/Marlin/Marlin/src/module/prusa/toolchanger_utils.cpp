@@ -484,7 +484,9 @@ void PrusaToolChangerUtils::ConfRestorer::sample() {
     if (sampled) {
         bsod("Double sampled planner configuration");
     }
+    #if HAS_CLASSIC_JERK
     sampled_jerk = planner.settings.max_jerk;
+    #endif
     sampled_travel_acceleration = planner.settings.travel_acceleration;
     sampled_feedrate_mm_s = feedrate_mm_s;
     sampled_feedrate_percentage = feedrate_percentage;
@@ -502,7 +504,9 @@ void PrusaToolChangerUtils::ConfRestorer::restore_jerk() {
     }
 
     auto s = planner.user_settings;
+    #if HAS_CLASSIC_JERK
     s.max_jerk = sampled_jerk;
+    #endif
     planner.apply_settings(s);
 }
 

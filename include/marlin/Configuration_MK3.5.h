@@ -572,7 +572,7 @@
 //
 #define CLASSIC_JERK
 #if DISABLED(CLASSIC_JERK)
-    #define JUNCTION_DEVIATION_MM 0.02 // (mm) Distance from real junction edge
+    #define JUNCTION_DEVIATION_MM 0.01f // (mm) Distance from real junction edge
 #endif
 
 /**

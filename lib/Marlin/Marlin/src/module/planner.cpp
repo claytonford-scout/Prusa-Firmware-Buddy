@@ -162,12 +162,16 @@ void Planner::apply_settings(const user_planner_settings_t &settings, const bool
   static constexpr planner_settings_t standard_limits = {
     .max_acceleration_mm_per_s2 = HWLIMIT_NORMAL_MAX_ACCELERATION,
     .max_feedrate_mm_s = HWLIMIT_NORMAL_MAX_FEEDRATE,
+    #if HAS_CLASSIC_JERK
     .max_jerk = HWLIMIT_NORMAL_JERK,
+    #endif
   };
   static constexpr planner_settings_t stealth_limits = {
     .max_acceleration_mm_per_s2 = HWLIMIT_STEALTH_MAX_ACCELERATION,
     .max_feedrate_mm_s = HWLIMIT_STEALTH_MAX_FEEDRATE,
+    #if HAS_CLASSIC_JERK
     .max_jerk = HWLIMIT_STEALTH_JERK,
+    #endif
   };
   const auto &limits = stealth_mode_ ? stealth_limits : standard_limits;
 
@@ -194,7 +198,9 @@ void Planner::apply_settings(const user_planner_settings_t &settings, const bool
   if (!no_limits) {
     apply_limit(&planner_settings_t::max_feedrate_mm_s);
     apply_limit(&planner_settings_t::max_acceleration_mm_per_s2);
+    #if HAS_CLASSIC_JERK
     apply_limit(&planner_settings_t::max_jerk);
+    #endif
   }
 
   refresh_acceleration_rates();

@@ -319,7 +319,6 @@ void resume_loop() {
         planner.apply_settings(state_buf.planner.settings);
         planner.refresh_acceleration_rates();
 #if !HAS_CLASSIC_JERK
-        planner.max_e_jerk = state_buf.planner.max_jerk.e;
         planner.junction_deviation_mm = state_buf.planner.junction_deviation_mm;
 #endif
 
@@ -969,7 +968,6 @@ void ac_fault_isr() {
         state_buf.planner.settings = planner.user_settings;
 
 #if !HAS_CLASSIC_JERK
-        state_buf.planner.max_jerk.e = planner.max_e_jerk;
         state_buf.planner.junction_deviation_mm = planner.junction_deviation_mm;
 #endif
     }
