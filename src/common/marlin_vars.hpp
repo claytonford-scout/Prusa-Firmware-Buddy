@@ -457,20 +457,6 @@ public:
         job_history[0] = { job_id, result };
     }
 
-    /**
-     * @brief Get the last fsm state
-     *
-     * This is needed, because in Prusa link there is no way to use the callbacks as there is no place to call
-     * marlin_client::loop periodically. Also for this to be stored in an atomic, we would need to make
-     * atomic<uint64_t> work, which I was not able to do, if anyone knows how to, let me know.
-     *
-     * @return last change for both FSM queues and the generation (which changes every time a value here changes).
-     */
-    fsm::States get_fsm_states() {
-        auto guard = MarlinVarsLockGuard();
-        return fsm_states; // copy is intended
-    }
-
     /// fsm::States is a big struct, we don't want to be copying it around
     /// So, there is this peek function that allows the users to read it while the mutex is locked
     /// And the result of the peek callback is returned
