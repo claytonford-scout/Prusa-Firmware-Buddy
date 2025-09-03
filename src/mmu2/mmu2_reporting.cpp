@@ -27,6 +27,14 @@ void CheckErrorScreenUserInput() {
     //
     // The only problem with this location is the fact, that the ReportErrorHook is called roughly once per second, which may introduce some GUI lag.
     // However, on the 8-bit, the solution is the same, so probably not a big deal...
+
+    const bool is_err_active = marlin_vars().peek_fsm_states([](const fsm::States &states) {
+        return states.is_active(ClientFSM::Load_unload) && states[ClientFSM::Load_unload]->GetPhase() == std::to_underlying(PhasesLoadUnload::MMU_ERRWaitingForUser);
+    });
+    if (!is_err_active) {
+        return;
+    }
+
     const Response rsp = marlin_server::get_response_from_phase(PhasesLoadUnload::MMU_ERRWaitingForUser);
     if (rsp != Response::_none) {
         SetButtonResponse(ResponseToButtonOperations(rsp));
