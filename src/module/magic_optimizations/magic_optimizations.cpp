@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <bits/functexcept.h>
 
-#if __GLIBCXX__ != 20231009
+#if __GLIBCXX__ != 20231009 && __GLIBCXX__ != 20240614
     #error Please check that this necromancy still works
 #endif
 
