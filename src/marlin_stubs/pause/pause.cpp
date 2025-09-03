@@ -819,6 +819,7 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
         mapi::park(mapi::ZAction::no_move, mapi::park_positions[mapi::ParkPosition::purge]);
         planner.synchronize(); // Wait for the park to finish before continuing
     }
+    config_store().set_filament_type(settings.GetExtruder(), filament::get_type_to_load());
     set(LoadState::load_prime);
 }
 #endif // HAS_NOZZLE_CLEANER()
