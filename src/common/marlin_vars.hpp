@@ -471,6 +471,15 @@ public:
         return fsm_states; // copy is intended
     }
 
+    /// fsm::States is a big struct, we don't want to be copying it around
+    /// So, there is this peek function that allows the users to read it while the mutex is locked
+    /// And the result of the peek callback is returned
+    /// Be very quick, just copy the data you need and begone
+    auto peek_fsm_states(auto &&func) {
+        auto guard = MarlinVarsLockGuard();
+        return func(const_cast<const fsm::States &>(fsm_states));
+    }
+
     /**
      * @brief Set the last fsm state
      *
