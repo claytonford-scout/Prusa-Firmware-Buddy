@@ -268,7 +268,7 @@ DialogHandler &DialogHandler::Access() {
 
 void DialogHandler::Loop() {
     const auto old_top = current_fsm_top;
-    const auto new_top = marlin_vars().get_fsm_states().get_top();
+    const auto new_top = marlin_vars().peek_fsm_states([](const auto &states) { return states.get_top(); });
 
     if (new_top == old_top) {
         return;

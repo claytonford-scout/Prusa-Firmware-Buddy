@@ -1,4 +1,6 @@
 #include "printer_state.hpp"
+#include "client_fsm_types.h"
+#include "custom_uint31_t.hpp"
 
 #include <fsm_states.hpp>
 #include <client_response.hpp>
@@ -178,8 +180,15 @@ bool state_is_active(DeviceState state) {
 namespace printer_state {
 
 DeviceState get_state(bool ready) {
-    const auto &fsm_states = marlin_vars().get_fsm_states();
-    const auto &top = fsm_states.get_top();
+    std::optional<fsm::States::Top> top;
+    bool is_changing_filament, is_printing, is_preheating;
+    marlin_vars().peek_fsm_states([&](const auto &states) {
+        top = states.get_top();
+        is_changing_filament = states.is_active(ClientFSM::Load_unload);
+        is_printing = states.is_active(ClientFSM::Printing);
+        is_preheating = states.is_active(ClientFSM::Preheat);
+    });
+
     State state = marlin_vars().print_state;
     if (!top) {
         // No FSM present...
@@ -199,8 +208,8 @@ DeviceState get_state(bool ready) {
         // NOTE: handled in get_print_state, it can be Printing, Paused or Stopped
         break;
     case ClientFSM::Load_unload:
-        if (fsm_states.is_active(ClientFSM::Printing)) {
-            if (load_unload_attention_while_printing(*fsm_states[ClientFSM::Load_unload])) {
+        if (is_printing) {
+            if (load_unload_attention_while_printing(top->data)) {
                 return DeviceState::Attention;
             } else {
                 return DeviceState::Printing;
@@ -269,7 +278,7 @@ DeviceState get_state(bool ready) {
         // server, not at full FSM states and can't detect some things - in
         // particular, load / unload from menu is not detectable by this (if
         // "covered" by the warning).
-        if (state_is_active(result) || is_warning_attention(data) || fsm_states.is_active(ClientFSM::Load_unload) || fsm_states.is_active(ClientFSM::Preheat)) {
+        if (state_is_active(result) || is_warning_attention(data) || is_changing_filament || is_preheating) {
             return DeviceState::Attention;
         } else {
             return result;
@@ -367,18 +376,21 @@ DeviceState get_print_state(State state, bool ready) {
 StateWithDialog get_state_with_dialog(bool ready) {
     // Get the state and slap top FSM dialog on top of it, if any
     DeviceState state = get_state(ready);
-    const auto &fsm_states = marlin_vars().get_fsm_states();
-    const auto &fsm_gen = fsm_states.get_state_id();
-    const auto &top = fsm_states.get_top();
-    if (!top) {
-        return state;
-    }
+
+    std::optional<fsm::States::Top> top;
+    fsm::StateId fsm_gen;
+    bool is_printing;
+    marlin_vars().peek_fsm_states([&](const fsm::States &states) {
+        top = states.get_top();
+        fsm_gen = states.get_state_id();
+        is_printing = states.is_active(ClientFSM::Printing);
+    });
 
     const auto &data = top->data;
     switch (top->fsm_type) {
     case ClientFSM::Load_unload:
-        if (fsm_states.is_active(ClientFSM::Printing)) {
-            if (auto attention_code = load_unload_attention_while_printing(*fsm_states[ClientFSM::Load_unload]); attention_code.has_value()) {
+        if (is_printing) {
+            if (auto attention_code = load_unload_attention_while_printing(top->data); attention_code.has_value()) {
                 const Response *buttons = ClientResponses::get_available_responses(GetEnumFromPhaseIndex<PhasesLoadUnload>(data.GetPhase())).data();
                 return { state, attention_code, fsm_gen, buttons };
             }
@@ -483,9 +495,8 @@ bool has_job() {
     case DeviceState::Paused:
         return true;
     case DeviceState::Attention: {
-        const auto &fsm_states = marlin_vars().get_fsm_states();
         // Attention while printing or one of these questions before print(eg. wrong filament)
-        return (fsm_states[ClientFSM::Printing] || fsm_states[ClientFSM::PrintPreview]);
+        return marlin_vars().peek_fsm_states([](const auto &states) { return states[ClientFSM::Printing] || states[ClientFSM::PrintPreview]; });
     }
     default:
         return false;

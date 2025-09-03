@@ -608,8 +608,12 @@ void MarlinPrinter::reset_printer() {
 }
 
 const char *MarlinPrinter::dialog_action(printer_state::DialogId dialog_id, Response response) {
-    const fsm::States fsm_states = marlin_vars().get_fsm_states();
-    const std::optional<fsm::States::Top> top = fsm_states.get_top();
+    fsm::StateId fsm_gen;
+    std::optional<fsm::States::Top> top;
+    marlin_vars().peek_fsm_states([&](const auto &states) {
+        fsm_gen = states.get_state_id();
+        top = states.get_top();
+    });
 
     // We always send dialog from the top FSM, so we can
     // just check the dialog_id and if it is the same
@@ -618,7 +622,7 @@ const char *MarlinPrinter::dialog_action(printer_state::DialogId dialog_id, Resp
         return "No buttons";
     }
 
-    if (fsm_states.get_state_id() != dialog_id) {
+    if (fsm_gen != dialog_id) {
         return "Invalid dialog id";
     }
 
