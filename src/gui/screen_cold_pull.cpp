@@ -140,12 +140,14 @@ namespace frame {
     };
 
 #if HAS_TOOLCHANGER()
-    class SelectTool final : public ToolBox::DialogToolActionBox<ToolBox::MenuSelect> {
+    class SelectTool final {
+        ToolBox::DialogToolActionBox<ToolBox::MenuSelect> dlg;
+
     public:
         SelectTool(window_t *) {
             Screens::Access()->gui_loop_until_dialog_closed();
             Response r;
-            switch (get_result()) {
+            switch (dlg.get_result()) {
             case ToolBox::DialogResult::Tool1:
                 r = Response::Tool1;
                 break;

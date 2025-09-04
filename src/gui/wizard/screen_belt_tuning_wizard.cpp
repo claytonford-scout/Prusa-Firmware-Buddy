@@ -29,10 +29,10 @@ using FrameError = WithConstructorArgs<FramePrompt, Phase::error, N_("Error"), N
 // but at the same time we need to keep the parameter compatbility with the standard ones.
 // So I've created this class that holds the screen data, but implicitly casts to window_t* parent pointer that is expected by the standard frames
 struct FrameParent {
-    window_t *parent;
+    window_frame_t *parent;
     ScreenBeltTuningWizard *screen;
 
-    inline operator window_t *() const {
+    inline operator window_frame_t *() const {
         return parent;
     }
 };
@@ -95,7 +95,7 @@ class FrameMeasuring : public FrameProgressPrompt {
 public:
     FrameMeasuring(FrameParent parent)
         : FrameProgressPrompt(parent, Phase::measuring, N_("Measuring belt tension"), nullptr)
-        , graph(this)
+        , graph(parent)
         , screen(*parent.screen) //
     {
         static constexpr std::initializer_list layout {
@@ -114,7 +114,7 @@ public:
             // Radio
             standard_stack_layout::for_radio,
         };
-        layout_vertical_stack(GetRect(), { &title, &progress_bar, &info, &graph, &radio }, layout);
+        layout_vertical_stack(parent.parent->GetRect(), { &title, &progress_bar, &info, &graph, &radio }, layout);
 
         // Reset the graph data, we will be sequentially filling it during the measuring
         screen.graph_data.fill(0);
@@ -161,7 +161,7 @@ class FrameResults : public FramePrompt {
 public:
     FrameResults(FrameParent parent, PhaseBeltTuning phase = PhaseBeltTuning::results)
         : FramePrompt(parent, phase, nullptr, nullptr)
-        , graph(this)
+        , graph(parent)
         , phase(phase)
         , screen(*parent.screen) //
     {
@@ -178,7 +178,7 @@ public:
             // Radio
             standard_stack_layout::for_radio,
         };
-        layout_vertical_stack(GetRect(), { &title, &info, &graph, &radio }, layout);
+        layout_vertical_stack(parent.parent->GetRect(), { &title, &info, &graph, &radio }, layout);
     }
 
     void update(const fsm::PhaseData &serialized_data) {

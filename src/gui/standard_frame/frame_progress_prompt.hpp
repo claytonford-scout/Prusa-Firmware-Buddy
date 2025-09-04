@@ -15,10 +15,10 @@
  * - Centered text (alignment can be changed)
  * - A FSM radio
  */
-class FrameProgressPrompt : public window_frame_t {
+class FrameProgressPrompt {
 
 public:
-    FrameProgressPrompt(window_t *parent, FSMAndPhase fsm_phase, const string_view_utf8 &txt_title, const string_view_utf8 &txt_info, Align_t info_alignment = Align_t::CenterTop());
+    FrameProgressPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, const string_view_utf8 &txt_title, const string_view_utf8 &txt_info, Align_t info_alignment = Align_t::CenterTop());
 
 protected:
     window_text_t title;

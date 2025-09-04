@@ -77,12 +77,11 @@ constexpr Rect16 rect_joe = Rect16(0, rect_text_joe.Bottom(), GuiDefaults::Scree
 
 namespace frames {
 
-class FrameWait : public window_frame_t {
+class FrameWait {
 public:
-    FrameWait(window_t *parent)
-        : window_frame_t(parent, parent->GetRect())
-        , hourglass(this, rect_hourglass, &img::hourglass_26x39)
-        , wait(this, rect_wait, is_multiline::no, is_closed_on_click_t::no, _(txt_wait)) {
+    FrameWait(window_frame_t *parent)
+        : hourglass(parent, rect_hourglass, &img::hourglass_26x39)
+        , wait(parent, rect_wait, is_multiline::no, is_closed_on_click_t::no, _(txt_wait)) {
         hourglass.SetAlignment(Align_t::CenterBottom());
         wait.SetAlignment(Align_t::Center());
     }
@@ -92,15 +91,13 @@ protected:
     window_text_t wait;
 };
 
-class FrameTitle : public window_frame_t {
+class FrameTitle {
 public:
-    FrameTitle(window_t *parent, const char *txt_title)
-        : window_frame_t(parent, parent->GetRect())
-        , line(this, rect_line)
-        , title(this, rect_title, is_multiline::no, is_closed_on_click_t::no, _(txt_title)) {
+    FrameTitle(window_frame_t *parent, const char *txt_title)
+        : line(parent, rect_line)
+        , title(parent, rect_title, is_multiline::no, is_closed_on_click_t::no, _(txt_title)) {
         line.SetBackColor(COLOR_WHITE);
         title.set_font(Font::big);
-        static_cast<window_frame_t *>(parent)->CaptureNormalWindow(*this);
     }
 
 protected:
@@ -111,10 +108,10 @@ protected:
 class FrameTitleRadio : public FrameTitle {
 
 public:
-    FrameTitleRadio(window_t *parent, Phase phase, const char *txt_title)
+    FrameTitleRadio(window_frame_t *parent, Phase phase, const char *txt_title)
         : FrameTitle(parent, txt_title)
-        , radio(this, WizardDefaults::RectRadioButton(0), phase) {
-        CaptureNormalWindow(radio);
+        , radio(parent, WizardDefaults::RectRadioButton(0), phase) {
+        parent->CaptureNormalWindow(radio);
     }
 
 protected:
@@ -124,11 +121,11 @@ protected:
 class FrameTitleDescRadio : public FrameTitleRadio {
 
 public:
-    FrameTitleDescRadio(window_t *parent, Phase phase, const char *title, const char *desc)
+    FrameTitleDescRadio(window_frame_t *parent, Phase phase, const char *title, const char *desc)
         : FrameTitleRadio(parent, phase, title)
         , phase(phase)
         , desc_ptr(desc)
-        , desc(this, rect_desc, is_multiline::yes) {}
+        , desc(parent, rect_desc, is_multiline::yes) {}
 
     void update(fsm::PhaseData data) {
         if (phase == PhaseManualBeltTuning::show_tension) {
@@ -148,10 +145,10 @@ protected:
 
 class FrameFinishJoe : public FrameTitleRadio {
 public:
-    FrameFinishJoe(window_t *parent, Phase phase, const char *title, const char *desc)
+    FrameFinishJoe(window_frame_t *parent, Phase phase, const char *title, const char *desc)
         : FrameTitleRadio(parent, phase, title)
-        , desc(this, rect_text_joe, is_multiline::yes, is_closed_on_click_t::no, _(desc))
-        , joe(this, rect_joe, &img::pepa_42x64) {
+        , desc(parent, rect_text_joe, is_multiline::yes, is_closed_on_click_t::no, _(desc))
+        , joe(parent, rect_joe, &img::pepa_42x64) {
         joe.SetAlignment(Align_t::Center());
     }
 
@@ -163,15 +160,15 @@ protected:
 class FrameTitleDescRadioQR : public FrameTitleRadio {
 
 public:
-    FrameTitleDescRadioQR(window_t *parent, Phase phase, const char *title, const char *desc, const char *qr_link)
+    FrameTitleDescRadioQR(window_frame_t *parent, Phase phase, const char *title, const char *desc, const char *qr_link)
         : FrameTitleRadio(parent, phase, title)
         , phase(phase)
         , desc_ptr(desc)
-        , qr(this, rect_qr, Align_t::Center(), qr_link)
-        , scan_me(this, rect_scan_me, is_multiline::no, is_closed_on_click_t::no, _("Scan me"))
-        , details(this, rect_details, is_multiline::no, is_closed_on_click_t::no, _("More details at"))
-        , link(this, rect_link, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM(qr_link))
-        , desc(this, rect_desc_qr, is_multiline::yes) {
+        , qr(parent, rect_qr, Align_t::Center(), qr_link)
+        , scan_me(parent, rect_scan_me, is_multiline::no, is_closed_on_click_t::no, _("Scan me"))
+        , details(parent, rect_details, is_multiline::no, is_closed_on_click_t::no, _("More details at"))
+        , link(parent, rect_link, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM(qr_link))
+        , desc(parent, rect_desc_qr, is_multiline::yes) {
         qr.SetAlignment(Align_t::RightTop());
         details.set_font(Font::small);
         link.set_font(Font::small);
@@ -250,14 +247,14 @@ class FrameAdjustKnob : public FrameTitle {
     };
 
 public:
-    FrameAdjustKnob(window_t *parent, Phase phase, const char *title, const char *desc)
+    FrameAdjustKnob(window_frame_t *parent, Phase phase, const char *title, const char *desc)
         : FrameTitle(parent, title)
         , phase(phase)
-        , desc(this, rect_desc_knob, is_multiline::yes, is_closed_on_click_t::no, _(desc))
-        , numb(this, rect_numb, 0, "%0.1f Hz")
-        , knob(this, rect_knob, &img::turn_knob_81x55)
-        , plus(this, rect_plus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("+"))
-        , minus(this, rect_minus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("-"))
+        , desc(parent, rect_desc_knob, is_multiline::yes, is_closed_on_click_t::no, _(desc))
+        , numb(parent, rect_numb, 0, "%0.1f Hz")
+        , knob(parent, rect_knob, &img::turn_knob_81x55)
+        , plus(parent, rect_plus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("+"))
+        , minus(parent, rect_minus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("-"))
         , done(parent, phase) {
         plus.SetAlignment(Align_t::Center());
         plus.set_font(Font::big);

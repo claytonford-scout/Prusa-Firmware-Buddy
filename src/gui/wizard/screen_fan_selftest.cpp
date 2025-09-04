@@ -80,7 +80,7 @@ WindowIconOkNgArray make_fan_icon_array(window_t *parent, int16_t row, size_t ic
 }
 
 namespace frame {
-    class SelftestProgress : public window_frame_t {
+    class SelftestProgress {
 
         window_wizard_progress_t progress;
         FooterLine footer;
@@ -174,31 +174,31 @@ namespace frame {
         }
 
     public:
-        explicit SelftestProgress(window_t *parent, PhasesFansSelftest phase)
+        explicit SelftestProgress(window_frame_t *parent, PhasesFansSelftest phase)
+            // The #ifs screw up the autoformatter
             // clang-format off
-            : window_frame_t(parent, parent->GetRect())
-            , progress { this, WizardDefaults::row_1 }
+            : progress { parent, WizardDefaults::row_1 }
 #if HAS_TOOLCHANGER()
             // when toolchanger is enabled, do not show footer with fan RPM, because its likely that no tool will be picked and it would just show zero RPM
-            , footer(this, 0)
+            , footer(parent, 0)
 #else
-            , footer(this, 0, footer::Item::print_fan, footer::Item::heatbreak_fan)
+            , footer(parent, 0, footer::Item::print_fan, footer::Item::heatbreak_fan)
 #endif
-            , test_title { this, Rect16(WizardDefaults::col_0, WizardDefaults::row_0, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_fan_test) }
-            , print_label { this, Rect16(col_texts, row_2, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_print_fan) }
-            , print_label_icon { this, &img::turbine_16x16, point_i16_t({ WizardDefaults::col_0, row_2 }) }
-            , heatbreak_label { this, Rect16(col_texts, row_3, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_hotend_fan) }
-            , heatbreak_label_icon { this, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_3 }) }
-            , info { this, Rect16(col_texts, row_6, col_texts_w, WizardDefaults::row_h * 3), is_multiline::yes, is_closed_on_click_t::no }
-            , print_icons { make_fan_icon_array(this, row_2, HOTENDS) }
-            , heatbreak_icons { make_fan_icon_array(this, row_3, HOTENDS) }
+            , test_title { parent, Rect16(WizardDefaults::col_0, WizardDefaults::row_0, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_fan_test) }
+            , print_label { parent, Rect16(col_texts, row_2, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_print_fan) }
+            , print_label_icon { parent, &img::turbine_16x16, point_i16_t({ WizardDefaults::col_0, row_2 }) }
+            , heatbreak_label { parent, Rect16(col_texts, row_3, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_hotend_fan) }
+            , heatbreak_label_icon { parent, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_3 }) }
+            , info { parent, Rect16(col_texts, row_6, col_texts_w, WizardDefaults::row_h * 3), is_multiline::yes, is_closed_on_click_t::no }
+            , print_icons { make_fan_icon_array(parent, row_2, HOTENDS) }
+            , heatbreak_icons { make_fan_icon_array(parent, row_3, HOTENDS) }
 #if HAS_CHAMBER_API()
-            , enclosure_label { this, Rect16(col_texts, row_4, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_enclosure_fan) }
-            , enclosure_label_icon { this, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_4 }) }
-            , enclosure_icons { make_fan_icon_array(this, row_4, 1) }
+            , enclosure_label { parent, Rect16(col_texts, row_4, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_enclosure_fan) }
+            , enclosure_label_icon { parent, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_4 }) }
+            , enclosure_icons { make_fan_icon_array(parent, row_4, 1) }
 #endif
 #if HAS_SWITCHED_FAN_TEST()
-            , switched_fan_icons { make_fan_icon_array(this, row_5, HOTENDS) }
+            , switched_fan_icons { make_fan_icon_array(parent, row_5, HOTENDS) }
             , switched_fan_label { parent, Rect16(col_texts, row_5, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_fans_switched) }
 #endif
         // clang-format on

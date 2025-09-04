@@ -271,7 +271,7 @@ private:
 class FrameWifiScan {
 
 public:
-    FrameWifiScan(window_t *parent)
+    FrameWifiScan(window_frame_t *parent)
         : menu(parent, parent->GetRect()) {
 
         static_cast<window_frame_t *>(parent)->CaptureNormalWindow(menu);
@@ -284,14 +284,14 @@ private:
 class FrameAskSwitchToWifi : public FramePrompt {
 
 public:
-    FrameAskSwitchToWifi(window_t *parent)
+    FrameAskSwitchToWifi(window_frame_t *parent)
         : FramePrompt(parent, Phase::ask_switch_to_wifi, _("Switch to Wi-Fi"), _("You're already successfully connected through the ethernet cable.\nSwitch to Wi-Fi and continue?")) {
     }
 };
 
 class FrameTextWithSSID : public FramePrompt {
 public:
-    FrameTextWithSSID(window_t *parent, Phase phase, const string_view_utf8 &txt_title, const string_view_utf8 &txt_info)
+    FrameTextWithSSID(window_frame_t *parent, Phase phase, const string_view_utf8 &txt_title, const string_view_utf8 &txt_info)
         : FramePrompt(parent, phase, txt_title, txt_info)
         , ssid_text(parent, info.GetRect(), is_multiline::no) {
         const Rect16 r = ssid_text.GetRect();
@@ -314,21 +314,21 @@ protected:
 class FrameConnectingFinishable : public FrameTextWithSSID {
 
 public:
-    FrameConnectingFinishable(window_t *parent)
+    FrameConnectingFinishable(window_frame_t *parent)
         : FrameTextWithSSID(parent, Phase::connecting_finishable, _("Connecting to:"), _("You can press 'Finish' to continue connecting on the background.")) {}
 };
 
 class FrameConnectingNonfinishable : public FrameTextWithSSID {
 
 public:
-    FrameConnectingNonfinishable(window_t *parent)
+    FrameConnectingNonfinishable(window_frame_t *parent)
         : FrameTextWithSSID(parent, Phase::connecting_nonfinishable, _("Connecting to:"), {}) {}
 };
 
 class FrameESPError : public FramePrompt {
 
 public:
-    FrameESPError(window_t *parent)
+    FrameESPError(window_frame_t *parent)
         : FramePrompt(parent, Phase::no_interface_error, _("No network interface"), _("The Wi-Fi module is not working properly or is missing.\n\nInsert the module, try restarting the printer, or use the ethernet cable.")) {
     }
 };
@@ -336,7 +336,7 @@ public:
 class FrameError : public FramePrompt {
 
 public:
-    FrameError(window_t *parent)
+    FrameError(window_frame_t *parent)
         : FramePrompt(parent, Phase::connection_error, _("Error"), _("There was an error connecting to the Wi-Fi.")) {
     }
 };
@@ -344,7 +344,7 @@ public:
 class FrameConnected : public FrameTextWithSSID {
 
 public:
-    FrameConnected(window_t *parent)
+    FrameConnected(window_frame_t *parent)
         : FrameTextWithSSID(parent, Phase::connected, _("Successfully connected to:"), _("You can now fully use all network features of the printer.")) {
         if (config_store().active_netdev.get() != NETDEV_ESP_ID) {
             ssid_text.SetText(_("Ethernet"));
@@ -357,7 +357,7 @@ private:
 class FrameWaitForINI : public FramePrompt {
 
 public:
-    FrameWaitForINI(window_t *parent)
+    FrameWaitForINI(window_frame_t *parent)
         : FramePrompt(parent, Phase::wait_for_ini_file, _("Credentials from INI"), _("Please insert a flash drive with a network configuration file.\n\nThe configuration file can be generated in PrusaSlicer.")) {
     }
 };
@@ -365,7 +365,7 @@ public:
 class FrameAskDeleteINIFile : public FramePrompt {
 
 public:
-    FrameAskDeleteINIFile(window_t *parent)
+    FrameAskDeleteINIFile(window_frame_t *parent)
         : FramePrompt(parent, Phase::ask_delete_ini_file, _("Delete INI file"), _("Delete credentials INI file? (Recommended)")) {
     }
 };
@@ -400,7 +400,7 @@ class FrameAskUsePrusaApp : public FrameRadioQR {
     static constexpr const char *url = "prusa.io/app";
 
 public:
-    FrameAskUsePrusaApp(window_t *parent)
+    FrameAskUsePrusaApp(window_frame_t *parent)
         : FrameRadioQR(parent, Phase::ask_use_prusa_app, _("Do you want to connect to the Wi-Fi with the Prusa app on your phone using NFC?"), url, url) {
     }
 };
@@ -409,7 +409,7 @@ class FrameWaitForNFC : public FramePrompt {
     nfc::SharedEnabler nfc_enable;
 
 public:
-    FrameWaitForNFC(window_t *parent)
+    FrameWaitForNFC(window_frame_t *parent)
         : FramePrompt(parent, Phase::wait_for_nfc,
             _("Credentials via NFC"),
             _("1. Open Prusa app on your mobile device.\n\n2. Go to in-app Menu and select \"Set up Printer Wi-Fi.\"\n\n3. Follow on-screen instructions."),
@@ -420,7 +420,7 @@ public:
 class FrameConfirmNFC : public FramePrompt {
 
 public:
-    FrameConfirmNFC(window_t *parent)
+    FrameConfirmNFC(window_frame_t *parent)
         : FramePrompt(parent, Phase::nfc_confirm, _("Credentials via NFC"), {}) {
         static constexpr const char *wifi_credentials_loaded_txt = N_("Wi-Fi credentials loaded via NFC.\nApply credentials?\n\nSSID: %s");
         string_view_utf8 str;
@@ -439,7 +439,7 @@ protected:
 class FrameAskSetupPrusaConnect : public FramePrompt {
 
 public:
-    FrameAskSetupPrusaConnect(window_t *parent)
+    FrameAskSetupPrusaConnect(window_frame_t *parent)
         : FramePrompt(parent, Phase::ask_setup_prusa_connect, _("Set up Prusa Connect?"), _("Do you want to add your printer to Prusa Connect?")) {
     }
 };
