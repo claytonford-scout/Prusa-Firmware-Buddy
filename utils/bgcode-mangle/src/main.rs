@@ -144,6 +144,24 @@ impl BlockHeader {
     }
 }
 
+fn gen_printer_metadata() -> Vec<u8> {
+    let header = BlockHeader {
+        tp: BlockType::PrinterMetadata,
+        compression: Compression::None,
+        uncompressed_size: 0,
+        compressed_size: 0,
+    };
+    let mut result = Vec::new();
+
+    header.write(&mut result).expect("Write to Vec doesn't fail");
+    result.extend([0x42, 0x00]); // Some unknown format the printer doesn't know.
+    // Here we have empty section, no actual data.
+    let crc = crc32fast::hash(&result);
+    result.write_u32::<NativeEndian>(crc).expect("Write to Vec doesn't fail");
+
+    result
+}
+
 /// Kill some CRCs in the file.
 ///
 /// For testing purposes.
@@ -158,6 +176,15 @@ struct Args {
     /// Kill these blocks.
     #[arg(short, long)]
     killblocks: Vec<usize>,
+
+    /// Insert a predefined block.
+    ///
+    /// Insert a printer metadata block with unknown format into the output file at given position
+    /// (0 means before the first block, 1 means after the first block, etc).
+    ///
+    /// The block is hardcoded in the source code.
+    #[arg(short, long)]
+    insert_at: Option<usize>,
 }
 
 fn main() -> Result<(), Error> {
@@ -192,6 +219,11 @@ fn main() -> Result<(), Error> {
     let mut idx = 0;
     let killblocks: HashSet<usize> = args.killblocks.into_iter().collect();
     while let Some(header) = BlockHeader::read(&mut input).context("Block header")? {
+        if Some(idx) == args.insert_at {
+            println!("Inserted into output at {idx}");
+            output.write_all(&gen_printer_metadata()).context("Writing additional block")?;
+            idx += 1;
+        }
         debug!("Block header: {header:?}");
         block.clear();
         let size = header.payload_size_with_params() as usize + checksum_size;
@@ -224,4 +256,23 @@ fn main() -> Result<(), Error> {
     debug!("Done reading");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use std::io::Cursor;
+
+    use super::*;
+
+    #[test]
+    fn gen_meta_read() {
+        let mut input = Cursor::new(gen_printer_metadata());
+        let header = BlockHeader::read(&mut input).unwrap().unwrap();
+        assert_eq!(header.tp, BlockType::PrinterMetadata);
+        let size = header.payload_size_with_params();
+        assert_eq!(size, 2 /* Just format, no content */);
+        let position = input.position();
+        let input = input.into_inner();
+        assert_eq!(input.len() - position as usize, size as usize + 4 /* CRC */);
+    }
 }

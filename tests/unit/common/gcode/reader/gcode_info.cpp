@@ -18,6 +18,8 @@ struct TestFile {
 const std::vector<TestFile> test_files = {
     { NEW_PLAIN, false, true },
     { NEW_BINARY, false, true },
+    { NEW_BINARY_META_AFTER, false, true },
+    { NEW_BINARY_META_BEFORE, false, true },
     { NEW_ENCRYPTED, true, true },
     { NEW_ENCRYPTED_MULTI, true, true },
     { NEW_ENCRYPTED_POLY, true, true },

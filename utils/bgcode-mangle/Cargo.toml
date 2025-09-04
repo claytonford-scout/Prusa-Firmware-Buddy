@@ -1,5 +1,5 @@
 [package]
-name = "crckill"
+name = "bgcode-mangle"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+crc32fast = "1"
 byteorder = "1"
 log = "0.4"
 env_logger = "0.11"

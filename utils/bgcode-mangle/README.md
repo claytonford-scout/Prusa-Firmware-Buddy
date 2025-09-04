@@ -1,8 +1,11 @@
 # README
 
+A simple tool that can mangle bgcode files a bit, to generate testfiles.
+
 A simple tool that can take a bgcode with CRCs and:
 a) List all the blocks there.
 b) Mangle the CRCs of selected blocks.
+c) Insert an unknown printer metadata block into the output.
 
 Testing purposes, to create a „corrupt“ gcode file (the actual content is left
 intact and we damage the CRC, but that's the same from the checking
@@ -21,4 +24,10 @@ Now, pick any number of blocks to kill and list them:
 
 ```
 cargo run -- input.bgcode output.bgcode -k 3 -k 13
+```
+
+Or, insert a metadata block at given position:
+
+```
+cargo run -- input.bgcode output.bgcode -i 2
 ```

@@ -94,6 +94,8 @@ file(
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_no_last_block.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new.gcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new_meta_after.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new_meta_before.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc_multiple.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc_poly.bgcode

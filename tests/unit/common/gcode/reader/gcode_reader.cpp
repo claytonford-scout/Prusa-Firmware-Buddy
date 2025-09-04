@@ -55,6 +55,8 @@ const std::vector<TestFile> test_files = {
     { BINARY_ENCRYPTED_CORRECT_GCODE, true, false, false, false, true },
     { NEW_PLAIN, false, true, true, false, true },
     { NEW_BINARY, true, false, true, true, true },
+    { NEW_BINARY_META_BEFORE, true, false, true, true, true },
+    { NEW_BINARY_META_AFTER, true, false, true, true, true },
     { NEW_ENCRYPTED, true, false, true, true, true },
     { NEW_ENCRYPTED_MULTI, true, false, true, true, true },
     { NEW_ENCRYPTED_POLY, true, false, true, true, true },
