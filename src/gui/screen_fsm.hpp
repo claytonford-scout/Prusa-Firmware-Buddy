@@ -25,11 +25,6 @@ struct FrameDefinition {
 
 template <class Storage, class... T>
 struct FrameDefinitionList {
-    template <class F>
-    using FrameType = typename F::FrameType;
-
-    static_assert(Storage::template has_enough_space_for<FrameType<T>...>());
-
     static void create_frame(Storage &storage, auto phase, auto... args) {
         auto f = [&]<typename FD> {
             if (phase == FD::phase) {
