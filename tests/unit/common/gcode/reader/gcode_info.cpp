@@ -1,6 +1,7 @@
 #include "test_files.hpp"
 
 #include <gcode_reader_any.hpp>
+#include <gcode_reader_binary.hpp>
 #include <gcode_info.hpp>
 #include <catch2/catch.hpp>
 
@@ -64,4 +65,60 @@ TEST_CASE("GCodeInfo") {
             }
         }
     }
+}
+
+TEST_CASE("GCodeInfo::is_valid_for_print") {
+    struct stat st;
+    REQUIRE(stat(NEW_ENCRYPTED, &st) == 0);
+
+    size_t seen_printable_cnt = 0;
+    for (size_t i = 0; i < (size_t)st.st_size - 1000 /* It is printable sooner than at the end */; i++) {
+        INFO("Prefix size: " << i);
+        FILE *f(fopen(NEW_ENCRYPTED, "rb"));
+        REQUIRE(f);
+        // Note: It takes ownership.
+        PrusaPackGcodeReader reader(*f, st);
+        transfers::PartialFile::State validity;
+        validity.total_size = st.st_size;
+        validity.extend_head(i);
+
+        reader.set_validity(validity);
+
+        GCodeInfo info;
+        if (info.check_valid_for_print(reader)) {
+            // Twice in a row on the same one should still work.
+            if (!info.check_valid_for_print(reader)) {
+                INFO("Failed with " << seen_printable_cnt);
+                INFO("Error: " << (info.error_str() ?: ""));
+                FAIL();
+            }
+
+            seen_printable_cnt++;
+
+            if (seen_printable_cnt > 300) {
+                // Just to make the test run faster... no need to keep trying
+                // deep into the actual gcode area.
+                break;
+            }
+
+            // Now, retry with decryption allowed, see there's no difference.
+            FILE *f2(fopen(NEW_ENCRYPTED, "rb"));
+            REQUIRE(f2);
+            PrusaPackGcodeReader reader2(*f2, st, true);
+
+            reader2.set_validity(validity);
+
+            REQUIRE(info.check_valid_for_print(reader2));
+        } else {
+            // Once the file becomes printable, it _stays_ printable even if we
+            // add more bytes to it.
+            REQUIRE(seen_printable_cnt == 0);
+        }
+
+        // No matter what, it shouldn't result in an error - only that it's not
+        // printable _yet_.
+        REQUIRE(!info.error_str());
+    }
+
+    REQUIRE(seen_printable_cnt > 0);
 }

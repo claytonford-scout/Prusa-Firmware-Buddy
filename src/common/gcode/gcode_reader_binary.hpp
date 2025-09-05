@@ -23,7 +23,7 @@ extern "C" {
 /**
  * @brief Implementation of IGcodeReader for PrusaPack files
  */
-class PrusaPackGcodeReader final : public GcodeReaderCommon {
+class PrusaPackGcodeReader : public GcodeReaderCommon {
 public:
     PrusaPackGcodeReader(FILE &f, const struct stat &stat_info, bool allow_decryption = false
 #if HAS_E2EE_SUPPORT()

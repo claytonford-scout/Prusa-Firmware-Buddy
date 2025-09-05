@@ -968,7 +968,7 @@ public:
 };
 } // namespace
 
-bool PrusaPackGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {
+bool PrusaPackGcodeReader::valid_for_print(bool full_check) {
     ValidationContext valid_context(full_check);
     if (full_check) {
         // To have the file_header initialized for the hash
