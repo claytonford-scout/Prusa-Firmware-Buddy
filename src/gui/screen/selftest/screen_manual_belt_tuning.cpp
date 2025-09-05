@@ -277,28 +277,17 @@ private:
 
 namespace {
 
-using FrameIntro = WithConstructorArgs<frames::FrameTitleDescRadioQR, Phase::intro, txt_title_begin, txt_desc_begin, link_begin_calib>;
-using FrameCheckXGantry = WithConstructorArgs<frames::FrameTitleDescRadioQR, Phase::check_x_gantry, txt_title_gantry, txt_desc_gantry, link_belt_calib_gantry>;
-using FrameWait = WithConstructorArgs<frames::FrameWait>;
-using FrameIntroMeasure = WithConstructorArgs<frames::FrameTitleDescRadioQR, Phase::intro_measure, txt_title_measure, txt_desc_measure, link_begin_calib>;
-using FrameMeasureUpBelt = WithConstructorArgs<frames::FrameAdjustKnob, Phase::measure_upper_belt, txt_title_up_belt_freq, txt_desc_up_belt_freq>;
-using FrameMeasureLoBelt = WithConstructorArgs<frames::FrameAdjustKnob, Phase::measure_lower_belt, txt_title_lo_belt_freq, txt_desc_lo_belt_freq>;
-using FrameShowTensions = WithConstructorArgs<frames::FrameTitleDescRadio, Phase::show_tension, txt_title_freq_report, txt_desc_freq_report>;
-using FrameAlignmentIssue = WithConstructorArgs<frames::FrameTitleDescRadioQR, Phase::alignment_issue, txt_title_alignment_issue, txt_desc_alignment_issue, link_belt_calib_gantry>;
-using FrameAdjustTensioners = WithConstructorArgs<frames::FrameTitleDescRadioQR, Phase::adjust_tensioners, txt_title_turn_screw, txt_desc_turn_screw, link_tensioning>;
-using FrameFinished = WithConstructorArgs<frames::FrameFinishJoe, Phase::finished, txt_title_finished, txt_desc_finished>;
-
 using Frames = FrameDefinitionList<ScreenManualBeltTuning::FrameStorage,
-    FrameDefinition<Phase::intro, FrameIntro>,
-    FrameDefinition<Phase::check_x_gantry, FrameCheckXGantry>,
-    FrameDefinition<Phase::homing_wait, FrameWait>,
-    FrameDefinition<Phase::intro_measure, FrameIntroMeasure>,
-    FrameDefinition<Phase::measure_upper_belt, FrameMeasureUpBelt>,
-    FrameDefinition<Phase::measure_lower_belt, FrameMeasureLoBelt>,
-    FrameDefinition<Phase::show_tension, FrameShowTensions>,
-    FrameDefinition<Phase::alignment_issue, FrameAlignmentIssue>,
-    FrameDefinition<Phase::adjust_tensioners, FrameAdjustTensioners>,
-    FrameDefinition<Phase::finished, FrameFinished>>;
+    FrameDefinition<Phase::intro, frames::FrameTitleDescRadioQR, Phase::intro, txt_title_begin, txt_desc_begin, link_begin_calib>,
+    FrameDefinition<Phase::check_x_gantry, frames::FrameTitleDescRadioQR, Phase::check_x_gantry, txt_title_gantry, txt_desc_gantry, link_belt_calib_gantry>,
+    FrameDefinition<Phase::homing_wait, frames::FrameWait>,
+    FrameDefinition<Phase::intro_measure, frames::FrameTitleDescRadioQR, Phase::intro_measure, txt_title_measure, txt_desc_measure, link_begin_calib>,
+    FrameDefinition<Phase::measure_upper_belt, frames::FrameAdjustKnob, Phase::measure_upper_belt, txt_title_up_belt_freq, txt_desc_up_belt_freq>,
+    FrameDefinition<Phase::measure_lower_belt, frames::FrameAdjustKnob, Phase::measure_lower_belt, txt_title_lo_belt_freq, txt_desc_lo_belt_freq>,
+    FrameDefinition<Phase::show_tension, frames::FrameTitleDescRadio, Phase::show_tension, txt_title_freq_report, txt_desc_freq_report>,
+    FrameDefinition<Phase::alignment_issue, frames::FrameTitleDescRadioQR, Phase::alignment_issue, txt_title_alignment_issue, txt_desc_alignment_issue, link_belt_calib_gantry>,
+    FrameDefinition<Phase::adjust_tensioners, frames::FrameTitleDescRadioQR, Phase::adjust_tensioners, txt_title_turn_screw, txt_desc_turn_screw, link_tensioning>,
+    FrameDefinition<Phase::finished, frames::FrameFinishJoe, Phase::finished, txt_title_finished, txt_desc_finished>>;
 
 } // namespace
 
