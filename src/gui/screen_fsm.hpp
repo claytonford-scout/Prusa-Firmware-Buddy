@@ -17,7 +17,7 @@ concept is_update_callable = std::is_invocable_v<decltype(&T::update), T &, fsm:
 
 }; // namespace common_frames
 
-template <auto Phase, class Frame>
+template <auto Phase, class Frame, auto... constructor_args>
 struct FrameDefinition {
     using FrameType = Frame;
     static constexpr auto phase = Phase;
@@ -26,12 +26,12 @@ struct FrameDefinition {
 template <class Storage, class... T>
 struct FrameDefinitionList {
     static void create_frame(Storage &storage, auto phase, auto... args) {
-        auto f = [&]<typename FD> {
-            if (phase == FD::phase) {
-                storage.template create<typename FD::FrameType>(args...);
+        auto f = [&]<auto phase_, typename Frame, auto... constructor_args>(FrameDefinition<phase_, Frame, constructor_args...>) {
+            if (phase == phase_) {
+                storage.template create<Frame>(args..., constructor_args...);
             }
         };
-        (f.template operator()<T>(), ...);
+        (f(T {}), ...);
     }
 
     static void destroy_frame(Storage &storage, auto phase) {
