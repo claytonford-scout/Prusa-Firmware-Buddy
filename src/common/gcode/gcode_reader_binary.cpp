@@ -969,6 +969,8 @@ public:
 } // namespace
 
 bool PrusaPackGcodeReader::valid_for_print(bool full_check) {
+    symmetric_info = {};
+    identity_block_info = {};
     ValidationContext valid_context(full_check);
     if (full_check) {
         // To have the file_header initialized for the hash
