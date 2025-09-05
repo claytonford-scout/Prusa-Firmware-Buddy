@@ -227,6 +227,28 @@ protected:
 
 class FrameAdjustKnob : public FrameTitle {
 
+    class DoneResponder : public window_t {
+
+    public:
+        DoneResponder(window_t *parent, Phase phase)
+            : window_t(parent, Rect16 {})
+            , phase_(phase) {
+        }
+
+    protected:
+        const Phase phase_;
+
+        virtual void windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, [[maybe_unused]] void *param) override {
+            switch (event) {
+            case GUI_event_t::CLICK:
+                marlin_client::FSM_response(phase_, Response::Done);
+                break;
+            default:
+                break;
+            }
+        }
+    };
+
 public:
     FrameAdjustKnob(window_t *parent, Phase phase, const char *title, const char *desc)
         : FrameTitle(parent, title)
@@ -235,7 +257,8 @@ public:
         , numb(this, rect_numb, 0, "%0.1f Hz")
         , knob(this, rect_knob, &img::turn_knob_81x55)
         , plus(this, rect_plus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("+"))
-        , minus(this, rect_minus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("-")) {
+        , minus(this, rect_minus, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM("-"))
+        , done(parent, phase) {
         plus.SetAlignment(Align_t::Center());
         plus.set_font(Font::big);
         plus.SetTextColor(COLOR_ORANGE);
@@ -243,6 +266,8 @@ public:
         minus.set_font(Font::big);
         minus.SetTextColor(COLOR_ORANGE);
         numb.SetAlignment(Align_t::Center());
+
+        static_cast<window_frame_t *>(parent)->CaptureNormalWindow(done);
     }
 
     void update(fsm::PhaseData data) {
@@ -254,16 +279,6 @@ public:
         }
     }
 
-    virtual void windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, [[maybe_unused]] void *param) override {
-        switch (event) {
-        case GUI_event_t::CLICK:
-            marlin_client::FSM_response(phase, Response::Done);
-            break;
-        default:
-            break;
-        }
-    }
-
 private:
     Phase phase;
     window_text_t desc;
@@ -271,6 +286,7 @@ private:
     window_icon_t knob;
     window_text_t plus;
     window_text_t minus;
+    DoneResponder done;
 };
 
 } // namespace frames
