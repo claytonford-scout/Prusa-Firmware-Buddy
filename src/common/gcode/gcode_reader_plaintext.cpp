@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <cinttypes>
 
-PlainGcodeReader::PlainGcodeReader(FILE &f, const struct stat &stat_info)
-    : GcodeReaderCommon(f) {
+PlainGcodeReader::PlainGcodeReader(unique_file_ptr &&f, const struct stat &stat_info)
+    : GcodeReaderCommon(std::move(f)) {
     this->ptr_stream_getc = static_cast<stream_getc_type>(&PlainGcodeReader::stream_getc_impl);
     file_size = stat_info.st_size;
 }

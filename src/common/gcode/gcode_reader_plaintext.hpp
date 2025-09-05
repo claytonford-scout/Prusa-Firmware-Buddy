@@ -8,7 +8,7 @@
  */
 class PlainGcodeReader final : public GcodeReaderCommon {
 public:
-    PlainGcodeReader(FILE &f, const struct stat &stat_info);
+    PlainGcodeReader(unique_file_ptr &&f, const struct stat &stat_info);
     PlainGcodeReader(PlainGcodeReader &&other) = default;
     PlainGcodeReader &operator=(PlainGcodeReader &&other) = default;
 

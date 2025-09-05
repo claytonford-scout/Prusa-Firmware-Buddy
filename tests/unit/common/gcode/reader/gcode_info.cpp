@@ -74,10 +74,9 @@ TEST_CASE("GCodeInfo::is_valid_for_print") {
     size_t seen_printable_cnt = 0;
     for (size_t i = 0; i < (size_t)st.st_size - 1000 /* It is printable sooner than at the end */; i++) {
         INFO("Prefix size: " << i);
-        FILE *f(fopen(NEW_ENCRYPTED, "rb"));
+        unique_file_ptr f(fopen(NEW_ENCRYPTED, "rb"));
         REQUIRE(f);
-        // Note: It takes ownership.
-        PrusaPackGcodeReader reader(*f, st);
+        PrusaPackGcodeReader reader(std::move(f), st);
         transfers::PartialFile::State validity;
         validity.total_size = st.st_size;
         validity.extend_head(i);
@@ -102,9 +101,9 @@ TEST_CASE("GCodeInfo::is_valid_for_print") {
             }
 
             // Now, retry with decryption allowed, see there's no difference.
-            FILE *f2(fopen(NEW_ENCRYPTED, "rb"));
+            unique_file_ptr f2(fopen(NEW_ENCRYPTED, "rb"));
             REQUIRE(f2);
-            PrusaPackGcodeReader reader2(*f2, st, true);
+            PrusaPackGcodeReader reader2(std::move(f2), st, true);
 
             reader2.set_validity(validity);
 

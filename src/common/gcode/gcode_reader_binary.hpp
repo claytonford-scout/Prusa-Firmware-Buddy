@@ -25,7 +25,7 @@ extern "C" {
  */
 class PrusaPackGcodeReader : public GcodeReaderCommon {
 public:
-    PrusaPackGcodeReader(FILE &f, const struct stat &stat_info, bool allow_decryption = false
+    PrusaPackGcodeReader(unique_file_ptr &&f, const struct stat &stat_info, bool allow_decryption = false
 #if HAS_E2EE_SUPPORT()
         ,
         e2ee::IdentityCheckLevel identity_check_lvl = e2ee::IdentityCheckLevel::AnyIdentity

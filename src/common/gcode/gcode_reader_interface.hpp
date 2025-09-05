@@ -221,8 +221,8 @@ protected:
     // For unittest purposes only.
     GcodeReaderCommon() {}
 
-    GcodeReaderCommon(FILE &f)
-        : file(&f) {}
+    GcodeReaderCommon(unique_file_ptr &&f)
+        : file(std::move(f)) {}
 
     GcodeReaderCommon(GcodeReaderCommon &&other) = default;
 
