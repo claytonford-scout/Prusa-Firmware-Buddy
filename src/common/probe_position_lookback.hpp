@@ -21,7 +21,8 @@ public:
 protected:
     virtual Sample generate_sample() const = 0;
 
-    /// Called from an ISR of HIGHER priority than update
+    /// Can be called from an ISR of higher priority than add_sample (on MK4), or lower priority, or from a standard thread (on XL).
+    /// This function really has to be ready for everything...
     float get_position_at(uint32_t time_us) const;
 
     /// Called from an ISR
@@ -50,8 +51,6 @@ public:
 
 private:
     Sample generate_sample() const final;
-
-    mutable std::atomic<uint8_t> is_reading = 0;
 };
 
 extern ProbePositionLookback probePositionLookback;

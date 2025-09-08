@@ -14,6 +14,7 @@ void ProbePositionLookbackBase::add_sample(Sample sample) {
     const auto new_newest_sample = (newest_sample_pos + 1) % NUM_SAMPLES;
 
     // First invalidate the position to indicate that the record is being manipulated with
+    // get_position_at could interrupt this function, so it needs to know that the sample is invalid
     samples[new_newest_sample].position = NAN;
 
     samples[new_newest_sample].time = sample.time;
@@ -37,6 +38,12 @@ float ProbePositionLookbackBase::get_position_at(uint32_t time_us) const {
             .time = samples[s1_pos].time,
             .position = samples[s1_pos].position,
         };
+        if (s1.time != samples[s1_pos].time.load()) {
+            // The sample got updated under our hands.
+            // This effectively means that we've wrapped around the buffer and can just give up
+            // Note: checking time here because it is the first member read during s1 initialization
+            return NAN;
+        }
 
         // If the position is NAN, it means that the sample is currently being updated (which means that it's the last sample and we can fail)
         if (std::isnan(s1.position)) {
@@ -72,11 +79,6 @@ void ProbePositionLookback::update() {
     // Check that we are in an ISR
     assert(__get_IPSR());
 
-    if (is_reading) {
-        // This should never happen, update() should be called from an ISR of lower priority
-        bsod_unreachable();
-    }
-
     const Sample sample = generate_sample();
 
     if (sample.time - samples[newest_sample_pos].time < SAMPLES_REQUESTED_DIFF) {
@@ -88,15 +90,7 @@ void ProbePositionLookback::update() {
 }
 
 float ProbePositionLookback::get_position_at(uint32_t time_us) const {
-    // Check that we are in an ISR
-    assert(__get_IPSR());
-
-    is_reading++;
-    ScopeGuard _sg = [&] {
-        is_reading--;
-    };
-
-    return ProbePositionLookbackBase::get_position_at(time_us, generate_sample());
+    return ProbePositionLookbackBase::get_position_at(time_us);
 }
 
 ProbePositionLookback::Sample ProbePositionLookback::generate_sample() const {
