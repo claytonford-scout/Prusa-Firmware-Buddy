@@ -9,9 +9,13 @@ class ProbePositionLookback : public ProbePositionLookbackBase {
 public:
     Sample current_sample;
 
+    Sample generate_sample() const final {
+        return current_sample;
+    }
+
     /// Called from an ISR of HIGHER priority than update
     float get_position_at(uint32_t time_us) const {
-        return ProbePositionLookbackBase::get_position_at(time_us, current_sample);
+        return ProbePositionLookbackBase::get_position_at(time_us);
     }
 
     void add_sample(uint32_t time_us, float z_pos) {

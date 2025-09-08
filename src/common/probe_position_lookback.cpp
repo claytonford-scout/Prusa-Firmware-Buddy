@@ -23,12 +23,14 @@ void ProbePositionLookbackBase::add_sample(Sample sample) {
     newest_sample_pos = new_newest_sample;
 }
 
-float ProbePositionLookbackBase::get_position_at(uint32_t time_us, Sample current_sample) const {
+float ProbePositionLookbackBase::get_position_at(uint32_t time_us) const {
     // store position of last sample before proceeding (new sample might be added later from interrupt)
     size_t s1_pos = newest_sample_pos;
 
     // get current sample so we can also interpolate between newest sample and now
-    Sample s2 = current_sample;
+    //! Important: The sample needs to be generaed AFTER first loading newest_sample_position
+    // Otherwise, we might end up with s2.time < s1.time right from the start
+    Sample s2 = generate_sample();
 
     while (true) {
         const Sample s1 {
@@ -97,7 +99,7 @@ float ProbePositionLookback::get_position_at(uint32_t time_us) const {
     return ProbePositionLookbackBase::get_position_at(time_us, generate_sample());
 }
 
-ProbePositionLookback::Sample ProbePositionLookback::generate_sample() {
+ProbePositionLookback::Sample ProbePositionLookback::generate_sample() const {
     return Sample {
         .time = ticks_us(),
         .position = planner.get_axis_position_mm(AxisEnum::Z_AXIS),

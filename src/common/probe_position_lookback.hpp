@@ -19,8 +19,10 @@ public:
     static constexpr uint8_t NUM_SAMPLES = 16;
 
 protected:
+    virtual Sample generate_sample() const = 0;
+
     /// Called from an ISR of HIGHER priority than update
-    float get_position_at(uint32_t time_us, Sample current_sample) const;
+    float get_position_at(uint32_t time_us) const;
 
     /// Called from an ISR
     void add_sample(Sample sample);
@@ -47,7 +49,7 @@ public:
     void update();
 
 private:
-    static Sample generate_sample();
+    Sample generate_sample() const final;
 
     mutable std::atomic<uint8_t> is_reading = 0;
 };
