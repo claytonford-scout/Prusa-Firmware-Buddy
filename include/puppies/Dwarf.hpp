@@ -438,8 +438,6 @@ private:
     CommunicationStatus write_general();
     CommunicationStatus write_tmc_enable();
     CommunicationStatus pull_fifo_nolock(bool &more);
-    CommunicationStatus pull_log_fifo();
-    CommunicationStatus pull_loadcell_fifo();
     bool dispatch_log_event();
     CommunicationStatus run_time_sync();
     constexpr logging::Component &get_log_component(uint8_t dwarf_nr);
