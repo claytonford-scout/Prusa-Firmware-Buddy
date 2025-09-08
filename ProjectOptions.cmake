@@ -370,7 +370,7 @@ set_feature_for_printers(
   "XL"
   "MINI"
   )
-set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4" "iX")
+set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4" "iX" "XL")
 set_feature_for_printers_master_board(
   HAS_E2EE_SUPPORT
   "MK4"
