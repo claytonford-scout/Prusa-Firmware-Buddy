@@ -89,10 +89,6 @@ void ProbePositionLookback::update() {
     add_sample(sample);
 }
 
-float ProbePositionLookback::get_position_at(uint32_t time_us) const {
-    return ProbePositionLookbackBase::get_position_at(time_us);
-}
-
 ProbePositionLookback::Sample ProbePositionLookback::generate_sample() const {
     return Sample {
         .time = ticks_us(),

@@ -18,12 +18,13 @@ public:
 
     static constexpr uint8_t NUM_SAMPLES = 16;
 
-protected:
-    virtual Sample generate_sample() const = 0;
-
+public:
     /// Can be called from an ISR of higher priority than add_sample (on MK4), or lower priority, or from a standard thread (on XL).
     /// This function really has to be ready for everything...
     float get_position_at(uint32_t time_us) const;
+
+protected:
+    virtual Sample generate_sample() const = 0;
 
     /// Called from an ISR
     void add_sample(Sample sample);
@@ -42,9 +43,6 @@ class ProbePositionLookback : public ProbePositionLookbackBase {
 public:
     /// Minimum time between samples (in us)
     static constexpr size_t SAMPLES_REQUESTED_DIFF = 1900;
-
-    /// Called from an ISR of HIGHER priority than update
-    float get_position_at(uint32_t time_us) const;
 
     /// Called from an ISR
     void update();

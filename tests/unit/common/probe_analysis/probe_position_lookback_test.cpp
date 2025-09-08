@@ -13,11 +13,6 @@ public:
         return current_sample;
     }
 
-    /// Called from an ISR of HIGHER priority than update
-    float get_position_at(uint32_t time_us) const {
-        return ProbePositionLookbackBase::get_position_at(time_us);
-    }
-
     void add_sample(uint32_t time_us, float z_pos) {
         ProbePositionLookbackBase::add_sample(Sample { .time = time_us, .position = z_pos });
     }
