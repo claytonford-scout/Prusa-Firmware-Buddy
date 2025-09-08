@@ -10,6 +10,9 @@ namespace buddy::hw {
 
 /// Abstracts runtime dynamic configuration based on incompatibilities
 /// between different hardware revisions.
+///
+/// Used for the IXBUDDY board too, as it is very similar, but it's BoM ID is
+/// different (hence the PRINTER_IS_PRUSA_iX() checks in implementation).
 class Configuration : public ConfigurationCommon {
     Configuration();
     Configuration(const Configuration &) = delete;

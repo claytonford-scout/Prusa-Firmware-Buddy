@@ -70,15 +70,15 @@ Configuration::Configuration() {
 }
 
 bool Configuration::has_inverted_fans() const {
-    return get_board_bom_id() < 37;
+    return !PRINTER_IS_PRUSA_iX() && get_board_bom_id() < 37;
 }
 
 bool Configuration::has_mmu_power_up_hw() const {
-    return get_board_bom_id() >= 37;
+    return PRINTER_IS_PRUSA_iX() || get_board_bom_id() >= 37;
 }
 
 bool Configuration::has_trinamic_oscillators() const {
-    return get_board_bom_id() >= 37;
+    return PRINTER_IS_PRUSA_iX() || get_board_bom_id() >= 37;
 }
 
 bool Configuration::is_fw_compatible_with_hw() const {
@@ -179,12 +179,12 @@ void Configuration::deactivate_ext_reset() const {
 }
 
 bool Configuration::has_inverted_mmu_reset() const {
-    return get_board_bom_id() >= 37;
+    return !PRINTER_IS_PRUSA_iX() && get_board_bom_id() >= 37;
 }
 
 bool Configuration::needs_push_pull_mmu_reset_pin() const {
     // xBuddy schematics says: Revisions older than 34 must use open drain only.
-    return get_board_bom_id() >= 34;
+    return PRINTER_IS_PRUSA_iX() || get_board_bom_id() >= 34;
 }
 
 } // namespace buddy::hw
