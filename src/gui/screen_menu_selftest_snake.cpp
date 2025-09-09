@@ -132,6 +132,12 @@ static SnakeConfig snake_config {};
 namespace {
 
 void do_snake(Action action, Tool tool = Tool::_first) {
+    // Code checked - this should never happen. Let's assume a bit of sanity here.
+    // _all_tools would break out gcode selftests
+    if (tool == Tool::_all_tools) {
+        bsod_unreachable();
+    }
+
     if (!are_previous_completed(action) && !snake_config.in_progress) {
         if (MsgBoxQuestion(_("Previous Calibrations & Tests are not all done. Continue anyway?"), Responses_YesNo, 1) == Response::No) {
             snake_config.reset();
