@@ -23,6 +23,9 @@ constexpr float length_top_belt = length_belt - 0.005f;
 // bottom belt length (vibrating part)
 constexpr float length_bottom_belt = length_belt + 0.005f;
 
+constexpr int16_t calib_position_x = 240;
+constexpr int16_t calib_position_y = -8;
+
 // range of valid measured frequencies
 // outside measurements are considered to have x-gantry misalignment
 constexpr uint16_t freq_result_min = 90;

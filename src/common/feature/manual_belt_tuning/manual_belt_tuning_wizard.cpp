@@ -65,7 +65,7 @@ public:
         if (!GcodeSuite::G28_no_parser(true, true, false, { .precise = false })) {
             return Result::abort;
         }
-        do_blocking_move_to_xy(240, -8, 50.f); // belt tension calibration position
+        do_blocking_move_to_xy(calib_position_x, calib_position_y, 50.f); // belt tension calibration position
         planner.synchronize();
 
         fsm_change(PhaseManualBeltTuning::intro_measure);
