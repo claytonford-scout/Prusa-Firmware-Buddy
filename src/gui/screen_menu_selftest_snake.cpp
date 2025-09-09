@@ -203,12 +203,8 @@ void do_snake(Action action, Tool tool = Tool::_first) {
     }
 
     if (has_submenu(action)) {
-        if (!snake_config.in_progress || tool == Tool::_first) { // Ask only for first tool or if it is selected in submenu
-            ask_config(action);
-        }
         marlin_client::test_start_with_data(get_test_mask(action), get_tool_mask(tool));
     } else {
-        ask_config(action);
         marlin_client::test_start(get_test_mask(action));
     }
 

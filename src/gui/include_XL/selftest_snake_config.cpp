@@ -157,13 +157,6 @@ uint64_t get_test_mask(Action action) {
     bsod_unreachable();
 }
 
-void ask_config(Action action) {
-    switch (action) {
-    default:
-        break;
-    }
-}
-
 Tool get_last_enabled_tool() {
 #if HAS_TOOLCHANGER()
     for (int i = EXTRUDERS - 1; i >= 0; --i) {
