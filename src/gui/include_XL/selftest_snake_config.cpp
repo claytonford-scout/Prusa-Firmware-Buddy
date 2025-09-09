@@ -159,12 +159,6 @@ uint64_t get_test_mask(Action action) {
 
 void ask_config(Action action) {
     switch (action) {
-    case Action::FilamentSensorCalibration: {
-#if HAS_TOOLCHANGER() && HAS_SIDE_FSENSOR()
-        side_fsensor_remap::ask_to_remap(); // Ask user whether to remap filament sensors
-#endif /*HAS_TOOLCHANGER()*/
-    } break;
-
     default:
         break;
     }

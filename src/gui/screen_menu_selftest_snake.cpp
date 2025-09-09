@@ -17,6 +17,10 @@
 #include "Marlin/src/gcode/queue.h"
 #include "selftest/i_selftest.hpp"
 
+#if HAS_TOOLCHANGER() && HAS_SIDE_FSENSOR()
+    #include <feature/filament_sensor/filament_sensors_handler_XL_remap.hpp>
+#endif
+
 using namespace SelftestSnake;
 
 namespace {
@@ -162,6 +166,12 @@ void do_snake(Action action, Tool tool = Tool::_first) {
             break;
 
         case Action::FilamentSensorCalibration:
+#if HAS_TOOLCHANGER() && HAS_SIDE_FSENSOR()
+            if (!snake_config.in_progress || tool == Tool::_first) {
+                // Ask user whether to remap filament sensors
+                side_fsensor_remap::ask_to_remap();
+            }
+#endif
             marlin_client::gcode_printf("M1981 T%d", static_cast<int>(tool));
             break;
 
