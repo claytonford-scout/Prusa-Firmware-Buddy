@@ -23,13 +23,13 @@ namespace buddy {
 class RetractTracker : Uncopyable {
     friend RetractTracker &retract_tracker();
 
+public:
 #if HAS_NEXTRUDER()
     static constexpr float extruder_to_nozzle_distance = 40.f; // mm
 #else
     #error
 #endif
 
-public:
     /// Adds \param extrusion_distance (retraction is negative) to temporary value of active hotend
     void track_extruder_move(float extrusion_distance);
 
