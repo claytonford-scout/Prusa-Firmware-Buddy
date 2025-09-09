@@ -987,7 +987,7 @@ RefineResult corexy_calibrate_homing_during_G28(float xy_mm_s, const G28Flags &f
   // In both cases, we want a clean slate so that the user is not bothered with "please recalibrate" right away
   config_store().precise_homing_instability_history.set(0);
 
-  if(!calibration_approved) {
+  if(calibration_approved == false) {
     // User decided to not do the calibration at his own risk -> consider the point refined
     return RefineResult::success;
   }
