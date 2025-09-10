@@ -345,7 +345,7 @@ bool Pause::should_park() {
 
 bool Pause::is_target_temperature_safe() {
 #if HAS_AUTO_RETRACT()
-    if (load_type == LoadType::unload && auto_retract().is_retracted(hotend_from_extruder(active_extruder))) {
+    if (load_type == LoadType::unload && auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(active_extruder))) {
         return true; // Its safe to unload even if the temp is too low if we are retracted
     }
 #endif
@@ -1087,9 +1087,9 @@ void Pause::auto_retract_process([[maybe_unused]] Response response) {
 
 void Pause::ram_sequence_process([[maybe_unused]] Response response) {
 #if HAS_AUTO_RETRACT()
-    if (auto_retract().is_retracted()) {
+    if (auto_retract().is_safely_retracted_for_unload()) {
         // The filament is already retracted from the nozzle -> no ramming needed, we don't even need to heat up the nozzle
-        ram_retracted_distance = auto_retract().retracted_distance();
+        ram_retracted_distance = auto_retract().retracted_distance().value(); // We are sure value is not std::nullopt because of is_safely_retracted_for_unload()
         set(LoadState::unload);
         return;
     }
@@ -1105,7 +1105,7 @@ void Pause::unload_process([[maybe_unused]] Response response) {
 #if HAS_NOZZLE_CLEANER()
     bool needs_cleaning = true; // Assume we need to clean the nozzle
     #if HAS_AUTO_RETRACT()
-    needs_cleaning = !auto_retract().is_retracted(); // If we are retracted, we don't need to clean the nozzle
+    needs_cleaning = !auto_retract().is_safely_retracted_for_unload(); // If we are retracted, we don't need to clean the nozzle
     #endif
 #endif
     unload_filament();
