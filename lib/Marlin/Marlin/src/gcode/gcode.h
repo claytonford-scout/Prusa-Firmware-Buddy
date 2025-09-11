@@ -323,14 +323,6 @@ public:
     static WorkspacePlane workspace_plane;
   #endif
 
-  #define MAX_COORDINATE_SYSTEMS 9
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    static int8_t active_coordinate_system;
-    static xyz_pos_t coordinate_system[MAX_COORDINATE_SYSTEMS];
-    static bool select_coordinate_system(const int8_t _new);
-    static int8_t get_coordinate_system();
-    static void set_coordinate_system_offset(int8_t system, AxisEnum axis, float offset);
-  #endif
   static millis_t previous_move_ms;
   FORCE_INLINE static void reset_stepper_timeout() { previous_move_ms = millis(); }
 
@@ -453,16 +445,6 @@ private:
 
   #if HAS_MESH
     static void G42();
-  #endif
-
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    static void G53();
-    static void G54();
-    static void G55();
-    static void G56();
-    static void G57();
-    static void G58();
-    static void G59();
   #endif
 
   #if ENABLED(GCODE_MOTION_MODES) || HAS_GCODE_COMPATIBILITY()

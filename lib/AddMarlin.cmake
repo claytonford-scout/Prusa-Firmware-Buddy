@@ -101,7 +101,6 @@ if(BOARD_IS_MASTER_BOARD)
             Marlin/Marlin/src/gcode/feature/trinamic/M906.cpp
             Marlin/Marlin/src/gcode/feature/trinamic/M911-M914.cpp
             Marlin/Marlin/src/gcode/gcode.cpp
-            Marlin/Marlin/src/gcode/geometry/G53-G59.cpp
             Marlin/Marlin/src/gcode/geometry/G92.cpp
             Marlin/Marlin/src/gcode/geometry/M206_M428.cpp
             Marlin/Marlin/src/gcode/host/M110.cpp

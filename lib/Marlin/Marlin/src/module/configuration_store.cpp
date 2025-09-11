@@ -446,14 +446,6 @@ void MarlinSettings::reset() {
   reset_stepper_drivers();
 
   //
-  // CNC Coordinate System
-  //
-
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    (void)gcode.select_coordinate_system(-1); // Go back to machine space
-  #endif
-
-  //
   // Skew Correction
   //
 

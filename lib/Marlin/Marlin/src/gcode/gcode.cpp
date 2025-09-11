@@ -89,11 +89,6 @@ PrinterGCodeCompatibilityReport GcodeSuite::compatibility;
   GcodeSuite::WorkspacePlane GcodeSuite::workspace_plane = PLANE_XY;
 #endif
 
-#if ENABLED(CNC_COORDINATE_SYSTEMS)
-  int8_t GcodeSuite::active_coordinate_system = -1; // machine space
-  xyz_pos_t GcodeSuite::coordinate_system[MAX_COORDINATE_SYSTEMS];
-#endif
-
 int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> extruder, const bool is_physical) {
   uint8_t e = active_extruder;
   if (extruder.has_value()) {
@@ -315,16 +310,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
             #endif
           )) G38(parser.subcode);                                 // G38.4, G38.5: Probe away from target
           break;
-      #endif
-
-      #if ENABLED(CNC_COORDINATE_SYSTEMS)
-        case 53: G53(); break;
-        case 54: G54(); break;
-        case 55: G55(); break;
-        case 56: G56(); break;
-        case 57: G57(); break;
-        case 58: G58(); break;
-        case 59: G59(); break;
       #endif
 
       #if ENABLED(GCODE_MOTION_MODES) || HAS_GCODE_COMPATIBILITY()
