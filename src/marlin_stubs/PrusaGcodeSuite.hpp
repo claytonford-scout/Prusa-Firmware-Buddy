@@ -35,7 +35,6 @@ int8_t get_target_extruder_from_command_p(const GCodeParser2 &p);
 void G12(); ///< Nozzle Cleaning
 #endif
 void G26(); //< first layer calibration
-void G64(); //< Measure Z_AXIS height
 void G162(); //< calibrate Z
 void G163(); //< measure length of axis
 void G123(); //< Manual move

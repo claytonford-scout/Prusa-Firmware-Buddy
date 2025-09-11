@@ -350,9 +350,6 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
         case 123:
             PrusaGcodeSuite::G123();
             break;
-        case 64:
-            PrusaGcodeSuite::G64();
-            break;
 #if HAS_SELFTEST()
         case 162:
             PrusaGcodeSuite::G162();
