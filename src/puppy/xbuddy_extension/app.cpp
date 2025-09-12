@@ -139,6 +139,19 @@ public:
     }
 };
 
+void ensure_silent_interval() {
+    // MODBUS over serial line specification and implementation guide V1.02
+    // 2.5.1.1 MODBUS Message RTU Framing
+    // In RTU mode, message frames are separated by a silent interval
+    // of at least 3.5 character times.
+    //
+    // We are using 230400 bauds which means silent time ~0.15ms
+    // Tick resolution is 1ms, meaning we are waiting longer than necessary.
+    // Implementing smaller delay could improve MODBUS throughput, but may
+    // not be worth the increased MCU resources consumption.
+    freertos::delay(1);
+}
+
 } // namespace
 
 void app::run() {
@@ -158,7 +171,7 @@ void app::run() {
         const auto request = hal::rs485::receive();
         const auto response = modbus::handle_transaction(modbus_callbacks, request, response_buffer);
         if (response.size()) {
-            freertos::delay(1);
+            ensure_silent_interval();
             hal::rs485::transmit_and_then_start_receiving(response);
         } else {
             hal::rs485::start_receiving();
