@@ -11,7 +11,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   add_subdirectory(common)
   add_subdirectory(feature)
 
-  if(HAS_ESP_FLASH_TASK)
+  if(HAS_ESP)
     add_subdirectory(buddy-esp-serial-flasher)
     target_link_libraries(firmware PRIVATE buddy-esp-serial-flasher)
   endif()

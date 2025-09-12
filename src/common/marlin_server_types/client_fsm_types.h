@@ -1,6 +1,7 @@
 #pragma once
 
 #include <option/has_dwarf.h>
+#include <option/has_esp.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_toolchanger.h>
 #include <option/has_loadcell.h>
@@ -35,7 +36,9 @@ enum class ClientFSM : uint8_t {
     Selftest,
     FansSelftest,
     #endif
+    #if HAS_ESP()
     NetworkSetup,
+    #endif
     Printing, // not a dialog
     #if ENABLED(CRASH_RECOVERY)
     CrashRecovery,

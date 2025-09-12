@@ -236,7 +236,7 @@ ScreenSplash::ScreenSplash()
                 { BootstrapStage::preparing_update, 1 },
                 { BootstrapStage::updating, 1 },
 #endif
-#if HAS_ESP_FLASH_TASK()
+#if HAS_ESP()
                 { BootstrapStage::flashing_esp, 1 },
                 { BootstrapStage::reflashing_esp, 1 },
 #endif
@@ -281,7 +281,7 @@ static const char *message(BootstrapStage stage) {
     case BootstrapStage::updating:
         return "Updating bootloader";
 #endif
-#if HAS_ESP_FLASH_TASK()
+#if HAS_ESP()
     case BootstrapStage::flashing_esp:
         return "Flashing ESP";
     case BootstrapStage::reflashing_esp:

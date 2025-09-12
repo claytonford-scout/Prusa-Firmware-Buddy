@@ -40,6 +40,8 @@
 #include <screen/toolhead/screen_toolhead_settings.hpp>
 #include <gui/screen/screen_factory_reset.hpp>
 
+#include <option/has_esp.h>
+
 #if PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI()
     #include <screen_menu_bed_level_correction.hpp>
 #endif
@@ -103,7 +105,9 @@ template struct MI_SCREEN_CTOR<ScreenMenuTemperature>;
 template struct MI_SCREEN_CTOR<ScreenMenuMove>;
 template struct MI_SCREEN_CTOR<ScreenMenuMetricsSettings>;
 template struct MI_SCREEN_CTOR<ScreenMenuEthernetSettings>;
+#if HAS_ESP()
 template struct MI_SCREEN_CTOR<ScreenMenuWifiSettings>;
+#endif
 template struct MI_SCREEN_CTOR<screen_messages_data_t>;
 template struct MI_SCREEN_CTOR<ScreenMenuConnect>;
 template struct MI_SCREEN_CTOR<ScreenMenuPrusaLink>;

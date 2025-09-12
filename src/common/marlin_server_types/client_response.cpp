@@ -18,7 +18,9 @@ constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM:
         { ClientFSM::Selftest, SelftestResponses },
         { ClientFSM::FansSelftest, FanSelftestResponses },
 #endif
+#if HAS_ESP()
         { ClientFSM::NetworkSetup, network_setup_responses },
+#endif
         { ClientFSM::Printing, {} },
 #if ENABLED(CRASH_RECOVERY)
         { ClientFSM::CrashRecovery, CrashRecoveryResponses },

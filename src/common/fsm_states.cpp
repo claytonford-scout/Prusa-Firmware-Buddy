@@ -1,5 +1,6 @@
 #include <common/fsm_states.hpp>
 
+#include <option/has_esp.h>
 #include <option/has_phase_stepping_calibration.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_door_sensor_calibration.h>
@@ -45,7 +46,9 @@ static constexpr uint32_t score(ClientFSM fsm_type) {
 #if HAS_MANUAL_BELT_TUNING()
     case ClientFSM::BeltTuning:
 #endif
+#if HAS_ESP()
     case ClientFSM::NetworkSetup:
+#endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:
 #endif

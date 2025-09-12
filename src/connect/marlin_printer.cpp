@@ -28,6 +28,8 @@
     #include <leds/side_strip_handler.hpp>
 #endif
 
+#include <option/has_esp.h>
+
 #if XL_ENCLOSURE_SUPPORT()
     #include <xl_enclosure.hpp>
     #include <fanctl.hpp>
@@ -411,9 +413,11 @@ std::optional<Printer::NetInfo> MarlinPrinter::net_info(Printer::Iface iface) co
     case Iface::Ethernet:
         id = NETDEV_ETH_ID;
         break;
+#if HAS_ESP()
     case Iface::Wifi:
         id = NETDEV_ESP_ID;
         break;
+#endif
     default:
         assert(0);
         return nullopt;
@@ -435,7 +439,9 @@ std::optional<Printer::NetInfo> MarlinPrinter::net_info(Printer::Iface iface) co
 Printer::NetCreds MarlinPrinter::net_creds() const {
     NetCreds result = {};
     strlcpy(result.pl_password, config_store().prusalink_password.get_c_str(), sizeof(result.pl_password));
+#if HAS_ESP()
     strlcpy(result.ssid, config_store().wifi_ap_ssid.get_c_str(), sizeof(result.ssid));
+#endif
     netdev_get_hostname(netdev_get_active_id(), result.hostname, sizeof(result.hostname));
     return result;
 }

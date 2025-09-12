@@ -25,7 +25,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             filepath_operation.cpp
             footer_def.cpp
             footer_eeprom.cpp
-            fsm_network_setup.cpp
             fsm_states.cpp
             general_response.cpp
             hardware_rng.cpp
@@ -96,6 +95,9 @@ if(BOARD IN_LIST BUDDY_BOARDS)
 
   if(HAS_SHEET_PROFILES)
     target_sources(firmware PRIVATE SteelSheets.cpp)
+  endif()
+  if(HAS_ESP)
+    target_sources(firmware PRIVATE fsm_network_setup.cpp)
   endif()
   if(HAS_E2EE_SUPPORT)
     add_subdirectory(e2ee)

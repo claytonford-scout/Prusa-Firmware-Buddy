@@ -71,7 +71,6 @@ target_sources(
           screen_menu_user_interface.cpp
           screen_messages.cpp
           screen_move_z.cpp
-          screen_network_setup.cpp
           screen_print_preview.cpp
           screen_printer_setup.cpp
           screen_printing.cpp
@@ -202,6 +201,10 @@ endif()
 
 if(CONNECT)
   target_sources(firmware PRIVATE screen_menu_connect.cpp)
+endif()
+
+if(HAS_ESP)
+  target_sources(firmware PRIVATE screen_network_setup.cpp)
 endif()
 
 if(HAS_INPUT_SHAPER_CALIBRATION)

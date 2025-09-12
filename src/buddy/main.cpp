@@ -1,5 +1,4 @@
 #include <buddy/main.h>
-#include "buddy/esp_flash_task.hpp"
 #include "platform.h"
 #include <device/board.h>
 #include <device/peripherals.h>
@@ -60,7 +59,6 @@
 #include "tasks.hpp"
 #include <appmain.hpp>
 #include "safe_state.h"
-#include <espif.h>
 #include "sound.hpp"
 #include <buddy/ccm_thread.hpp>
 #include <version/version.hpp>
@@ -120,6 +118,11 @@
     #include <advanced_power.hpp>
 #endif
 
+#include <option/has_esp.h>
+#if HAS_ESP()
+    #include "buddy/esp_flash_task.hpp"
+#endif
+
 using namespace crash_dump;
 
 LOG_COMPONENT_REF(Buddy);
@@ -145,7 +148,6 @@ void StartDefaultTask(void const *argument);
 void StartDisplayTask(void const *argument);
 void StartConnectTask(void const *argument);
 void StartConnectTaskError(void const *argument); // Version for redscreen
-void StartESPTask(void const *argument);
 void iwdg_warning_cb(void);
 
 /**
@@ -158,6 +160,7 @@ void iwdg_warning_cb(void);
  * dependencies to connected peripherals.
  */
 static void manufacture_report_endless_loop() {
+#if HAS_ESP()
     // ESP reset (needed for XL, since it has embedded ESP)
     HAL_GPIO_WritePin(ESP_RST_GPIO_Port, ESP_RST_Pin, GPIO_PIN_RESET);
 
@@ -169,6 +172,7 @@ static void manufacture_report_endless_loop() {
         HAL_UART_Transmit(&uart_handle_for_esp, &endl, sizeof(endl), 1000);
         osDelay(500); // tester needs 500ms, do not change this value!
     }
+#endif
 }
 
 #if ENABLED(RESOURCES()) && ENABLED(BOOTLOADER_UPDATE())
@@ -298,15 +302,17 @@ extern "C" void main_cpp(void) {
         // block esp in tester mode (redscreen probably shouldn't happen on tester, but better safe than sorry)
         if (!running_in_tester_mode() && config_store().connect_enabled.get()) {
             TaskDeps::components_init();
-            uart_init_esp();
             // Needed for certificate verification
             hw_rtc_init();
             // Needed for SSL random data
             hw_rng_init();
 
+    #if HAS_ESP()
+            uart_init_esp();
             // We can't flash ESP while showing error screen as there is no bootstrap progressbar.
             // Let's pretend that flashing was successful in order to enable Wi-Fi.
             skip_esp_flashing();
+    #endif
 
             TaskDeps::wait(TaskDeps::Tasks::network);
             start_network_task(/*allow_full=*/false);
@@ -346,7 +352,7 @@ extern "C" void main_cpp(void) {
     #error Do not know how to init TMC communication channel
 #endif
 
-#if BUDDY_ENABLE_WUI()
+#if HAS_ESP() && BUDDY_ENABLE_WUI()
     uart_init_esp();
 #endif
 
@@ -366,6 +372,7 @@ extern "C" void main_cpp(void) {
     hw_rtc_init();
     hw_rng_init();
 
+#if HAS_ESP()
     // ESP flashing can start fairly early in the boot process.
     // On printers without embedded ESP32 we need to upload stub to enable verification.
     // This would take some seconds, which we can hide here.
@@ -375,6 +382,7 @@ extern "C" void main_cpp(void) {
     if (!running_in_tester_mode()) {
         start_flash_esp_task();
     }
+#endif
 
 #if HAS_ADVANCED_POWER()
     advancedpower.ResetOvercurrentFault();

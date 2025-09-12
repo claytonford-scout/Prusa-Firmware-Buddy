@@ -9,7 +9,6 @@
 #include "window_dlg_quickpause.hpp"
 #include "window_dlg_wait.hpp"
 #include "window_dlg_warning.hpp"
-#include <screen_network_setup.hpp>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_phase_stepping_calibration.h>
 #include <option/has_input_shaper_calibration.h>
@@ -62,6 +61,11 @@
 
 #if HAS_DOOR_SENSOR_CALIBRATION()
     #include <feature/door_sensor_calibration/screen_door_sensor_calibration.hpp>
+#endif
+
+#include <option/has_esp.h>
+#if HAS_ESP()
+    #include <screen_network_setup.hpp>
 #endif
 
 alignas(std::max_align_t) static std::array<uint8_t, 2560> mem_space;
@@ -173,7 +177,9 @@ using FSMDisplayConfig = FSMDisplayConfigDef<
     FSMScreenDef<ClientFSM::Selftest, ScreenSelftest>,
     FSMScreenDef<ClientFSM::FansSelftest, ScreenFanSelftest>,
 #endif
+#if HAS_ESP()
     FSMScreenDef<ClientFSM::NetworkSetup, ScreenNetworkSetup>,
+#endif
     FSMPrintDef<ClientFSM::Printing>,
 #if ENABLED(CRASH_RECOVERY)
     FSMScreenDef<ClientFSM::CrashRecovery, ScreenCrashRecovery>,

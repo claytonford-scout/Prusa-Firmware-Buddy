@@ -24,6 +24,7 @@
 #include <option/has_belt_tuning.h>
 #include <option/has_coldpull.h>
 #include <option/has_emergency_stop.h>
+#include <option/has_esp.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_loadcell.h>
@@ -370,6 +371,7 @@ enum class PhasesFansSelftest : PhaseUnderlyingType {
 constexpr inline ClientFSM client_fsm_from_phase(PhasesFansSelftest) { return ClientFSM::FansSelftest; }
 #endif
 
+#if HAS_ESP()
 enum class PhaseNetworkSetup : PhaseUnderlyingType {
     init,
 
@@ -378,11 +380,11 @@ enum class PhaseNetworkSetup : PhaseUnderlyingType {
     wifi_scan, ///< Scanning available wi-fi networks (the scanning is fully handled on the GUI thread)
     wait_for_ini_file, ///< Prompting user to insert a flash drive with creds
     ask_delete_ini_file, ///< Asking the user if he wants to delete the ini file
-#if HAS_NFC()
+    #if HAS_NFC()
     ask_use_prusa_app, ///< User is prompted if he wants to use the Prusa app to connect to the wi-fi
     wait_for_nfc, ///< Prompting user to provide the credentials through NFW
     nfc_confirm, ///< Loaded credentials via NFC, asking for confirmation
-#endif
+    #endif
     connecting_finishable, ///< The user is connecting to a Wi-Fi. The screen offers a "Finish" button that keeps connecting on the background and "Cancel" to go back.
     connecting_nonfinishable, ///< The user is connecting to a Wi-Fi. The screen only offers a "Cancel" button to go back.
     connected,
@@ -397,6 +399,7 @@ enum class PhaseNetworkSetup : PhaseUnderlyingType {
     _last = finish,
 };
 constexpr inline ClientFSM client_fsm_from_phase(PhaseNetworkSetup) { return ClientFSM::NetworkSetup; }
+#endif
 
 #if ENABLED(CRASH_RECOVERY)
 enum class PhasesCrashRecovery : PhaseUnderlyingType {
@@ -891,6 +894,7 @@ inline constexpr PhaseResponses FanSelftestResponses[] = {
 static_assert(std::size(ClientResponses::FanSelftestResponses) == CountPhases<PhasesFansSelftest>());
 #endif
 
+#if HAS_ESP()
 inline constexpr EnumArray<PhaseNetworkSetup, PhaseResponses, CountPhases<PhaseNetworkSetup>()> network_setup_responses {
     { PhaseNetworkSetup::init, {} },
         { PhaseNetworkSetup::ask_switch_to_wifi, { Response::Yes, Response::No } },
@@ -900,11 +904,11 @@ inline constexpr EnumArray<PhaseNetworkSetup, PhaseResponses, CountPhases<PhaseN
         { PhaseNetworkSetup::wifi_scan, { Response::Back } },
         { PhaseNetworkSetup::wait_for_ini_file, { Response::Cancel } },
         { PhaseNetworkSetup::ask_delete_ini_file, { Response::Yes, Response::No } },
-#if HAS_NFC()
+    #if HAS_NFC()
         { PhaseNetworkSetup::ask_use_prusa_app, { Response::Yes, Response::No } },
         { PhaseNetworkSetup::wait_for_nfc, { Response::Cancel } },
         { PhaseNetworkSetup::nfc_confirm, { Response::Ok, Response::Cancel } },
-#endif
+    #endif
         { PhaseNetworkSetup::connecting_finishable, { Response::Finish, Response::Cancel } },
         { PhaseNetworkSetup::connecting_nonfinishable, { Response::Cancel } },
         { PhaseNetworkSetup::connected, { Response::Ok } },
@@ -916,6 +920,7 @@ inline constexpr EnumArray<PhaseNetworkSetup, PhaseResponses, CountPhases<PhaseN
         { PhaseNetworkSetup::help_qr, { Response::Back } },
         { PhaseNetworkSetup::finish, {} },
 };
+#endif
 
 #if ENABLED(CRASH_RECOVERY)
 inline constexpr PhaseResponses CrashRecoveryResponses[] = {

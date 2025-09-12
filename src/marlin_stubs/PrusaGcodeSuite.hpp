@@ -4,6 +4,7 @@
 #pragma once
 #include "../../lib/Marlin/Marlin/src/gcode/parser.h"
 
+#include <option/has_esp.h>
 #include <option/has_toolchanger.h>
 #include <option/has_side_leds.h>
 #include <option/has_belt_tuning.h>
@@ -140,7 +141,9 @@ void M1601(); //< Filament stuck detected, Prusa STM32 platform specific
 void M1700(); //< Preheat. Prusa STM32 platform specific
 void M1701(); //< Autoload. Prusa STM32 platform specific
 void M1702(); //< Coldpull. Prusa platform specific
+#if HAS_ESP()
 void M1703(); //< Wi-fi setup. Prusa platform specific
+#endif
 
 void M1978(); //< Fan Selftest
 #if HAS_DOOR_SENSOR_CALIBRATION()

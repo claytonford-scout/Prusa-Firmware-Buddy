@@ -143,15 +143,25 @@ void hw_gpio_init() {
     __HAL_RCC_GPIOH_CLK_ENABLE();
 
     // Configure GPIO pins : USB_OVERC_Pin ESP_GPIO0_Pin BED_MON_Pin WP1_Pin
+#if HAS_ESP()
     GPIO_InitStruct.Pin = USB_OVERC_Pin | ESP_GPIO0_Pin | BED_MON_Pin | WP1_Pin;
+#else
+    GPIO_InitStruct.Pin = USB_OVERC_Pin | BED_MON_Pin | WP1_Pin;
+#endif
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
+#if HAS_ESP()
     // NOTE: Configuring GPIO causes a short drop of pin output to low. This is
     //       avoided by first setting the pin and then initilizing the GPIO. In case
     //       this does not work we first initilize ESP GPIO0 to avoid reset low
-    //       followed by ESP GPIO low as this sequence can switch esp to boot mode */
+    //       followed by ESP GPIO low as this sequence can switch esp to boot mode
+    //
+    // NOTE on NOTE: We configure ESP_GPIO0_Pin as an input pin and we claim we
+    //               avoid some behavior by writing to it first before
+    //               configuring it again as an output pin... Sounds rather
+    //               suspect, we should try to get rid of this.
 
     // Configure ESP GPIO0 (PROG, High for ESP module boot from Flash)
     GPIO_InitStruct.Pin = ESP_GPIO0_Pin;
@@ -168,6 +178,7 @@ void hw_gpio_init() {
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_WritePin(GPIOC, ESP_RST_Pin, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+#endif
 
     // Configure GPIO pins : WP2_Pin
     GPIO_InitStruct.Pin = WP2_Pin;

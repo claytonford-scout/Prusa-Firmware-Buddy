@@ -3,11 +3,14 @@
 #include <buddy/main.h>
 #include <device/board.h>
 #include <device/hal.h>
-#include <espif.h>
 #include <option/has_mmu2.h>
 #include <option/has_mmu2_over_uart.h>
 #include <option/has_puppies.h>
 #include <option/has_tmc_uart.h>
+
+#if HAS_ESP()
+    #include <espif.h>
+#endif
 
 #if HAS_PUPPIES()
     #include <puppies/PuppyBus.hpp>
@@ -109,6 +112,7 @@ void uart_init_mmu() {
 }
 #endif
 
+#if HAS_ESP()
 UART_HandleTypeDef uart_handle_for_esp;
 void uart_init_esp() {
     uart_handle_for_esp.Instance = UART_ESP;
@@ -127,6 +131,7 @@ void uart_init_esp() {
         Error_Handler();
     }
 }
+#endif
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 #if HAS_TMC_UART()
@@ -147,9 +152,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
     }
 #endif
 
+#if HAS_ESP()
     if (huart == &uart_handle_for_esp) {
         return espif_tx_callback();
     }
+#endif
 }
 
 void HAL_UART_RxHalfCpltCallback([[maybe_unused]] UART_HandleTypeDef *huart) {

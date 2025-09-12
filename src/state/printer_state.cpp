@@ -5,6 +5,7 @@
 #include <fsm_states.hpp>
 #include <client_response.hpp>
 #include <marlin_vars.hpp>
+#include <option/has_esp.h>
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_mmu2.h>
@@ -230,7 +231,9 @@ DeviceState get_state(bool ready) {
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
 #endif
+#if HAS_ESP()
     case ClientFSM::NetworkSetup:
+#endif
 #if HAS_COLDPULL()
     case ClientFSM::ColdPull:
 #endif
@@ -437,7 +440,9 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
 #endif
+#if HAS_ESP()
     case ClientFSM::NetworkSetup:
+#endif
 #if HAS_COLDPULL()
     case ClientFSM::ColdPull:
 #endif

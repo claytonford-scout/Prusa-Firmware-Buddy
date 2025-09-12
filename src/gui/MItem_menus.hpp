@@ -17,6 +17,8 @@
 #include <img_resources.hpp>
 #include <ScreenFactory.hpp>
 
+#include <option/has_esp.h>
+
 class MI_SCREEN_BASE : public IWindowMenuItem {
 protected:
     // Two constructors for flash saving (so that we don't need to pass that many parameters)
@@ -81,8 +83,10 @@ using MI_METRICS_SETTINGS
 using MI_ETH_SETTINGS
     = MI_SCREEN<N_("Ethernet"), class ScreenMenuEthernetSettings, &img::lan_16x16>;
 
+#if HAS_ESP()
 using MI_WIFI_SETTINGS
     = MI_SCREEN<N_("Wi-Fi"), class ScreenMenuWifiSettings, &img::wifi_16x16>;
+#endif
 
 using MI_MESSAGES
     = MI_SCREEN<N_("Message History"), class screen_messages_data_t>;
