@@ -3110,6 +3110,11 @@ void Temperature::isr() {
             return;
         }
 
+        if (marlin_debug_flags & MARLIN_DEBUG_DRYRUN) {
+            // In dry run, the bed is left cold. The temperature would never stabilize.
+            return;
+        }
+
         SkippableGCode::Guard skippable_operation;
         PrintStatusMessageGuard status_guard;
 
