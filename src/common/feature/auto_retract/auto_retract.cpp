@@ -68,7 +68,7 @@ void AutoRetract::set_retracted_distance(uint8_t hotend, std::optional<float> di
     config_store().set_filament_retracted_distance(hotend, dist);
 }
 
-void AutoRetract::maybe_retract_from_nozzle() {
+void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_callback) {
     if (!can_perform_action()) {
         return;
     }
@@ -104,14 +104,19 @@ void AutoRetract::maybe_retract_from_nozzle() {
         struct {
             uint32_t start_time;
             float progress_coef;
+            const ProgressCallback &progress_callback;
         } progress_data {
             ticks_ms(),
             100.0f / sequence.duration_estimate_ms(),
+            progress_callback
         };
 
         Subscriber subscriber(marlin_server::idle_publisher, [&] {
             const float progress = std::min((ticks_ms() - progress_data.start_time) * progress_data.progress_coef, 100.0f);
             psm_guard.update<PrintStatusMessage::Type::auto_retracting>({ progress });
+            if (progress_data.progress_callback) {
+                progress_data.progress_callback(progress);
+            }
         });
         sequence.execute();
     }

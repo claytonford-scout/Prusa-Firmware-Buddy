@@ -1,14 +1,16 @@
 #pragma once
 #include <optional>
 #include <bitset>
+#include <inplace_function.hpp>
 namespace buddy {
-
 /// Class for managing automatic retraction after print or load, so that the printer keeps the nozzle empty for MBL and non-printing to prevent oozing.
 /// Only to be managed from the marlin thread
 class AutoRetract {
     friend AutoRetract &auto_retract();
 
 public:
+    using ProgressCallback = stdext::inplace_function<void(float)>;
+
     static constexpr float minimum_auto_retract_distance = 20.f; ///< Minimum retract distance for the filament to be considered auto-retracted. Auto-retracted filaments can be unloaded without heating.
 
     /// \returns whether the specified hotend is retracted (some amount > 0.0f) and is a known value -> will deretract on positive Z move
@@ -27,7 +29,7 @@ public:
     std::optional<float> retracted_distance() const;
 
     /// If !is_safely_retracted_for_unload(), executes the retraction process and saves retracted distance
-    void maybe_retract_from_nozzle();
+    void maybe_retract_from_nozzle(const ProgressCallback &progress_callback = nullptr);
 
     /// If will_deretract(), executes the deretraction process and set retracted distance to unknown value (because it can be changed by printing moves without notice)
     void maybe_deretract_to_nozzle();
