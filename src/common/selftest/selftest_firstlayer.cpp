@@ -3,12 +3,9 @@
  */
 
 #include "selftest_firstlayer.hpp"
-#include "i_selftest.hpp"
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "filament.hpp"
 #include "Marlin/src/gcode/queue.h"
-#include "Marlin/src/gcode/lcd/M73_PE.h"
-#include "Marlin/src/gcode/gcode.h"
 #include "Marlin/src/module/probe.h"
 #include "Marlin/src/module/temperature.h"
 #include "marlin_stubs/G26.hpp"
