@@ -66,6 +66,7 @@ GcodeSuite gcode;
 #include <option/has_phase_stepping.h>
 #include <option/has_phase_stepping_calibration.h>
 #include <marlin_vars.hpp>
+#include <utils/serial_logging_disabler.hpp>
 
 millis_t GcodeSuite::previous_move_ms;
 
@@ -792,6 +793,9 @@ void GcodeSuite::process_subcommands_now(char * gcode) {
    * while the machine is not accepting commands.
    */
   void GcodeSuite::host_keepalive() {
+    // Do not log keeaplive messages, only print to serial
+    SerialLoggingDisabler sld;
+
     const millis_t ms = millis();
     static millis_t next_busy_signal_ms = 0;
     if (!suspend_auto_report && host_keepalive_interval && busy_state != NOT_BUSY) {

@@ -82,6 +82,7 @@
 #include <option/has_local_bed.h>
 #include <option/has_remote_bed.h>
 #include <option/has_modular_bed.h>
+#include <utils/serial_logging_disabler.hpp>
 
 LOG_COMPONENT_REF(MarlinServer);
 
@@ -2946,6 +2947,9 @@ void Temperature::isr() {
 
         now = millis();
         if (ELAPSED(now, next_temp_ms)) { // Print temp & remaining time every 1s while waiting
+          // Do not log heater states, only print to serial
+          SerialLoggingDisabler sld;
+
           next_temp_ms = now + 1000UL;
           print_heater_states(target_extruder);
           #if TEMP_RESIDENCY_TIME > 0
