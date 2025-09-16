@@ -176,6 +176,7 @@
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
     #include <feature/auto_retract/auto_retract.hpp>
+    #include <feature/retract_tracker/retract_tracker.hpp>
 #endif
 
 #include <option/buddy_enable_wui.h>
@@ -864,6 +865,20 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
         return false; // We are not ready yet, we need to wait for the loader to finish buffering
     }
 #endif // HAS_NOZZLE_CLEANER()
+
+#if HAS_AUTO_RETRACT()
+    // During multi tool printing, slicer handles retraction/ramming and keeps FW in the dark
+    // RetractTracker keeps track of retracted distances on each hotend
+    // This overwrites retracted distances in persistent storage with temporary ones from RetractTracker
+    for (uint8_t i = 0; i < HOTENDS; i++) {
+        const auto dist = buddy::retract_tracker().get_retracted_distance(i);
+        // Do not save retract_tracker value before it was validated
+        if (dist.has_value()) {
+            // update only used hotends
+            buddy::auto_retract().set_retracted_distance(i, dist);
+        }
+    }
+#endif
 
 #if ENABLED(PRUSA_MMU2)
     if (MMU2::mmu2.Enabled() && (!finished || GCodeInfo::getInstance().is_singletool_gcode())) {
