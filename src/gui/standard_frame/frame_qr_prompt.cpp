@@ -11,18 +11,13 @@ FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, cons
     , qr(parent, FrameQRLayout::qrcode_rect(), Align_t::Center())
     , radio(parent, WizardDefaults::RectRadioButton(0), fsm_phase) //
 {
-    const char *help_url = PrinterModelInfo::current().help_url;
     StringBuilder(link_buffer)
         .append_string("prusa.io/")
-        .append_string(help_url)
-        .append_char('-')
         .append_string(qr_suffix);
     link.SetText(string_view_utf8::MakeRAM(link_buffer.data()));
 
     qr.get_string_builder()
         .append_string("https://prusa.io/qr-")
-        .append_string(help_url)
-        .append_char('-')
         .append_string(qr_suffix);
 
     parent->CaptureNormalWindow(radio);
