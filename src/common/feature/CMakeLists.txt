@@ -47,5 +47,9 @@ if(FILAMENT_SENSOR)
   add_subdirectory(filament_sensor)
 endif()
 
+if(HAS_LOADCELL)
+  add_subdirectory(nozzle_cleaning_failed)
+endif()
+
 add_subdirectory(ramming)
 add_subdirectory(cork)
