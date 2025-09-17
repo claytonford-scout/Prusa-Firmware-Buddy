@@ -1793,16 +1793,29 @@ bool Planner::_populate_block(block_t * const block,
 
           vmax_junction_sqr = (junction_acceleration * junction_deviation_mm * sin_theta_d2) / (1.0f - sin_theta_d2);
           #if ENABLED(JD_SMALL_SEGMENT_HANDLING)
-            if (block->millimeters < 1) {
+            // For small moves with >135° junction (octagon) find speed for approximate arc
+            if (block->millimeters < 1 && junction_cos_theta < -0.7071067812f) {
+              // Fast acos(-t) approximation (max. error +-0.033rad = 1.89°)
+              // Based on MinMax polynomial published by W. Randolph Franklin, see
+              // https://wrf.ecse.rpi.edu/Research/Short_Notes/arcsin/onlyelem.html
+              //  acos( t) = pi / 2 - asin(x)
+              //  acos(-t) = pi - acos(t) ... pi / 2 + asin(x)
 
-              // Fast acos approximation, minus the error bar to be safe
-              const float junction_theta = (RADIANS(-40) * sq(junction_cos_theta) - RADIANS(50)) * junction_cos_theta + RADIANS(90) - 0.18f;
+              const float neg = junction_cos_theta < 0 ? -1 : 1,
+                          t = neg * junction_cos_theta,
+                          asinx =       0.032843707f
+                                + t * (-1.451838349f
+                                + t * ( 29.66153956f
+                                + t * (-131.1123477f
+                                + t * ( 262.8130562f
+                                + t * (-242.7199627f
+                                + t * ( 84.31466202f ) ))))),
+                          junction_theta = RADIANS(90) + neg * asinx; // acos(-t)
 
-              // If angle is greater than 135 degrees (octagon), find speed for approximate arc
-              if (junction_theta > RADIANS(135)) {
-                const float limit_sqr = block->millimeters / (RADIANS(180) - junction_theta) * junction_acceleration;
-                NOMORE(vmax_junction_sqr, limit_sqr);
-              }
+              // NOTE: junction_theta bottoms out at 0.033 which avoids divide by 0.
+
+              const float limit_sqr = (block->millimeters * junction_acceleration) / junction_theta;
+              NOMORE(vmax_junction_sqr, limit_sqr);
             }
           #endif //JD_SMALL_SEGMENT_HANDLING
 
