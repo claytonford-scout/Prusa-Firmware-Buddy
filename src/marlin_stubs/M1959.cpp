@@ -180,8 +180,7 @@ static PhasesInputShaperCalibration parking(Context &context) {
 #endif
 
     // Ensure consistent measurement
-    const xyz_pos_t pos = { X_BED_SIZE / 2, Y_BED_SIZE / 2, Z_SIZE / 2 };
-    plan_park_move_to_xyz(pos, HOMING_FEEDRATE_XY, HOMING_FEEDRATE_Z, Segmented::no);
+    do_blocking_move_to(X_BED_SIZE / 2, Y_BED_SIZE / 2, Z_SIZE / 2);
 
 #if HAS_PHASE_STEPPING()
     // Ensure phase stepping is disabled throughout the calibration as we manipulate steps directly
@@ -190,8 +189,6 @@ static PhasesInputShaperCalibration parking(Context &context) {
     std::ignore = context;
 #endif
 
-    // Carry on the changes
-    planner.synchronize();
 #if HAS_ATTACHABLE_ACCELEROMETER()
     return PhasesInputShaperCalibration::wait_for_extruder_temperature;
 #else
