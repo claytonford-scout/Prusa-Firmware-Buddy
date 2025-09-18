@@ -13,6 +13,7 @@
 #include <logging/log.hpp>
 #include <config_store/store_instance.hpp>
 #include <odometer.hpp>
+#include <filament_to_load.hpp>
 
 LOG_COMPONENT_REF(MMU2);
 
@@ -191,6 +192,12 @@ bool TuneMenuEntered() {
 
 void tuneIdlerStallguardThreshold() {
     // @@TODO
+}
+
+void UpdateCurrentFilamentType(uint8_t slot) {
+    if (slot < EXTRUDERS) {
+        filament::set_type_to_load(config_store().get_filament_type(slot));
+    } // ignore out-of-bounds slot indices (uknown filament types)
 }
 
 } // namespace MMU2

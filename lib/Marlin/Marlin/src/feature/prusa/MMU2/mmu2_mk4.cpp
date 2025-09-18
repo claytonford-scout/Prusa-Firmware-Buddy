@@ -624,6 +624,7 @@ bool MMU2::ToolChangeCommonOnce(uint8_t slot) {
 }
 
 void MMU2::ToolChangeCommon(uint8_t slot) {
+    UpdateCurrentFilamentType(slot);
     while (!ToolChangeCommonOnce(slot)) { // while not successfully fed into extruder's PTFE tube
         if (planner_draining()) {
             return; // power panic happening, pretend the G-code finished ok
@@ -783,6 +784,7 @@ void MMU2::UnloadObeyAutoRetracted() {
 }
 
 void MMU2::UnloadInner(PreUnloadPolicy preUnloadPolicy) {
+    UpdateCurrentFilamentType(extruder); // this is probably the only place where we need to rely on the "extruder" variable matching the currently unloaded slot
     FSensorBlockRunout blockRunout;
     BlockEStallDetection blockEStallDetection;
 
@@ -865,6 +867,7 @@ bool MMU2::cut_filament(uint8_t slot, bool enableFullScreenMsg /*= true*/) {
         return false;
     }
 
+    UpdateCurrentFilamentType(slot);
     if (enableFullScreenMsg) {
         FullScreenMsgCut(slot);
     }
@@ -904,6 +907,7 @@ bool MMU2::load_filament(uint8_t slot) {
         return false;
     }
 
+    UpdateCurrentFilamentType(slot);
     FullScreenMsgLoad(slot);
     {
         CommandInProgressGuard cipg(CommandInProgress::LoadFilament, commandInProgressManager);
@@ -954,6 +958,7 @@ bool MMU2::eject_filament(uint8_t slot, bool enableFullScreenMsg /* = true */) {
         return false;
     }
 
+    UpdateCurrentFilamentType(slot);
     if (enableFullScreenMsg) {
         FullScreenMsgEject(slot);
     }
