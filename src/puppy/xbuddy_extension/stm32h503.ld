@@ -35,11 +35,9 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-/* Highest address of the user mode stack */
-_estack = ORIGIN(RAM) + LENGTH(RAM); /* end of "RAM" Ram type memory */
-
 _Min_Heap_Size = 0x200; /* required amount of heap */
-_Min_Stack_Size = 0x400; /* required amount of stack */
+
+ISR_STACK_SIZE = 1024;
 
 TOTAL_FLASH_SIZE = 128K;
 FLASH_ONE_PAGE = 8K;
@@ -51,7 +49,8 @@ APP_SIZE = TOTAL_FLASH_SIZE - BL_SIZE - DESCRIPTOR_SIZE;
 /* Memories definition */
 MEMORY
 {
-  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 32K
+  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 32K - ISR_STACK_SIZE
+  ISR_STACK    (xrw)    : ORIGIN = ORIGIN(RAM) + LENGTH(RAM) - ISR_STACK_SIZE, LENGTH = ISR_STACK_SIZE
   FLASH_BOOTLOADER (rx) : ORIGIN = FW_ORIGIN, LENGTH = BL_SIZE
   FLASH    (rx)    : ORIGIN = FW_ORIGIN + BL_SIZE,   LENGTH = APP_SIZE
   FW_DESCRIPTOR (r) : ORIGIN = FW_ORIGIN + TOTAL_FLASH_SIZE - DESCRIPTOR_SIZE, LENGTH = DESCRIPTOR_SIZE
@@ -207,9 +206,16 @@ SECTIONS
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = . + _Min_Heap_Size;
-    . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .isr_stack (NOLOAD) :
+  {
+    _isr_stack_start = .;
+    . = . + ISR_STACK_SIZE;
+    _isr_stack_end = .;
+    _estack = .;
+  } > ISR_STACK
 
 /* Remove information from the standard libraries */
   /DISCARD/ :
