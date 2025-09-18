@@ -18,6 +18,11 @@ class SelftestFrameFirstLayer : public SelftestFrame {
     WindowProgressBar progress;
     WindowLiveAdjustZ_withText live_z;
 
+    void set_live_z_enable(bool set) {
+        progress.set_visible(set);
+        live_z.set_active(set);
+    }
+
 protected:
     virtual void change() override;
 
