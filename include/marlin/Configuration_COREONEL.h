@@ -552,13 +552,13 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 #define DEFAULT_MAX_FEEDRATE \
-    { 350, 350, 30, 50 }
+    { 500, 500, 15, 100 }
 
 /// HW limits of feed rate
 #define HWLIMIT_NORMAL_MAX_FEEDRATE \
-    { 350, 350, 35, 100 }
+    { 500, 500, 15, 100 }
 #define HWLIMIT_STEALTH_MAX_FEEDRATE \
-    { 160, 160, 12, 100 }
+    { 160, 160, 8, 100 }
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -567,7 +567,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 #define DEFAULT_MAX_ACCELERATION \
-    { 10000, 10000, 1000, 1500 }
+    { 10000, 10000, 500, 1500 }
 
 /// HW limits of max acceleration
 #define HWLIMIT_NORMAL_MAX_ACCELERATION \
@@ -606,8 +606,8 @@
  * value set here, it may happen instantaneously.
  */
 #if ENABLED(CLASSIC_JERK)
-    #define DEFAULT_XJERK 8.0
-    #define DEFAULT_YJERK 8.0
+    #define DEFAULT_XJERK 10.0
+    #define DEFAULT_YJERK 10.0
     #define DEFAULT_ZJERK 2.0
 #endif
 
