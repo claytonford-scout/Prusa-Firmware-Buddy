@@ -4,7 +4,7 @@
 #include <common/marlin_server.hpp>
 #include <Marlin/src/gcode/calibrate/M958.hpp>
 #include <Marlin/src/gcode/gcode.h>
-#include <Marlin/src/module/tool_change.h>
+#include <mapi/motion.hpp>
 #include <option/development_items.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_attachable_accelerometer.h>
@@ -172,12 +172,7 @@ static PhasesInputShaperCalibration parking(Context &context) {
             .precise = false, // We don't need precise position for this procedure
         });
 
-#if HAS_REMOTE_ACCELEROMETER()
-    // Without tool being picked there is no accelerometer data
-    if (prusa_toolchanger.has_tool() == false) {
-        tool_change(/*tool_index=*/0, tool_return_t::no_return, tool_change_lift_t::no_lift, /*z_down=*/false);
-    }
-#endif
+    mapi::ensure_tool_with_accelerometer_picked();
 
     // Ensure consistent measurement
     do_blocking_move_to(X_BED_SIZE / 2, Y_BED_SIZE / 2, Z_SIZE / 2);

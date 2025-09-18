@@ -7,6 +7,7 @@
 #include <logging/log.hpp>
 #include <module/planner.h>
 #include <module/motion.h>
+#include <mapi/motion.hpp>
 #include <sfl/segmented_vector.hpp>
 #include <gcode/gcode.h>
 
@@ -1829,7 +1830,7 @@ static bool has_impact(const CalibrationResult &r) {
 
 std::expected<std::array<MotorPhaseCorrection, 2>, CalibrateAxisError>
 phase_stepping::calibrate_axis(AxisEnum axis, CalibrateAxisHooks &hooks) {
-
+    mapi::ensure_tool_with_accelerometer_picked();
     reset_compensation(axis);
     phase_stepping::EnsureEnabled _;
 
