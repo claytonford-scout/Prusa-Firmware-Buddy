@@ -38,6 +38,8 @@ static inline constexpr const AxisCalibrationConfig xy_axis_calibration_config {
 static inline constexpr const AxisCalibrationConfig xy_axis_calibration_config {
     .speed_range = { 0.1f, 3.f },
     .enabled_harmonics = 0b1010,
+    .min_magnitude = 0.016f,
+    .magnitude_quotient = 1.4f
 };
 #else
     #error
