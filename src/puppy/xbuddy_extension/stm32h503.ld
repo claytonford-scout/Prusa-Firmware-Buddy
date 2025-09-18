@@ -68,6 +68,16 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  /DISCARD/ :
+  {
+    /* Make sure we're not doing any dynamic allocations. */
+    /* You'll get a linker error if it tries to sneak in. */
+    /* Do not try to consolidate this with DISCARD below. */
+    *(.text.malloc)
+    *(.text.free)
+    *(.text.sbrk)
+  }
+
   /* The program code and other data into "FLASH" Rom type memory */
   .text :
   {

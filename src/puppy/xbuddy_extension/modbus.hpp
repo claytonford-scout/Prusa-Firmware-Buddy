@@ -33,6 +33,9 @@ namespace modbus {
 ///   error - we return the error from here, but the printer side shall raise
 ///   some kind of BSOD or something.
 class Callbacks {
+protected:
+    ~Callbacks() = default;
+
 public:
     /// These correspond to the on-wire representation (that's why they have
     /// manually-assigned value).
@@ -57,8 +60,6 @@ public:
         // We will not respond, just ignore the message silently (someone else on the bus might answer).
         Ignore = 255,
     };
-
-    virtual ~Callbacks() = default;
 
     virtual Status read_register(uint8_t device, uint16_t address, uint16_t &out) = 0;
     virtual Status write_register(uint8_t device, uint16_t address, uint16_t value) = 0;
