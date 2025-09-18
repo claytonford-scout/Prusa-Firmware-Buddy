@@ -154,24 +154,11 @@ void hw_gpio_init() {
     //       followed by ESP GPIO low as this sequence can switch esp to boot mode */
 
     // Configure ESP GPIO0 (PROG, High for ESP module boot from Flash)
-    GPIO_InitStruct.Pin =
-#if (BOARD_IS_XBUDDY() || BOARD_IS_XLBUDDY())
-        GPIO_PIN_15
-#else
-        GPIO_PIN_6
-#endif
-        ;
+    GPIO_InitStruct.Pin = ESP_GPIO0_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_WritePin(GPIOE,
-#if (BOARD_IS_XBUDDY() || BOARD_IS_XLBUDDY())
-        GPIO_PIN_15
-#else
-        GPIO_PIN_6
-#endif
-        ,
-        GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOE, ESP_GPIO0_Pin, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
     // Configure GPIO pins : ESP_RST_Pin
