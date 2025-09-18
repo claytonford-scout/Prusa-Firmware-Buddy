@@ -165,7 +165,7 @@ void marlin_finalize_unload() {
 bool marlin_is_retracted() {
 #if HAS_AUTO_RETRACT()
     static_assert(HOTENDS == 1);
-    return buddy::auto_retract().is_retracted();
+    return buddy::auto_retract().is_safely_retracted_for_unload();
 #else
     return false;
 #endif
