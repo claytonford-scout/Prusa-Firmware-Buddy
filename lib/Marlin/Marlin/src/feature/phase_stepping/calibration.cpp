@@ -637,175 +637,69 @@ std::vector<SignalPeak> find_peaks(It begin, It end, float min_prominence) {
     return peaks;
 }
 
-// Compute mean fit for harmonic peak positions. Return a tuple (estimated
-// fundamental position, estimated error).
-std::tuple<float, float> harmonic_peaks_fit(std::span<const HarmonicPeak> peaks) {
-    // I f is the fundamental and p_i is the position of the i-th peak
-    // with harmonic h_i, we minimize:
-    //   E = Σ (p_i - f/h_i)²
-    //
-    // Taking the derivative with respect to f and setting to zero:
-    //   dE/df = Σ -2(p_i - f/h_i)(1/h_i) = 0
-    //
-    // Solving for f:
-    //   f = Σ (p_i/h_i) / Σ (1/h_i²)
-    //
-    float sum_pos_div_harm = 0;
-    float sum_inv_harm_squared = 0;
-
-    for (const auto &peak : peaks) {
-        sum_pos_div_harm += peak.position / peak.harmonic;
-        sum_inv_harm_squared += 1.0f / (peak.harmonic * peak.harmonic);
-    }
-
-    float fundamental_pos = sum_pos_div_harm / sum_inv_harm_squared;
-
-    // Now compute the error with this optimal fundamental
-    float error = 0;
-    for (const auto &peak : peaks) {
-        float p_est = fundamental_pos / peak.harmonic;
-        error += (peak.position - p_est) * (peak.position - p_est);
-    }
-
-    return { fundamental_pos, error };
-}
-
-struct HarmonicPeaksFit {
-    std::vector<HarmonicPeak> found; // Actual detected peaks
-    std::vector<HarmonicPeak> estimated; // Estimated ideal positions
-    float badness; // Error metric from fitting
-    float prominence_sum; // Sum of prominences of all peaks
-
-    bool operator==(const HarmonicPeaksFit &other) const {
-        const auto badness_equal = [](float a, float b) {
-            return std::fabs(a - b) < 1e5;
-        };
-
-        const auto prominence_equal = [](float a, float b) {
-            return std::fabs(a - b) < 1e5;
-        };
-
-        return found == other.found && estimated == other.estimated && badness_equal(badness, other.badness) && prominence_equal(prominence_sum, other.prominence_sum);
-    }
-};
-
-// Detect harmonic peaks in a set of sweeps. Returns the top n fits sorted by prominence sum.
+// Detect a peak in each signal such that they are all harmonics of a common
+// fundamental frequency. Returns a single fit.
 template <typename PosConverter>
-std::vector<HarmonicPeaksFit> find_harmonic_peaks(
-    std::span<const HarmonicT<MagnitudeContainer>> sweeps, PosConverter idx_to_pos,
-    float min_prominence = 0.15, int n_closest = 2, std::size_t n_best_fits = 3) {
-    // Find peaks for each harmonic sweep
-    std::vector<HarmonicT<std::vector<SignalPeak>>> peaks;
-    peaks.reserve(sweeps.size());
+stdext::inplace_vector<HarmonicPeak, opts::CORRECTION_HARMONICS> find_harmonic_peaks(
+    std::span<const HarmonicT<MagnitudeContainer>> sweeps, PosConverter idx_to_pos) {
+    assert(!sweeps.empty());
     for (const auto &sweep : sweeps) {
-        peaks.push_back({ sweep.harmonic, find_peaks(sweep.value.begin(), sweep.value.end(), min_prominence) });
+        (void)sweep; // Silence unused variable warning in release builds
+        assert(!sweep.value.empty());
     }
 
-    std::vector<HarmonicPeaksFit> best_fits;
+    // The algorithm works as follows: each signal "votes" for the position of
+    // the fundamental frequency. The voting is done by normalizing the
+    // magnitude to a range 0-1 based on max value and converting the index to a
+    // corresponding fundamental speed. The votes are then summed up and the
+    // highest peak is selected as the fundamental speed.
+    stdext::inplace_vector<HarmonicT<float>, opts::CORRECTION_HARMONICS> signal_max_value;
+    std::transform(sweeps.begin(), sweeps.end(), std::back_inserter(signal_max_value),
+        [](const auto &sweep) {
+            return HarmonicT<float> {
+                sweep.harmonic,
+                *std::max_element(sweep.value.begin(), sweep.value.end())
+            };
+        });
 
-    // Try all points as anchors:
-    for (const auto &[h_anchor, h_anchor_peaks] : peaks) {
-        for (const auto &peak : h_anchor_peaks) {
-            float fundamental_pos = idx_to_pos(peak.idx) / h_anchor;
+    // We need to step along corresponding indices of all sweeps:
+    int step_factor = std::accumulate(signal_max_value.begin(), signal_max_value.end(), 1,
+        [](int acc, const auto &h_val) { return std::gcd(acc, h_val.harmonic); });
 
-            // For each harmonic, collect n closest peaks to the estimated position
-            std::vector<std::vector<std::pair<SignalPeak, HarmonicPeak>>> candidates_per_harmonic;
-            candidates_per_harmonic.reserve(peaks.size());
+    float max_vote = 0.f;
+    int max_idx = 0;
+    for (std::size_t i = 0; true; i++) {
+        float vote = 0.f;
+        bool valid = true;
+        for (std::size_t j = 0; j < sweeps.size(); j++) {
+            const auto &sweep = sweeps[j];
+            float signal_max = signal_max_value[j].value != 0 ? signal_max_value[j].value : 1.f;
 
-            for (const auto &[h, h_peaks] : peaks) {
-                // Sort peaks by distance to the estimated fundamental position
-                std::vector<std::pair<float, SignalPeak>> sorted_peaks;
-                sorted_peaks.reserve(h_peaks.size());
-
-                for (const auto &p : h_peaks) {
-                    float dist = std::fabs(idx_to_pos(p.idx) / h - fundamental_pos);
-                    sorted_peaks.push_back({ dist, p });
-                }
-
-                std::sort(sorted_peaks.begin(), sorted_peaks.end(),
-                    [](const auto &a, const auto &b) { return a.first < b.first; });
-
-                // Take up to n_closest peaks
-                std::vector<std::pair<SignalPeak, HarmonicPeak>> harmonic_candidates;
-                harmonic_candidates.reserve(std::min<int>(n_closest, sorted_peaks.size()));
-
-                for (int i = 0; i < std::min<int>(n_closest, sorted_peaks.size()); i++) {
-                    const auto &signal_peak = sorted_peaks[i].second;
-                    harmonic_candidates.push_back({ signal_peak,
-                        HarmonicPeak { h, idx_to_pos(signal_peak.idx) } });
-                }
-
-                candidates_per_harmonic.push_back(std::move(harmonic_candidates));
+            std::size_t signal_idx = i * step_factor / sweep.harmonic;
+            if (signal_idx >= sweep.value.size()) {
+                valid = false;
+                break;
             }
 
-            // Now test all combinations of candidates recursively
-            std::vector<std::pair<SignalPeak, HarmonicPeak>> current_combination(peaks.size());
+            float normalized_val = sweep.value[signal_idx] / signal_max;
+            vote += normalized_val;
+        }
 
-            auto test_combinations = [&](auto &&self, std::size_t harmonic_idx) -> void {
-                // Recursive stop: there are no more harmonics to test
-                if (harmonic_idx == candidates_per_harmonic.size()) {
-                    // Extract just the HarmonicPeak from each pair for fitting
-                    std::vector<HarmonicPeak> harmonic_peaks;
-                    harmonic_peaks.reserve(current_combination.size());
-                    for (const auto &pair : current_combination) {
-                        harmonic_peaks.push_back(pair.second);
-                    }
-
-                    auto [estimated_fundamental_pos, badness] = harmonic_peaks_fit(harmonic_peaks);
-
-                    float prominence_sum = 0.0f;
-                    for (const auto &[signal_peak, _] : current_combination) {
-                        prominence_sum += signal_peak.prominence;
-                    }
-
-                    std::vector<HarmonicPeak> estimated_peaks;
-                    estimated_peaks.reserve(harmonic_peaks.size());
-                    for (const auto &peak : harmonic_peaks) {
-                        estimated_peaks.push_back({ peak.harmonic, estimated_fundamental_pos / peak.harmonic });
-                    }
-
-                    // Create a new candidate fit
-                    HarmonicPeaksFit candidate {
-                        .found = harmonic_peaks,
-                        .estimated = estimated_peaks,
-                        .badness = badness,
-                        .prominence_sum = prominence_sum
-                    };
-
-                    if (std::find(best_fits.begin(), best_fits.end(), candidate) != best_fits.end()) {
-                        return; // Already found this combination
-                    }
-
-                    // Add to best_fits if there's still room or if it's better than the worst fit
-                    if (best_fits.size() < n_best_fits) {
-                        best_fits.push_back(candidate);
-                        if (best_fits.size() > 1) {
-                            std::sort(best_fits.begin(), best_fits.end(),
-                                [](const auto &a, const auto &b) { return a.badness < b.badness; });
-                        }
-                    } else if (badness < best_fits.back().badness) {
-                        // Replace the last element (lowest prominence)
-                        best_fits.back() = candidate;
-                        std::sort(best_fits.begin(), best_fits.end(),
-                            [](const auto &a, const auto &b) { return a.badness < b.badness; });
-                    }
-
-                    return;
-                }
-                // Try each candidate for the current harmonic
-                for (const auto &candidate : candidates_per_harmonic[harmonic_idx]) {
-                    current_combination[harmonic_idx] = candidate;
-                    self(self, harmonic_idx + 1);
-                }
-            };
-
-            test_combinations(test_combinations, 0); // Start the recursion
+        if (!valid) {
+            break;
+        }
+        if (vote > max_vote) {
+            max_vote = vote;
+            max_idx = i;
         }
     }
 
-    std::sort(best_fits.begin(), best_fits.end(),
-        [](const auto &a, const auto &b) { return a.prominence_sum > b.prominence_sum; });
-    return best_fits;
+    stdext::inplace_vector<HarmonicPeak, opts::CORRECTION_HARMONICS> result;
+    for (const auto &sweep : sweeps) {
+        float pos = idx_to_pos(max_idx / step_factor / sweep.harmonic);
+        result.push_back({ sweep.harmonic, pos });
+    }
+    return result;
 }
 
 // Find best fitting num_peaks peaks in the signal that are evenly spaced with
@@ -1405,14 +1299,8 @@ static void debug_dump_dft_sweep_result(const char *name, int harmonic, int dir,
 #endif
 }
 
-static void debug_dump_harmonic_peaks(const char *name,
-    const std::vector<HarmonicPeaksFit> &peaks_set) {
+static void debug_dump_harmonic_peaks(const char *name, const stdext::inplace_vector<HarmonicPeak, opts::CORRECTION_HARMONICS> &peaks) {
 #ifdef SERIAL_DEBUG
-    assert(peaks_set.size() >= 1);
-    const auto &peaks = peaks_set[0].found;
-    const auto &estimated_peaks = peaks_set[0].estimated;
-    assert(peaks.size() == estimated_peaks.size());
-
     serial_printf("# harmonic_peaks {");
     serial_printf("\"name\": \"%s\", ", name);
     serial_printf("\"peaks\": [");
@@ -1420,7 +1308,7 @@ static void debug_dump_harmonic_peaks(const char *name,
         serial_printf("{");
         serial_printf("\"harmonic\": %d, ", peaks[i].harmonic);
         serial_printf("\"measured_position\": %f,", peaks[i].position);
-        serial_printf("\"estimated_position\": %f", estimated_peaks[i].position);
+        serial_printf("\"estimated_position\": %f", peaks[i].position);
         serial_printf("}");
         if (i + 1 < peaks.size()) {
             serial_printf(", ");
@@ -1556,28 +1444,18 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     auto idx_to_pos = [&](int idx) {
         return start_speed + idx * (end_speed - start_speed) / (harmonic_signals[0].value.size() - 1);
     };
-    auto detected_peaks_sets = find_harmonic_peaks(harmonic_signals, idx_to_pos);
-    if (detected_peaks_sets.empty()) {
-        return std::unexpected(CalibrateAxisError::no_peaks_found);
-    }
-    debug_dump_harmonic_peaks("peaks", detected_peaks_sets);
+    auto detected_peaks = find_harmonic_peaks(harmonic_signals, idx_to_pos);
+    debug_dump_harmonic_peaks("peaks", detected_peaks);
 
     ABORT_CHECK();
 
-    for (std::size_t set_i = 0; set_i != detected_peaks_sets.size(); set_i++) {
-        log_debug(PhaseStepping, "Detected peaks set %d", set_i);
-        [[maybe_unused]] auto &detected_peaks = detected_peaks_sets[set_i].found;
-        [[maybe_unused]] auto &estimated_peaks = detected_peaks_sets[set_i].estimated;
-        for (std::size_t i = 0; i < detected_peaks.size(); i++) {
-            log_debug(PhaseStepping, "    peak %d at %f, estimated at %f",
-                detected_peaks[i].harmonic, detected_peaks[i].position,
-                estimated_peaks[i].position);
-        }
+    for (std::size_t i = 0; i < detected_peaks.size(); i++) {
+        log_debug(PhaseStepping, "    peak %d at %f",
+            detected_peaks[i].harmonic, detected_peaks[i].position);
     }
 
-    // Use detected peaks as the source of truth
     stdext::inplace_vector<HarmonicT<float>, opts::CORRECTION_HARMONICS> result;
-    for (const auto &peak : detected_peaks_sets[0].found) {
+    for (const auto &peak : detected_peaks) {
         result.emplace_back(peak.harmonic, peak.position);
     }
     return result;
@@ -1909,7 +1787,7 @@ std::expected<std::array<MagCalibResult, 2>, CalibrateAxisError> find_best_mag(A
 static std::expected<std::array<CalibrationResult, 2>, CalibrateAxisError>
 calibrate_single_harmonic(AxisEnum axis, const AxisCalibrationConfig &calib_config,
     int harmonic, float nominal_calib_speed, AbortFun should_abort) {
-    log_debug(PhaseStepping, "Calibrating harmonic %d", harmonic);
+    log_debug(PhaseStepping, "Calibrating harmonic %d on speed %f", harmonic, nominal_calib_speed);
     WithCorrectionDisabled disabler(axis, harmonic);
 
     auto mag_result = find_approx_mag(axis, calib_config, harmonic, nominal_calib_speed, should_abort);
