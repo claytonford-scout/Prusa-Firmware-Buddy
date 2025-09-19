@@ -124,7 +124,11 @@ std::optional<Temperature> Chamber::current_temperature() const {
     if (chamber_tempearture.has_value() && bed_temperature > *chamber_tempearture && *chamber_tempearture > min_temp) {
         static constexpr Temperature bed_max = BED_MAXTEMP - BED_MAXTEMP_SAFETY_MARGIN;
         static constexpr Temperature chamber_max = chamber_maxtemp;
+        #if PRINTER_IS_PRUSA_COREONEL()
+        static constexpr Temperature offset = 8.f / ((bed_max - min_temp) * std::sqrt(chamber_max - min_temp));
+        #else
         static constexpr Temperature offset = 6.f / ((bed_max - min_temp) * std::sqrt(chamber_max - min_temp));
+        #endif
         return chamber_tempearture.value() + offset * (bed_temperature - chamber_tempearture.value()) * std::sqrt(chamber_tempearture.value() - min_temp);
     }
     #else
