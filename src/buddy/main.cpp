@@ -70,6 +70,7 @@
 #include <buddy/filesystem_semihosting.h>
 #include <freertos/timing.hpp>
 #include <heap.h>
+#include <heap.hpp>
 
 #if BUDDY_ENABLE_CONNECT()
     #include "connect/run.hpp"
@@ -628,7 +629,9 @@ void iwdg_warning_cb(void) {
 }
 
 extern "C" void idle_callback() {
-    check_isr_stack_overflow();
+    if (isr_stack_overflow_checker().has_overflowed()) {
+        bsod("ISR stack overflow");
+    }
 }
 
 void init_error_screen() {
@@ -736,8 +739,10 @@ int main() {
     system_core_init();
     tick_timer_init();
 
+    // Instantiate isr_stack_overflow_checker now
+    (void)isr_stack_overflow_checker();
+
     // other MCU setup
-    setup_isr_stack_overflow_trap();
     enable_trap_on_division_by_zero();
     enable_backup_domain();
     enable_segger_sysview();
