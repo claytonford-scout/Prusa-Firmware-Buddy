@@ -521,6 +521,9 @@ volatile bool Temperature::temp_meas_ready = false;
 
       // Report heater states every 2 seconds
       if (ELAPSED(ms, next_temp_ms)) {
+        // Do not log heater states, only print to serial
+        SerialLoggingDisabler sld;
+        
         #if HAS_TEMP_SENSOR
           print_heater_states(isbed ? active_extruder : heater);
           SERIAL_EOL();
@@ -2883,6 +2886,9 @@ void Temperature::isr() {
 
     void Temperature::auto_report_temperatures() {
       if (auto_report_temp_interval && ELAPSED(millis(), next_temp_report_ms)) {
+        // Do not log heater states, only print to serial
+        SerialLoggingDisabler sld;
+
         next_temp_report_ms = millis() + 1000UL * auto_report_temp_interval;
         PORT_REDIRECT(SERIAL_BOTH);
         print_heater_states(active_extruder);
@@ -3038,6 +3044,9 @@ void Temperature::isr() {
 
         now = millis();
         if (ELAPSED(now, next_temp_ms)) { //Print Temp Reading every 1 second while heating up.
+          // Do not log heater states, only print to serial
+          SerialLoggingDisabler sld;
+
           next_temp_ms = now + 1000UL;
           print_heater_states(active_extruder);
           #if TEMP_BED_RESIDENCY_TIME > 0
