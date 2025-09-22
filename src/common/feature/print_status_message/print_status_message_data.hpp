@@ -25,7 +25,8 @@ struct PrintStatusMessageDataProgress {
     bool operator==(const PrintStatusMessageDataProgress &) const = default;
 };
 
-struct PrintStatusMessageDataAxisProgress : public PrintStatusMessageDataProgress {
+struct PrintStatusMessageDataAxisProgress {
+    PrintStatusMessageDataProgress progress;
     AxisEnum axis;
 
     bool operator==(const PrintStatusMessageDataAxisProgress &) const = default;
