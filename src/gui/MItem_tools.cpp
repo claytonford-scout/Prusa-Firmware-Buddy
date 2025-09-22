@@ -35,6 +35,7 @@
 #include <option/filament_sensor.h>
 #include <option/has_side_leds.h>
 #include <option/has_coldpull.h>
+#include <option/has_auto_retract.h>
 #include <raii/auto_restore.hpp>
 #include <time.h>
 #include <footer_items_heaters.hpp>
@@ -967,3 +968,12 @@ void MI_LOG_TO_TXT::OnChange(size_t) {
     MsgBoxInfo(_("The printer will now save all logs to file until restart.\n\nLog file: %s").formatted(fmt_buf, filename), Responses_Ok);
     MsgBoxWarning(_("Turn the logging off before disconnecting the USB drive, or you risk damaging the filesystem!"), Responses_Ok);
 }
+
+#if HAS_AUTO_RETRACT()
+MI_PRE_NOZZLE_CLEANING_RETRACT::MI_PRE_NOZZLE_CLEANING_RETRACT()
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().pre_nozzle_cleaning_retraction_enable.get(), _("Pre nozzle cleaning retraction")) {}
+
+void MI_PRE_NOZZLE_CLEANING_RETRACT::OnChange(size_t) {
+    config_store().pre_nozzle_cleaning_retraction_enable.set(value());
+}
+#endif
