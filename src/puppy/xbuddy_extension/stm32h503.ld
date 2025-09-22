@@ -35,8 +35,6 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-_Min_Heap_Size = 0x200; /* required amount of heap */
-
 ISR_STACK_SIZE = 1024;
 
 TOTAL_FLASH_SIZE = 128K;
@@ -199,14 +197,12 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM
 
-  /* User_heap_stack section, used to check that there is enough "RAM" Ram  type memory left */
-  ._user_heap_stack :
+  /* Mark end of ram */
+  ._end_of_ram :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
-    . = . + _Min_Heap_Size;
-    . = ALIGN(8);
   } >RAM
 
   .isr_stack (NOLOAD) :
