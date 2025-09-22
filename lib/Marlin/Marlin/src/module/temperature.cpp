@@ -2975,7 +2975,7 @@ void Temperature::isr() {
         idle(true, true);
 
         const float temp = degHotend(target_extruder);
-        statusGuard.update<PrintStatusMessage::waiting_for_hotend_temp>({.current = temp, .target = target_temp});
+        statusGuard.update<PrintStatusMessage::waiting_for_hotend_temp>({.progress{ .current = temp, .target = target_temp }, .tool=target_extruder});
 
         // Prevent a wait-forever situation if R is misused i.e. M109 R0
         if (wants_to_cool) {

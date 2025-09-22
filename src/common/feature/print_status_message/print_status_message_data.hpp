@@ -32,4 +32,11 @@ struct PrintStatusMessageDataAxisProgress {
     bool operator==(const PrintStatusMessageDataAxisProgress &) const = default;
 };
 
-using PrintStatusMessageData = std::variant<std::monostate, PrintStatusMessageDataCustom, PrintStatusMessageDataProgress, PrintStatusMessageDataAxisProgress>;
+struct PrintStatusMessageDataToolProgress {
+    PrintStatusMessageDataProgress progress;
+    uint8_t tool;
+
+    bool operator==(const PrintStatusMessageDataToolProgress &) const = default;
+};
+
+using PrintStatusMessageData = std::variant<std::monostate, PrintStatusMessageDataCustom, PrintStatusMessageDataProgress, PrintStatusMessageDataAxisProgress, PrintStatusMessageDataToolProgress>;
