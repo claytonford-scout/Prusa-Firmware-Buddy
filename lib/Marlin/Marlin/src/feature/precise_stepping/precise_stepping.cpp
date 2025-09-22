@@ -406,6 +406,11 @@ void classic_step_generator_init(const move_t &move, classic_step_generator_t &s
     step_generator_state.step_generator[axis] = &step_generator;
     step_generator_state.next_step_func[axis] = (generator_next_step_f)classic_step_generator_next_step_event;
 
+    // Set the initial step flags from the last cached values
+    step_generator.step_flags = 0;
+    step_generator.step_flags = step_generator_state.current_flags & (STEP_EVENT_FLAG_X_DIR << axis);
+    step_generator.step_flags = step_generator_state.current_flags & (STEP_EVENT_FLAG_X_ACTIVE << axis);
+
     // Set the initial direction and activity flags for the entire next move
     step_generator.move_step_flags = 0;
     step_generator.move_step_flags |= move.flags & (STEP_EVENT_FLAG_X_DIR << axis);
@@ -1434,12 +1439,8 @@ void PreciseStepping::step_generator_state_init(const move_t &move) {
         step_event_info.status = STEP_EVENT_INFO_STATUS_NOT_GENERATED;
     }
 
-    // Reset current global and per-axis activity flags to running values
+    // Reset current global activity flags to running values
     step_generator_state.current_flags = (StepEventFlag_t(Stepper::last_direction_bits) << STEP_EVENT_FLAG_DIR_SHIFT) & STEP_EVENT_FLAG_DIR_MASK;
-    for (uint8_t i = 0; i != PS_AXIS_COUNT; ++i) {
-        StepEventFlag_t mask = ((STEP_EVENT_FLAG_X_DIR | STEP_EVENT_FLAG_X_ACTIVE) << i);
-        PreciseStepping::step_generator_state.step_generator[i]->step_flags = step_generator_state.current_flags & mask;
-    }
 
     LOOP_XYZ(i) {
 #ifdef ADVANCED_STEP_GENERATORS
