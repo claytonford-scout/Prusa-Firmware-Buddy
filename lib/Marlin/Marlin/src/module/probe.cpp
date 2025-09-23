@@ -827,6 +827,12 @@ void prepare_for_nozzle_cleaning() {
  * @brief Probe within a given rectangle in order to cleanup loadcell-based probe.
  */
 bool cleanup_probe(const xy_pos_t &rect_min, const xy_pos_t &rect_max) {
+  GcodeSuite::G28_no_parser(true, true, true,
+    {
+        .only_if_needed = true,
+        .precise = false
+    });
+
   float radius = 1.0f;
   bool probe_deployed = false;
   const int required_clean_cnt = 3;
