@@ -105,10 +105,10 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
         };
 
         Subscriber subscriber(marlin_server::idle_publisher, [&] {
-            const float progress = std::min((ticks_ms() - progress_data.start_time) * progress_data.progress_coef, 100.0f);
-            psm_guard.update<PrintStatusMessage::Type::auto_retracting>({ progress });
+            const float progress_0_100 = std::min((ticks_ms() - progress_data.start_time) * progress_data.progress_coef, 100.0f);
+            psm_guard.update<PrintStatusMessage::Type::auto_retracting>({ progress_0_100 });
             if (progress_data.progress_callback) {
-                progress_data.progress_callback(progress);
+                progress_data.progress_callback(progress_0_100);
             }
         });
         sequence.execute();

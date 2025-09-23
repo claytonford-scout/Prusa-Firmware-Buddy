@@ -12,7 +12,7 @@ class AutoRetract {
     friend AutoRetract &auto_retract();
 
 public:
-    using ProgressCallback = stdext::inplace_function<void(float)>;
+    using ProgressCallback = stdext::inplace_function<void(float progress_0_100)>;
 
     static constexpr float minimum_auto_retract_distance = 20.f; ///< Minimum retract distance for the filament to be considered auto-retracted. Auto-retracted filaments can be unloaded without heating.
 
