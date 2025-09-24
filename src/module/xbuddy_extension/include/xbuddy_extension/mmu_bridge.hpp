@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <tuple>
 
-namespace xbuddy_extension_shared::mmu_bridge {
+namespace xbuddy_extension::mmu_bridge {
 
 constexpr uint8_t modbusUnitNr = 220;
 
@@ -23,4 +23,4 @@ inline constexpr std::tuple<uint8_t, uint8_t> unpack_command(uint16_t cmdpacked)
     return { cmdpacked & 0xff, cmdpacked >> 8 };
 }
 
-} // namespace xbuddy_extension_shared::mmu_bridge
+} // namespace xbuddy_extension::mmu_bridge

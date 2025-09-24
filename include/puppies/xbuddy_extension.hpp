@@ -5,15 +5,15 @@
 #include "PuppyBus.hpp"
 #include <atomic>
 #include <freertos/mutex.hpp>
-#include <xbuddy_extension_shared/mmu_bridge.hpp>
-#include <xbuddy_extension_shared/xbuddy_extension_shared_enums.hpp>
+#include <xbuddy_extension/mmu_bridge.hpp>
+#include <xbuddy_extension/shared_enums.hpp>
 
 namespace buddy::puppies {
 
 class XBuddyExtension final : public ModbusDevice {
 public:
-    static constexpr size_t FAN_CNT = xbuddy_extension_shared::fan_count;
-    using FilamentSensorState = xbuddy_extension_shared::FilamentSensorState;
+    static constexpr size_t FAN_CNT = xbuddy_extension::fan_count;
+    using FilamentSensorState = xbuddy_extension::FilamentSensorState;
 
     XBuddyExtension(PuppyModbus &bus, const uint8_t modbus_address);
 
@@ -123,7 +123,7 @@ public:
         uint16_t commandStatus; // accepted, rejected, progress, error - simply ResponseMsgParamCodes
         uint16_t pec; // either progressCode (x)or errorCode
     };
-    using MMUQueryRegisters = ModbusInputRegisterBlock<xbuddy_extension_shared::mmu_bridge::commandInProgressRegisterAddress, MMUQueryMultiRegister>;
+    using MMUQueryRegisters = ModbusInputRegisterBlock<xbuddy_extension::mmu_bridge::commandInProgressRegisterAddress, MMUQueryMultiRegister>;
 
     const MMUQueryRegisters &mmu_query_registers() const { return mmuQuery; }
 

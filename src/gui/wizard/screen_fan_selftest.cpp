@@ -32,7 +32,6 @@
 #endif
 
 using namespace fan_selftest;
-using namespace buddy;
 
 namespace {
 
@@ -138,18 +137,18 @@ namespace frame {
             }
 
 #if HAS_CHAMBER_API()
-            switch (chamber().backend()) {
+            switch (buddy::chamber().backend()) {
 
     #if XL_ENCLOSURE_SUPPORT()
-            case Chamber::Backend::xl_enclosure:
+            case buddy::Chamber::Backend::xl_enclosure:
                 process_fan_result(config_store().xl_enclosure_fan_selftest_result.get(), enclosure_icons, 0);
                 break;
     #endif /* XL_ENCLOSURE_SUPPORT() */
 
     #if HAS_XBUDDY_EXTENSION()
-            case Chamber::Backend::xbuddy_extension:
+            case buddy::Chamber::Backend::xbuddy_extension:
                 static_assert(HAS_CHAMBER_FILTRATION_API());
-                if (xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
+                if (buddy::xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
                     process_fan_result(config_store().xbe_fan_test_results.get().fans[2], enclosure_icons, 0 /* icon_index */);
                 } else {
                     process_fan_result(config_store().xbe_fan_test_results.get().fans[0], enclosure_icons, 0 /* icon_index */);
@@ -158,7 +157,7 @@ namespace frame {
                 break;
     #endif
 
-            case Chamber::Backend::none:
+            case buddy::Chamber::Backend::none:
                 break;
             }
 #endif /* HAS_CHAMBER_API() */
@@ -218,21 +217,21 @@ namespace frame {
 #if HAS_CHAMBER_API()
             uint8_t enclosure_fan_count = 0;
 
-            switch (chamber().backend()) {
+            switch (buddy::chamber().backend()) {
 
-            case Chamber::Backend::none:
+            case buddy::Chamber::Backend::none:
                 break;
 
     #if XL_ENCLOSURE_SUPPORT()
-            case Chamber::Backend::xl_enclosure:
+            case buddy::Chamber::Backend::xl_enclosure:
                 enclosure_fan_count = 1;
                 break;
     #endif /* XL_ENCLOSURE_SUPPORT() */
 
     #if HAS_XBUDDY_EXTENSION()
-            case Chamber::Backend::xbuddy_extension:
+            case buddy::Chamber::Backend::xbuddy_extension:
                 static_assert(HAS_CHAMBER_FILTRATION_API());
-                if (xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
+                if (buddy::xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
                     enclosure_fan_count = 1;
                     enclosure_label.SetText(_(en_text_filtration_fan));
                 } else {

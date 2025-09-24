@@ -247,5 +247,5 @@ target_link_libraries(
 target_link_libraries(Marlin PRIVATE CppStdExtensions logging freertos)
 
 if(HAS_XBUDDY_EXTENSION)
-  target_link_libraries(Marlin PUBLIC XBuddyExtensionShared)
+  target_link_libraries(Marlin PUBLIC xbuddy_extension)
 endif()

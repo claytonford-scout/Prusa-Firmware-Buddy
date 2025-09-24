@@ -1,8 +1,9 @@
+/// @file
 #pragma once
 
 #include <cstdint>
 
-namespace xbuddy_extension_shared {
+namespace xbuddy_extension {
 
 enum FilamentSensorState {
     uninitialized,
@@ -19,4 +20,4 @@ enum class Fan {
 
 static constexpr uint8_t fan_count = 3;
 
-} // namespace xbuddy_extension_shared
+} // namespace xbuddy_extension

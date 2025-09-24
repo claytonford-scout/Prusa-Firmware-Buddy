@@ -3,10 +3,10 @@
 
 #include "hal.hpp"
 #include <freertos/timing.hpp>
-#include <xbuddy_extension_shared/mmu_bridge.hpp>
+#include <xbuddy_extension/mmu_bridge.hpp>
 
 using namespace modules::protocol;
-using namespace xbuddy_extension_shared::mmu_bridge;
+using namespace xbuddy_extension::mmu_bridge;
 
 // #define SIMULATE_MMU
 #ifdef SIMULATE_MMU
