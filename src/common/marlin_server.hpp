@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <gcode/inject_queue_actions.hpp>
 #include <marlin_server_shared.h>
+#include <marlin_server_request.hpp>
 #include <utils/publisher.hpp>
 
 #include <serial_printing.hpp>
