@@ -331,7 +331,7 @@ private:
 #endif
 #if XBUDDY_EXTENSION_VARIANT_STANDARD()
             case FanType::xbe_chamber: {
-                assert(fan->get_desc_num() < puppies::XBuddyExtension::FAN_CNT);
+                assert(fan->get_desc_num() < buddy::puppies::XBuddyExtension::FAN_CNT);
                 auto res = config_store().xbe_fan_test_results.get();
                 res.fans[fan->get_desc_num()] = fan->test_result();
                 config_store().xbe_fan_test_results.set(res);
