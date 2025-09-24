@@ -154,6 +154,9 @@ float Loadcell::Tare(TareMode mode) {
         }
 
         offset = tareSum / requestedTareCount;
+
+        // Wait till the loadcell reports first sample with the new offset applied (BFW-7791)
+        WaitBarrier();
     }
 
     reset_endstops();
