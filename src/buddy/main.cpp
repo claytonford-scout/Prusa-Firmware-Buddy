@@ -625,10 +625,6 @@ void Error_Handler(void) {
     bsod("Error_Handler");
 }
 
-void system_core_error_handler() {
-    bsod("system_core_error_handler");
-}
-
 void iwdg_warning_cb(void) {
     const auto &e = find_error(ErrCode::ERR_SYSTEM_INTERNAL_ERROR);
     crash_dump::save_message(crash_dump::MsgType::IWDGW, static_cast<uint16_t>(e.err_code), nullptr, nullptr);
