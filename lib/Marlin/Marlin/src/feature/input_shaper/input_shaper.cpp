@@ -272,8 +272,8 @@ void input_shaper_step_generator_init(const move_t &move, input_shaper_step_gene
 
     // Set the initial step flags from the last cached values
     step_generator.step_flags = 0;
-    step_generator.step_flags = step_generator_state.current_flags & (STEP_EVENT_FLAG_X_DIR << axis);
-    step_generator.step_flags = step_generator_state.current_flags & (STEP_EVENT_FLAG_X_ACTIVE << axis);
+    step_generator.step_flags |= step_generator_state.current_flags & (STEP_EVENT_FLAG_X_DIR << axis);
+    step_generator.step_flags |= step_generator_state.current_flags & (STEP_EVENT_FLAG_X_ACTIVE << axis);
 
     // Set the initial direction and activity flags for the entire next move
     step_generator.move_step_flags = 0;
