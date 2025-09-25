@@ -56,7 +56,7 @@ void uart_init_tmc() {
     uart_handle_for_tmc.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     uart_handle_for_tmc.Init.OverSampling = UART_OVERSAMPLING_16;
     if (HAL_HalfDuplex_Init(&uart_handle_for_tmc) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif
@@ -82,7 +82,7 @@ void uart_init_puppies() {
     uart_handle_for_puppies.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     uart_handle_for_puppies.Init.OverSampling = UART_OVERSAMPLING_16;
     if (HAL_UART_Init(&uart_handle_for_puppies) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif
@@ -107,7 +107,7 @@ void uart_init_mmu() {
     uart_handle_for_mmu.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     uart_handle_for_mmu.Init.OverSampling = UART_OVERSAMPLING_16;
     if (HAL_UART_Init(&uart_handle_for_mmu) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif
@@ -128,7 +128,7 @@ void uart_init_esp() {
     uart_handle_for_esp.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     uart_handle_for_esp.Init.OverSampling = UART_OVERSAMPLING_8;
     if (HAL_UART_Init(&uart_handle_for_esp) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif

@@ -113,7 +113,7 @@ void hw_rtc_init() {
     hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
     if (HAL_RTC_Init(&hrtc) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
     HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_B);
@@ -125,7 +125,7 @@ void hw_rtc_init() {
 void hw_rng_init() {
     hrng.Instance = RNG;
     if (HAL_RNG_Init(&hrng) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -300,7 +300,7 @@ void static config_adc(ADC_HandleTypeDef *hadc, ADC_TypeDef *ADC_NUM, uint32_t N
     hadc->Init.DMAContinuousRequests = ENABLE;
     hadc->Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     if (HAL_ADC_Init(hadc) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -318,7 +318,7 @@ static void config_adc_ch(ADC_HandleTypeDef *hadc, uint32_t Channel, uint32_t Ra
     Rank++; // Channel rank starts at 1, but for array indexing, we need to start from 0.
     ADC_ChannelConfTypeDef sConfig = { Channel, Rank, sample_time, 0 };
     if (HAL_ADC_ConfigChannel(hadc, &sConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -539,17 +539,17 @@ void hw_i2c1_init() {
     hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     #if defined(I2C_FLTR_ANOFF) && defined(I2C_FLTR_DNF)
     // Configure Analog filter
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     // Configure Digital filter
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     #endif
 }
@@ -591,17 +591,17 @@ void hw_i2c2_init() {
     hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c2) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     #if defined(I2C_FLTR_ANOFF) && defined(I2C_FLTR_DNF)
     // Configure Analog filter
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     // Configure Digital filter to maximum (tHD:STA 0.357us delay)
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0x0F) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     #endif
 }
@@ -646,17 +646,17 @@ void hw_i2c3_init() {
     hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c3) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     #if defined(I2C_FLTR_ANOFF) && defined(I2C_FLTR_DNF)
     // Configure Analogue filter
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     // Configure Digital filter
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     #endif
 }
@@ -683,7 +683,7 @@ void hw_spi2_init() {
     hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     hspi2.Init.CRCPolynomial = 10;
     if (HAL_SPI_Init(&hspi2) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -705,7 +705,7 @@ void hw_spi3_init() {
     hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     hspi3.Init.CRCPolynomial = 10;
     if (HAL_SPI_Init(&hspi3) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -725,7 +725,7 @@ void hw_spi4_init() {
     hspi4.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     hspi4.Init.CRCPolynomial = 10;
     if (HAL_SPI_Init(&hspi4) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif
@@ -745,7 +745,7 @@ void hw_spi5_init() {
     hspi5.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     hspi5.Init.CRCPolynomial = 10;
     if (HAL_SPI_Init(&hspi5) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif
@@ -765,7 +765,7 @@ void hw_spi6_init() {
     hspi6.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     hspi6.Init.CRCPolynomial = 10;
     if (HAL_SPI_Init(&hspi6) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 #endif
@@ -783,19 +783,19 @@ void hw_tim1_init() {
     htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim1.Init.RepetitionCounter = 0;
     if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     if (HAL_TIM_PWM_Init(&htim1) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.Pulse = 0;
@@ -805,10 +805,10 @@ void hw_tim1_init() {
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
     if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) { //_PWM_FAN1
-        Error_Handler();
+        bsod_system();
     }
     if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) { //_PWM_FAN
-        Error_Handler();
+        bsod_system();
     }
     sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
     sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
@@ -818,7 +818,7 @@ void hw_tim1_init() {
     sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
     sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
     if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     __HAL_TIM_ENABLE(&htim1);
 }
@@ -834,26 +834,26 @@ void hw_tim2_init() {
     htim2.Init.Period = 42000;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     if (HAL_TIM_PWM_Init(&htim2) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.Pulse = 21000;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     HAL_TIM_MspPostInit(&htim2);
@@ -879,29 +879,29 @@ void hw_tim3_init() {
     htim3.Init.Period = TIM3_default_Period; // 0xff was 42000
     htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     if (HAL_TIM_PWM_Init(&htim3) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.Pulse = 21000;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK) { //_PWM_HEATER_BED
-        Error_Handler();
+        bsod_system();
     }
     if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK) { //_PWM_HEATER_0
-        Error_Handler();
+        bsod_system();
     }
 
     HAL_TIM_MspPostInit(&htim3);
@@ -927,18 +927,18 @@ void hw_tim8_init() {
     htim8.Init.Period = period;
     htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     if (HAL_TIM_Base_Init(&htim8) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim8, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim8, &sMasterConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     HAL_TIM_MspPostInit(&htim8);
@@ -959,18 +959,18 @@ void hw_tim9_init() {
     htim9.Init.Period = 33 - 1; // ~3 kHz
     htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     if (HAL_TIM_Base_Init(&htim9) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim9, &sMasterConfig) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 
     HAL_TIM_MspPostInit(&htim9);
@@ -985,7 +985,7 @@ void hw_tim13_init() {
     htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim13) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -996,7 +996,7 @@ void hw_tim14_init() {
     htim14.Init.Period = 1000;
     htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     if (HAL_TIM_Base_Init(&htim14) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
     HAL_TIM_Base_Start_IT(&htim14);
 }
