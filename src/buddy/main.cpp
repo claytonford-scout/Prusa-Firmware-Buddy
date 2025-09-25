@@ -622,12 +622,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
  * @retval None
  */
 void Error_Handler(void) {
-    /* User can add his own implementation to report the HAL error return state */
-    app_error();
+    bsod("Error_Handler");
 }
 
 void system_core_error_handler() {
-    app_error();
+    bsod("system_core_error_handler");
 }
 
 void iwdg_warning_cb(void) {
@@ -771,16 +770,8 @@ int main() {
 }
 
 #ifdef USE_FULL_ASSERT
-/**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+/// Used by stm32 HAL"
 void assert_failed(uint8_t *file, uint32_t line) {
-    /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-    app_assert(file, line);
+    _bsod("STM32 assert fail", file, line);
 }
 #endif /* USE_FULL_ASSERT */
