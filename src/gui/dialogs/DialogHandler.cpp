@@ -175,7 +175,6 @@ struct FSMPrintDef {
         }
 
         if (IScreenPrinting::GetInstance()) {
-            IScreenPrinting::NotifyMarlinStart();
             return true;
         }
 

@@ -22,8 +22,4 @@ public:
     IScreenPrinting(const string_view_utf8 &caption);
     ~IScreenPrinting();
     static IScreenPrinting *GetInstance();
-    static void NotifyMarlinStart();
-
-private:
-    virtual void notifyMarlinStart() {};
 };

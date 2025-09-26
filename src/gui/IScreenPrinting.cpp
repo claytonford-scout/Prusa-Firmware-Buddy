@@ -41,9 +41,3 @@ void IScreenPrinting::TuneAction() {
 IScreenPrinting *IScreenPrinting::GetInstance() {
     return IScreenPrinting::ths;
 }
-
-void IScreenPrinting::NotifyMarlinStart() {
-    if (ths) {
-        ths->notifyMarlinStart();
-    }
-}
