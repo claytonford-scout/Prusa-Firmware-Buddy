@@ -334,6 +334,13 @@ DialogHandler &DialogHandler::Access() {
 }
 
 void DialogHandler::Loop() {
+    // If a Screen gets destroyed underneath a FSM Dialog (IDialogMarlin), we have to re-register it to the new screen
+    if (ptr && !ptr->GetParent()) {
+        auto current_screen = Screens::Access()->Get();
+        ptr->SetParent(current_screen);
+        current_screen->RegisterSubWin(*ptr);
+    }
+
     const auto new_top = marlin_vars().peek_fsm_states([](const auto &states) { return states.get_top(); });
 
     if (new_top == current_fsm_top) {
