@@ -12,8 +12,6 @@ class DialogHandler {
 
     static_unique_ptr<IDialogMarlin> ptr;
     std::optional<fsm::States::Top> current_fsm_top;
-    std::pair<ClientFSM, fsm::BaseData> last_fsm_change;
-    std::optional<std::pair<ClientFSM, fsm::BaseData>> dialog_cache;
     DialogHandler() = default;
     DialogHandler(DialogHandler &) = delete;
 

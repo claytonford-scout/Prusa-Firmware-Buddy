@@ -109,11 +109,18 @@ struct FSMDialogDef {
     static constexpr ClientFSM fsm = fsm_;
 
     static void open(fsm::BaseData data) {
-        DialogHandler::Access().ptr = make_dialog_ptr<Dialog>(data);
+        auto &ptr = DialogHandler::Access().ptr;
+        if (ptr) {
+            // This should never happen - appropriate close() should always be called before
+            bsod("Opening 2nd FSM dialog");
+        }
+
+        ptr = make_dialog_ptr<Dialog>(data);
     }
 
     static void close() {
-        // Do nothing, is handled elsewhere
+        // Ptr is a static_unique_ptr, it will call the destructor
+        DialogHandler::Access().ptr = nullptr;
     }
 
     static void change(fsm::BaseData data) {
@@ -226,18 +233,6 @@ static_assert(fsm_display_config_size == std::to_underlying(ClientFSM::_count) +
 //*****************************************************************************
 // method definitions
 void DialogHandler::open(ClientFSM fsm_type, fsm::BaseData data) {
-    if (ptr) {
-        if (dialog_cache.has_value()) {
-            // TODO: Make all dialogs screens and use Screens state stack
-            bsod("Can't open more then 2 dialogs at a time.");
-        }
-
-        dialog_cache = last_fsm_change;
-        ptr = nullptr;
-    }
-
-    last_fsm_change = std::make_pair(fsm_type, data);
-
     visit_display_config(fsm_type, [&]<typename Config>(Config) {
         Config::open(data);
     });
@@ -247,23 +242,9 @@ void DialogHandler::close(ClientFSM fsm_type) {
     visit_display_config(fsm_type, []<typename Config>(Config) {
         Config::close();
     });
-
-    // Attempt to restore underlying screen state
-    if (ptr != nullptr) {
-        if (dialog_cache.has_value()) {
-            ptr = nullptr;
-            const auto cache = *dialog_cache;
-            dialog_cache = std::nullopt;
-            open(cache.first, cache.second);
-        } else {
-            ptr = nullptr; // destroy current dialog
-        }
-    }
 }
 
 void DialogHandler::change(ClientFSM fsm_type, fsm::BaseData data) {
-    last_fsm_change = std::make_pair(fsm_type, data);
-
     visit_display_config(fsm_type, [&]<typename Config>(Config) {
         Config::change(data);
     });
