@@ -20,24 +20,6 @@ IScreenPrinting::~IScreenPrinting() {
 
 IScreenPrinting *IScreenPrinting::ths = nullptr;
 
-/******************************************************************************/
-// static methods to be pointed by fnc pointers
-void IScreenPrinting::StopAction() {
-    if (IScreenPrinting::ths) {
-        IScreenPrinting::ths->stopAction();
-    }
-}
-void IScreenPrinting::PauseAction() {
-    if (IScreenPrinting::ths) {
-        IScreenPrinting::ths->pauseAction();
-    }
-}
-void IScreenPrinting::TuneAction() {
-    if (IScreenPrinting::ths) {
-        IScreenPrinting::ths->tuneAction();
-    }
-}
-
 IScreenPrinting *IScreenPrinting::GetInstance() {
     return IScreenPrinting::ths;
 }

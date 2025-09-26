@@ -11,9 +11,6 @@ protected:
     StatusFooter footer;
 
     static IScreenPrinting *ths;
-    static void StopAction();
-    static void PauseAction();
-    static void TuneAction();
     virtual void stopAction() = 0;
     virtual void pauseAction() = 0;
     virtual void tuneAction() = 0;
