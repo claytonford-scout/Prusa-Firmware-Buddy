@@ -150,6 +150,12 @@ void Screens::ResetTimeout() {
 }
 
 void Screens::Loop() {
+    if (gui_get_nesting()) {
+        // We CANNOT call Screens::Loop while we're in the gui_loop.
+        // This function would be creating and destroying screens under our hands
+        bsod("Screen loop inside gui loop");
+    }
+
     /// menu timeout logic:
     /// when timeout is expired on current screen,
     /// we iterate through whole stack and close every screen that should be closed
