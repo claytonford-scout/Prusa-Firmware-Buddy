@@ -28,12 +28,12 @@ bool screen_t::registerSubWin(window_t &win) {
         break;
     case win_type_t::dialog:
         registerAnySubWin(win, first_dialog, last_dialog);
-        if (&win == first_dialog && last_normal) { // connect to list
-            last_normal->SetNext(&win);
-        }
         break;
-    default:
-        return false;
+    }
+
+    // We might have added last_normal or fist_dialog, make sure the chain is linked
+    if (last_normal) {
+        last_normal->SetNext(first_dialog);
     }
 
     clearAllHiddenBehindDialogFlags();
