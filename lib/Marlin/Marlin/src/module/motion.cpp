@@ -40,8 +40,6 @@
 
 #include "metric.h"
 
-#include "homing_reporter.hpp"
-
 #if HAS_BED_PROBE
   #include "probe.h"
 #endif
@@ -1085,7 +1083,7 @@ void homing_failed(stdext::inplace_function<void()> fallback_error, [[maybe_unus
  * @return true on success
  */
 bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_dir,
-  void (*enable_wavetable)(AxisEnum), [[maybe_unused]] bool can_calibrate, bool homing_z_with_probe) {
+  void (*enable_wavetable)(AxisEnum), [[maybe_unused]] bool can_calibrate, bool homing_z_with_probe, bool throw_homing_failed) {
 
   // clear the axis state while running
   axes_home_level[axis] = AxisHomeLevel::not_homed;
@@ -1161,7 +1159,7 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
       // not OK run out attempts
       set_axis_is_not_at_home(axis);
       
-      if (!HomingReporter::block_red_screen()) {
+      if (throw_homing_failed) {
         static constexpr std::array error_codes {
           ErrCode::ERR_ELECTRO_HOMING_ERROR_X,
           ErrCode::ERR_ELECTRO_HOMING_ERROR_Y,

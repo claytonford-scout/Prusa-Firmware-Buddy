@@ -26,7 +26,6 @@
 #include "../gcode.h"
 
 #include "bsod.h"
-#include "homing_reporter.hpp"
 
 #include "../../module/endstops.h"
 #include "../../module/planner.h"
@@ -471,7 +470,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   PrintStatusMessageGuard statusGuard;
   statusGuard.update<PrintStatusMessage::homing>({});
-  HomingReporter reporter;
 
   #if HAS_CEILING_CLEARANCE()
   buddy::CeilingClearanceCheckDisabler ccd;
@@ -736,17 +734,17 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // Home Y (before X)
   if (ENABLED(HOME_Y_BEFORE_X) && !failed && should_home_to_level(Y_AXIS, AxisHomeLevel::imprecise)) {
-    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate);
+    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate, true, flags.throw_homing_failed);
   }
 
   // Home X
   if (!failed && should_home_to_level(X_AXIS, AxisHomeLevel::imprecise)) {
-    failed = !homeaxis(X_AXIS, fr_mm_s, false, reenable_wt_X, flags.can_calibrate);
+    failed = !homeaxis(X_AXIS, fr_mm_s, false, reenable_wt_X, flags.can_calibrate, true, flags.throw_homing_failed);
   }
 
   // Home Y (after X)
   if (DISABLED(HOME_Y_BEFORE_X) && !failed && should_home_to_level(Y_AXIS, AxisHomeLevel::imprecise)) {
-    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate);
+    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate, true, flags.throw_homing_failed);
   }
 
   #if HAS_PRECISE_HOMING_COREXY()

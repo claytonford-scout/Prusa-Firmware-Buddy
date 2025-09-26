@@ -30,7 +30,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             hardware_rng.cpp
             hardware_serial.cpp
             heap.cpp
-            homing_reporter.cpp
             hwio_pindef_check.cpp
             i2c.cpp
             ini_handler.cpp
@@ -107,7 +106,6 @@ elseif(BOARD STREQUAL "DWARF")
     firmware
     PRIVATE adc.cpp
             heap.cpp
-            homing_reporter.cpp
             marlin_log_component.cpp
             otp.cpp
             Pin.cpp
@@ -130,7 +128,6 @@ elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
             ExtInterruptHandler.cpp
             fsm_states.cpp
             heap.cpp
-            homing_reporter.cpp
             hwio_XLBuddy.cpp # todo: replace
             i2c.cpp
             marlin_client.cpp

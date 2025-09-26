@@ -278,6 +278,10 @@ struct G28Flags {
   #if ENABLED(DETECT_PRINT_SHEET)
     bool check_sheet = false;
   #endif
+
+  /// If set to false, homing_failed() function will not be called on homing failure
+  // This means that the G28 will return false instead of a crash/redscreen
+  bool throw_homing_failed = true;
 };
 
 class GcodeSuite {
