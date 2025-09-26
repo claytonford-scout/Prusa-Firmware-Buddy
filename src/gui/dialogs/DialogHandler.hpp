@@ -17,7 +17,7 @@ class DialogHandler {
 
     void close(ClientFSM fsm_type);
     [[nodiscard]] bool change(ClientFSM fsm_type, fsm::BaseData data);
-    void open(ClientFSM fsm_type, fsm::BaseData data); // can be enforced (pre opened), unlike change/close
+    [[nodiscard]] bool open(ClientFSM fsm_type, fsm::BaseData data); // can be enforced (pre opened), unlike change/close
 
 public:
     // accessor for static methods
