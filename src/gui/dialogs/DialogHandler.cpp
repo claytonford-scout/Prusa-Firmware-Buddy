@@ -77,17 +77,12 @@ static static_unique_ptr<IDialogMarlin> make_dialog_ptr(Args &&...args) {
     return make_static_unique_ptr<T>(mem_space.data(), std::forward<Args>(args)...);
 }
 
-template <ClientFSM fsm_, typename Screen>
-struct FSMScreenDef {
-    static constexpr ClientFSM fsm = fsm_;
-
-    [[nodiscard]] static bool open([[maybe_unused]] fsm::BaseData data) {
+struct FSMScreenDefBase {
+    [[nodiscard]] static bool open_base(ScreenFactory::Creator screen, [[maybe_unused]] fsm::BaseData data) {
         // We need to get out of the GUI loop to open the screen, windows are on the stack
         if (gui_get_nesting()) {
             return false;
         }
-
-        constexpr auto screen = ScreenFactory::Screen<Screen>;
 
         if (Screens::Access()->IsScreenOpened(screen)) {
             // Already opened, no need to do anything
@@ -101,6 +96,16 @@ struct FSMScreenDef {
         Screens::Access()->Loop();
 
         return true;
+    }
+};
+
+template <ClientFSM fsm_, typename Screen>
+struct FSMScreenDef : public FSMScreenDefBase {
+    static constexpr ClientFSM fsm = fsm_;
+    static constexpr auto screen = ScreenFactory::Screen<Screen>;
+
+    [[nodiscard]] static bool open(fsm::BaseData data) {
+        return open_base(screen, data);
     }
 
     static void close() {
@@ -127,20 +132,7 @@ struct FSMScreenDef {
     }
 };
 
-template <ClientFSM fsm_, typename Dialog>
-struct FSMDialogDef {
-    static constexpr ClientFSM fsm = fsm_;
-
-    [[nodiscard]] static bool open(fsm::BaseData data) {
-        auto &ptr = DialogHandler::Access().ptr;
-        if (ptr) {
-            // This should never happen - appropriate close() should always be called before
-            bsod("Opening 2nd FSM dialog");
-        }
-
-        ptr = make_dialog_ptr<Dialog>(data);
-        return true;
-    }
+struct FSMDialogDefBase {
 
     static void close() {
         // Ptr is a static_unique_ptr, it will call the destructor
@@ -161,6 +153,22 @@ struct FSMDialogDef {
             assert(false);
             return false;
         }
+    }
+};
+
+template <ClientFSM fsm_, typename Dialog>
+struct FSMDialogDef : public FSMDialogDefBase {
+    static constexpr ClientFSM fsm = fsm_;
+
+    [[nodiscard]] static bool open(fsm::BaseData data) {
+        auto &ptr = DialogHandler::Access().ptr;
+        if (ptr) {
+            // This should never happen - appropriate close() should always be called before
+            bsod("Opening 2nd FSM dialog");
+        }
+
+        ptr = make_dialog_ptr<Dialog>(data);
+        return true;
     }
 };
 

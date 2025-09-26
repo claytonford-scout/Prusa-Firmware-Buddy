@@ -8,6 +8,7 @@
 class DialogHandler {
     template <ClientFSM fsm_, typename Dialog>
     friend struct FSMDialogDef;
+    friend struct FSMDialogDefBase;
     friend struct FSMWaitDef;
 
     static_unique_ptr<IDialogMarlin> ptr;
