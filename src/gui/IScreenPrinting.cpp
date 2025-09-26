@@ -11,15 +11,4 @@ IScreenPrinting::IScreenPrinting(const string_view_utf8 &caption)
     IScreenPrinting::ClrMenuTimeoutClose(); // don't close on menu timeout
     header.SetText(caption);
     header.SetIcon(&img::print_16x16);
-    ths = this;
-}
-
-IScreenPrinting::~IScreenPrinting() {
-    ths = nullptr;
-}
-
-IScreenPrinting *IScreenPrinting::ths = nullptr;
-
-IScreenPrinting *IScreenPrinting::GetInstance() {
-    return IScreenPrinting::ths;
 }

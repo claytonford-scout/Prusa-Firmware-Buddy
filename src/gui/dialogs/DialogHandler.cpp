@@ -174,21 +174,31 @@ struct FSMPrintDef {
             return false;
         }
 
-        if (IScreenPrinting::GetInstance()) {
-            return true;
-        }
+        ScreenFactory::Creator screen;
 
         if constexpr (fsm == ClientFSM::Serial_printing) {
+            screen = ScreenFactory::Screen<screen_printing_serial_data_t>;
+            if (Screens::Access()->IsScreenOpened(screen)) {
+                // Already opened, no need to do anything
+                return true;
+            }
+
             Screens::Access()->ClosePrinting();
-            Screens::Access()->Open(ScreenFactory::Screen<screen_printing_serial_data_t>);
 
         } else if constexpr (fsm == ClientFSM::Printing) {
+            screen = ScreenFactory::Screen<screen_printing_data_t>;
+            if (Screens::Access()->IsScreenOpened(screen)) {
+                // Already opened, no need to do anything
+                return true;
+            }
+
             Screens::Access()->CloseAll();
-            Screens::Access()->Open(ScreenFactory::Screen<screen_printing_data_t>);
 
         } else {
             static_assert(0);
         }
+
+        Screens::Access()->Open(screen);
 
         // Do loop immediately for the window open to take effect
         // Otherwise, the change() that follows right after open() would not do anything
