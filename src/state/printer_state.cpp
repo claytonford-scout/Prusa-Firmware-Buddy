@@ -227,6 +227,10 @@ DeviceState get_state(bool ready) {
 #endif
     case ClientFSM::QuickPause:
         return DeviceState::Paused;
+#if HAS_LOADCELL()
+    case ClientFSM::NozzleCleaningFailed:
+        return DeviceState::Attention;
+#endif
 #if HAS_SELFTEST()
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
@@ -264,9 +268,6 @@ DeviceState get_state(bool ready) {
         // preheat menu to be the only menu screen to not be Idle... :-(
     case ClientFSM::Preheat:
     case ClientFSM::Wait:
-#if HAS_LOADCELL()
-    case ClientFSM::NozzleCleaningFailed:
-#endif
         return DeviceState::Busy;
 
     case ClientFSM::Warning: {
