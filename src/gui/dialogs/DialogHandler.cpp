@@ -97,9 +97,21 @@ struct FSMScreenDef {
         Screens::Access()->Close<Screen>();
     }
 
-    static void change(fsm::BaseData data) {
+    [[nodiscard]] static bool change(fsm::BaseData data) {
+        // DO NOT change screens while in the nested loop
+        // We would be potentially changing phases while the GUI widgets are on the stack
+        if (gui_get_nesting()) {
+            return false;
+        }
+
         if (auto s = Screens::Access()->get<Screen>()) {
             s->Change(data);
+            return true;
+
+        } else {
+            // The screen is not on the stack, we cannot notify it about the change
+            // TODO: This should be okay as the screen should read the current state at the creation, but it's not doing that currently
+            return false;
         }
     }
 };
@@ -123,9 +135,19 @@ struct FSMDialogDef {
         DialogHandler::Access().ptr = nullptr;
     }
 
-    static void change(fsm::BaseData data) {
+    [[nodiscard]] static bool change(fsm::BaseData data) {
+        // We CANNOT check for gui nesting for dialogs - dialogs can be shown blockingly over screens
+        // One just has to hope that noone would call DialogHandler::Loop() inside a FSM dialog
+        // assert(!gui_get_nesting())
+
         if (auto &ptr = DialogHandler::Access().ptr) {
             ptr->Change(data);
+            return true;
+
+        } else {
+            // The dialog is not on the stact - should not happen
+            assert(false);
+            return false;
         }
     }
 };
@@ -157,8 +179,9 @@ struct FSMPrintDef {
         Screens::Access()->CloseAll();
     }
 
-    static void change([[maybe_unused]] fsm::BaseData data) {
+    [[nodiscard]] static bool change([[maybe_unused]] fsm::BaseData data) {
         // Do nothing
+        return true;
     }
 };
 
@@ -168,7 +191,9 @@ struct FSMEndDef {
 
     static void open(fsm::BaseData) {}
     static void close() {}
-    static void change(fsm::BaseData) {}
+    [[nodiscard]] static bool change(fsm::BaseData) {
+        return true;
+    }
 };
 
 template <class... T>
@@ -244,10 +269,14 @@ void DialogHandler::close(ClientFSM fsm_type) {
     });
 }
 
-void DialogHandler::change(ClientFSM fsm_type, fsm::BaseData data) {
+bool DialogHandler::change(ClientFSM fsm_type, fsm::BaseData data) {
+    bool result = false;
+
     visit_display_config(fsm_type, [&]<typename Config>(Config) {
-        Config::change(data);
+        result = Config::change(data);
     });
+
+    return result;
 }
 
 bool DialogHandler::IsOpen() const {
@@ -267,36 +296,42 @@ void DialogHandler::Loop() {
         return;
     }
 
+    // Shortcut - we're just changing the data
+    if (new_top && old_top && new_top->fsm_type == old_top->fsm_type) {
+        if (!change(new_top->fsm_type, new_top->data)) {
+            // Failed to change state - try again later
+            return;
+        }
+        current_fsm_top = new_top;
+        return;
+    }
+
     // TODO Investigate whether Screens::Access()->Loop() is really needed.
     // TODO Update open() so that we won't need to call change() afterwards.
     if (new_top && old_top) {
-        if (new_top->fsm_type == old_top->fsm_type) {
-            if (new_top->data != old_top->data) {
-                change(new_top->fsm_type, new_top->data);
-            }
-        } else {
-            if (new_top->fsm_type == ClientFSM::Load_unload && (old_top->fsm_type == ClientFSM::PrintPreview
+        if (new_top->fsm_type == ClientFSM::Load_unload && (old_top->fsm_type == ClientFSM::PrintPreview
 #if HAS_COLDPULL()
-                    || old_top->fsm_type == ClientFSM::ColdPull
+                || old_top->fsm_type == ClientFSM::ColdPull
 #endif
-                    )) {
-                // TODO Remove this shitcode/prasohack as soon as possible.
-                //      As a special exception we do not close PrintPreview screen when the LoadUnload dialog
-                //      is requested. It would destroy the ToolsMappingBody while one of its methods is still
-                //      executing, leading to calling refresh_physical_tool_filament_labels() which in turn
-                //      jumped to undefined memory.
-            } else {
-                close(old_top->fsm_type);
-                Screens::Access()->Loop();
-            }
-            open(new_top->fsm_type, new_top->data);
+                )) {
+            // TODO Remove this shitcode/prasohack as soon as possible.
+            //      As a special exception we do not close PrintPreview screen when the LoadUnload dialog
+            //      is requested. It would destroy the ToolsMappingBody while one of its methods is still
+            //      executing, leading to calling refresh_physical_tool_filament_labels() which in turn
+            //      jumped to undefined memory.
+        } else {
+            close(old_top->fsm_type);
             Screens::Access()->Loop();
-            change(new_top->fsm_type, new_top->data);
         }
+        open(new_top->fsm_type, new_top->data);
+        Screens::Access()->Loop();
+        [[maybe_unused]] const bool change_r = change(new_top->fsm_type, new_top->data);
+        assert(change_r); // Should never fail
     } else if (new_top && !old_top) {
         open(new_top->fsm_type, new_top->data);
         Screens::Access()->Loop();
-        change(new_top->fsm_type, new_top->data);
+        [[maybe_unused]] const bool change_r = change(new_top->fsm_type, new_top->data);
+        assert(change_r);
     } else if (!new_top && old_top) {
         close(old_top->fsm_type);
         Screens::Access()->Loop();

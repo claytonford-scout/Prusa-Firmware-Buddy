@@ -16,7 +16,7 @@ class DialogHandler {
     DialogHandler(DialogHandler &) = delete;
 
     void close(ClientFSM fsm_type);
-    void change(ClientFSM fsm_type, fsm::BaseData data);
+    [[nodiscard]] bool change(ClientFSM fsm_type, fsm::BaseData data);
     void open(ClientFSM fsm_type, fsm::BaseData data); // can be enforced (pre opened), unlike change/close
 
 public:
