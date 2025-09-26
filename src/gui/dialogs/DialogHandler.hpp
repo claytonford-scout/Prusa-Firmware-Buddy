@@ -20,6 +20,9 @@ class DialogHandler {
     [[nodiscard]] bool change(ClientFSM fsm_type, fsm::BaseData data);
     [[nodiscard]] bool open(ClientFSM fsm_type, fsm::BaseData data); // can be enforced (pre opened), unlike change/close
 
+    /// Ensures that the correct screen/dialog is open to corresponbg with fsm_states->top
+    void update_screen();
+
 public:
     // accessor for static methods
     static DialogHandler &Access();

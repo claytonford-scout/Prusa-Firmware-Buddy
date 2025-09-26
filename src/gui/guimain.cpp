@@ -117,9 +117,8 @@ void gui_run(void) {
     while (1) {
         gui::StartLoop();
 
-        DialogHandler::Access().Loop();
-
         Screens::Access()->Loop();
+        DialogHandler::Access().Loop();
 
         gui_loop();
         gui::EndLoop();

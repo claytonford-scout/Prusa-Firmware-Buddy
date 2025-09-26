@@ -167,6 +167,12 @@ struct FSMDialogDef : public FSMDialogDefBase {
             bsod("Opening 2nd FSM dialog");
         }
 
+        // If we're about to close some screen, do it now, so that we can spawn the dialog directly over the new top
+        // This reduces redraws
+        if (!gui_get_nesting()) {
+            Screens::Access()->Loop();
+        }
+
         ptr = make_dialog_ptr<Dialog>(data);
         return true;
     }
@@ -334,13 +340,18 @@ DialogHandler &DialogHandler::Access() {
 }
 
 void DialogHandler::Loop() {
+    update_screen();
+
     // If a Screen gets destroyed underneath a FSM Dialog (IDialogMarlin), we have to re-register it to the new screen
+    // Do this after update_screen to reduce GUI redraws
     if (ptr && !ptr->GetParent()) {
         auto current_screen = Screens::Access()->Get();
         ptr->SetParent(current_screen);
         current_screen->RegisterSubWin(*ptr);
     }
+}
 
+void DialogHandler::update_screen() {
     const auto new_top = marlin_vars().peek_fsm_states([](const auto &states) { return states.get_top(); });
 
     if (new_top == current_fsm_top) {
@@ -366,6 +377,9 @@ void DialogHandler::Loop() {
         current_fsm_top = std::nullopt;
     }
 
+    // Do NOT do Screens::Access()->Loop(); here.
+    // The ScreenHandler works faster if it can do both close and open in the same step
+
     // Open the new one
     if (new_top) {
         if (!open(new_top->fsm_type, new_top->data)) {
@@ -377,5 +391,10 @@ void DialogHandler::Loop() {
         }
 
         current_fsm_top = new_top;
+    }
+
+    // Make sure all changes are carried over now to reduce redraws
+    if (!gui_get_nesting()) {
+        Screens::Access()->Loop();
     }
 }
