@@ -592,8 +592,8 @@ struct CurrentStore
 
 #if HAS_PHASE_STEPPING()
     static constexpr bool phase_stepping_ram_only = true;
-    StoreItem<bool, defaults::phase_stepping_enabled_x, ItemFlag::features, journal::hash("Phase Stepping Enabled X"), 1, phase_stepping_ram_only> phase_stepping_enabled_x;
-    StoreItem<bool, defaults::phase_stepping_enabled_y, ItemFlag::features, journal::hash("Phase Stepping Enabled Y"), 1, phase_stepping_ram_only> phase_stepping_enabled_y;
+    StoreItem<bool, defaults::phase_stepping_enabled, ItemFlag::features, journal::hash("Phase Stepping Enabled X"), 1, phase_stepping_ram_only> phase_stepping_enabled_x;
+    StoreItem<bool, defaults::phase_stepping_enabled, ItemFlag::features, journal::hash("Phase Stepping Enabled Y"), 1, phase_stepping_ram_only> phase_stepping_enabled_y;
 
     bool get_phase_stepping_enabled();
     bool get_phase_stepping_enabled(AxisEnum axis);
