@@ -8,7 +8,7 @@ FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, cons
     : info(parent, FrameQRLayout::text_rect(), is_multiline::yes, is_closed_on_click_t::no, info_text)
     , link(parent, FrameQRLayout::link_rect(), is_multiline::no)
     , icon_phone(parent, FrameQRLayout::phone_icon_rect(), &img::hand_qr_59x72)
-    , qr(parent, FrameQRLayout::qrcode_rect(), Align_t::Center())
+    , qr(parent, FrameQRLayout::qrcode_rect())
     , radio(parent, WizardDefaults::RectRadioButton(0), fsm_phase) //
 {
     StringBuilder(link_buffer)
