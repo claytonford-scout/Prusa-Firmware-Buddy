@@ -18,9 +18,6 @@ struct Status {
 
     std::array<uint16_t, fan_count> fan_rpm; /// RPM of the fan
     uint16_t temperature; /// decidegree Celsius (eg. 23.5°C = 235 in the register)
-
-    uint16_t mmu_power; /// TODO is this needed?
-    uint16_t mmu_nreset; /// TODO is this needed?
     uint16_t filament_sensor; /// FilamentSensorState
 };
 

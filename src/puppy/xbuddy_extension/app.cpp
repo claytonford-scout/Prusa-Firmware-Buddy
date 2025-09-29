@@ -19,8 +19,6 @@ void read_register_file_callback(xbuddy_extension::modbus::Status &status) {
     status.fan_rpm[2] = hal::fan3::get_rpm();
     // Note: Mainboard expects this in decidegree Celsius.
     status.temperature = 10 * temperature::raw_to_celsius(hal::temperature::get_raw());
-    status.mmu_power = hal::mmu::power_pin_get();
-    status.mmu_nreset = hal::mmu::nreset_pin_get();
     status.filament_sensor = hal::filament_sensor::get();
 }
 
