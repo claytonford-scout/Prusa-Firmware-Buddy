@@ -57,7 +57,7 @@ bool AdvancedPower::OvercurrentFaultDetected() const {
 }
 
 float AdvancedPower::GetInputCurrent() const {
-    return buddy::hw::Configuration::Instance().curr_measurement_voltage_to_current(RawValueToVoltage(GetInputCurrentRaw()));
+    return buddy::hw::Configuration::Instance().curr_measurement_voltage_to_current(RawValueToVoltage(AdcGet::inputCurrent()));
 }
 #endif
 

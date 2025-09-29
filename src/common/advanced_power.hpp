@@ -16,32 +16,16 @@ public:
     AdvancedPower();
 
 #if BOARD_IS_XBUDDY()
-    inline int GetBedVoltageRaw() const {
-        return AdcGet::inputVoltage();
-    }
-
     inline float GetBedVoltage() const {
-        return beforeVoltageDivider11(RawValueToVoltage(GetBedVoltageRaw()));
-    }
-
-    inline int GetHeaterVoltageRaw() const {
-        return AdcGet::heaterVoltage();
+        return beforeVoltageDivider11(RawValueToVoltage(AdcGet::inputVoltage()));
     }
 
     inline float GetHeaterVoltage() const {
-        return beforeVoltageDivider11(RawValueToVoltage(GetHeaterVoltageRaw()));
-    }
-
-    inline int GetHeaterCurrentRaw() const {
-        return AdcGet::heaterCurrent();
+        return beforeVoltageDivider11(RawValueToVoltage(AdcGet::heaterVoltage()));
     }
 
     inline float GetHeaterCurrent() const {
-        return ((RawValueToVoltage(GetHeaterCurrentRaw()) / 1.95f) * 2.00f);
-    }
-
-    inline int GetInputCurrentRaw() const {
-        return AdcGet::inputCurrent();
+        return ((RawValueToVoltage(AdcGet::heaterCurrent()) / 1.95f) * 2.00f);
     }
 
     /**
