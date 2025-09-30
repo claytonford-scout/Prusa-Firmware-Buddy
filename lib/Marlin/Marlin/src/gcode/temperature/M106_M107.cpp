@@ -30,6 +30,7 @@
     #include "fanctl.hpp"
     #include <device/board.h>
     #include <option/xbuddy_extension_variant_standard.h>
+    #include <pwm_utils.hpp>
 
     #if XBUDDY_EXTENSION_VARIANT_STANDARD()
         #include <feature/xbuddy_extension/xbuddy_extension.hpp>
@@ -55,8 +56,12 @@
  * @return false to let Marlin process this fan as well, true to eat this G-code
  */
 static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool set_auto) {
+    [[maybe_unused]] const auto pwm_or_auto = set_auto ? PWM255OrAuto(pwm_auto) : PWM255OrAuto(speed);
+
+    switch (fan) {
     #if HAS_TOOLCHANGER()
-    if (fan == 1) { // Heatbreak fan
+    case 1:
+        // Heatbreak fan
         if (tool >= 0 && tool <= buddy::puppies::DWARF_MAX_COUNT) {
             if (buddy::puppies::dwarfs[tool].is_enabled()) {
                 if (set_auto) {
@@ -67,33 +72,28 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
             }
         }
         return true; // Eat this G-code, heatbreak fan is not controlled by Marlin
-    }
     #endif /* HAS_TOOLCHANGER() */
 
     #if XL_ENCLOSURE_SUPPORT()
-    static_assert(FAN_COUNT < 3, "Fan index 3 is reserved for Enclosure fan and should not be set by thermalManager");
-    if (fan == 3) {
+    case 3:
+        static_assert(FAN_COUNT < 3, "Fan index 3 is reserved for Enclosure fan and should not be set by thermalManager");
         Fans::enclosure().set_pwm(speed);
         return true;
-    }
     #endif
 
     #if XBUDDY_EXTENSION_VARIANT_STANDARD()
-    using XBE = buddy::XBuddyExtension;
-    static_assert(FAN_COUNT < 3, "Fan 3 is dedicated to extboard");
+        using XBE = buddy::XBuddyExtension;
+        static_assert(FAN_COUNT < 3, "Fan 3 is dedicated to extboard");
 
-    switch (fan) {
     case 3:
-        // Cooling fan 2 has shared PWM line
-        buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::cooling_fan_1, set_auto ? buddy::XBuddyExtension::FanPWMOrAuto(pwm_auto) : buddy::XBuddyExtension::FanPWM(speed));
+        buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::cooling_fan_1, pwm_or_auto);
         return true;
+
     case 4:
-        buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::filtration_fan, set_auto ? buddy::XBuddyExtension::FanPWMOrAuto(pwm_auto) : buddy::XBuddyExtension::FanPWM(speed));
+        buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::filtration_fan, pwm_or_auto);
         return true;
-    default:
-        break;
+    #endif // XBUDDY_EXTENSION_VARIANT_STANDARD()
     }
-    #endif
 
     return false;
 }
@@ -121,28 +121,58 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
  * - `R` - Set the to auto control (if supported by the fan)
  * - `A` - ???
  * - `T` - Select which tool if the same fan is on multiple tools, active_extruder if not specified
- *Enclosure fan (index 3) don't support T parameter
+ * - `N` - Ramp function breakpoint PWM for chamber fan regulator (0-255, P3/P4 only). See description below.
+ * - `G` - Proportional gain (ramp_slope) for chamber fan regulator (float, P3/P4 only). See description below.
+ *
+ *#### XBuddyExtension Chamber Fan Auto Control Logic (fans 3 & 4 on CORE ONE printers)
+ * - Chamber Fan control algorithm is ramp function with hysteresis on top of it
+ * - If temperature is below target, ramp function output is ramp_breakpoint_pwm (Parameter N)
+ *   The minimal PWM is to ensure good airflow to cool the extruded material fast enough, which is necessary even when the chamber is on the target temperature.
+ *   This minimal required airflow is material specific, and thus it has been exposed to be made configurable via gcode.
+ *
+ * - If temperature is above target, ramp function output is proportional to the error with slope ramp_slope (Parameter G)
+ * - Hysteresis is applied on top of the ramp function to avoid fan premature kick-start and reduce kick-starts frequency
+ * - The PWM output is also modified based on the filtration backend to adjust for different fan configurations
+ *
+ * !! This comment is also doubled in the FanCooling::compute_auto_regulation_step. If you do changes here, update the other one, too.
  */
 void GcodeSuite::M106() {
     const uint8_t p = parser.byteval('P', _ALT_P);
-    const uint16_t speed = std::clamp<uint16_t>(parser.ushortval('S', 255), 0, 255);
+
     const bool auto_control = parser.seen('R');
+    if (parser.seen('S') || parser.seen('A') || auto_control) {
+        const uint8_t speed = parser.byteval('S', 255);
 
-    if (set_special_fan_speed(p, get_target_extruder_from_command(), speed, auto_control)) {
-        return;
-    }
+        if (set_special_fan_speed(p, get_target_extruder_from_command(), speed, auto_control)) {
+            // Done in the function
 
-    if (p < _CNT_P) {
-        uint16_t d = parser.seen('A') ? thermalManager.fan_speed[0] : 255;
-        uint16_t s = parser.ushortval('S', d);
-        NOMORE(s, 255U);
+        } else if (p < _CNT_P) {
+            uint16_t d = parser.seen('A') ? thermalManager.fan_speed[0] : 255;
+            uint16_t s = parser.ushortval('S', d);
+            NOMORE(s, 255U);
     #if HAS_GCODE_COMPATIBILITY()
-        if (gcode.compatibility.mk4_compatibility_mode) {
-            s = (s * 7) / 10; // Converts speed to 70% of its values
-        }
+            if (gcode.compatibility.mk4_compatibility_mode) {
+                s = (s * 7) / 10; // Converts speed to 70% of its values
+            }
     #endif
 
-        thermalManager.set_fan_speed(p, s);
+            thermalManager.set_fan_speed(p, s);
+        }
+    }
+
+    switch (p) {
+
+    #if XBUDDY_EXTENSION_VARIANT_STANDARD()
+    case 3:
+    case 4:
+        if (parser.seen('N')) {
+            buddy::xbuddy_extension().set_chamber_regulator_ramp_breakpoint_pwm(std::clamp<uint16_t>(parser.ushortval('N'), 0, 255));
+        }
+        if (parser.seen('G')) {
+            buddy::xbuddy_extension().set_chamber_regulator_ramp_slope(parser.floatval('G'));
+        }
+        break;
+    #endif
     }
 }
 

@@ -57,6 +57,14 @@ public: // Fans
     /// * Please note than PWM control for the cooling fans is shared (so calling this with Fan::cooling_fan_1 does the same as with Fan::cooling_fan_2)
     void set_fan_target_pwm(Fan fan, FanPWMOrAuto target);
 
+    void set_chamber_regulator_ramp_breakpoint_pwm(uint8_t pwm) {
+        chamber_cooling.ramp_breakpoint_pwm = pwm;
+    };
+
+    void set_chamber_regulator_ramp_slope(float slope) {
+        chamber_cooling.ramp_slope = slope;
+    };
+
     /// A convenience function returning a structure of data to be used in the Connect interface
     /// The key idea here is to avoid locking the internal mutex for every member while providing a consistent state of values.
     struct FanState {

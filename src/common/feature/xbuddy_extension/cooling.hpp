@@ -26,13 +26,11 @@ public:
 
     // Numbers pulled out of thin air
     static constexpr FanPWM max_pwm { 255 };
-    static constexpr FanPWM min_pwm { 40 };
+    static constexpr FanPWM min_pwm { 40 }; // TODO - This is too much, we need to find a lower value that is still safe
     static constexpr FanPWM spin_up_pwm { 100 };
 
     // time step for regulation loop
     static constexpr float dt_s = 1.0f;
-
-    static constexpr float integration_constant = 1.5f * dt_s;
 
     /// Applies spinup and emergency fan overrides
     [[nodiscard]] FanPWM apply_pwm_overrides(bool already_spinning, FanPWM pwm) const;
@@ -43,6 +41,9 @@ public:
 
     constexpr bool get_overheating_temp_flag() { return overheating_temp_flag; };
     constexpr bool get_critical_temp_flag() { return critical_temp_flag; };
+
+    uint8_t ramp_breakpoint_pwm = 0;
+    float ramp_slope = 10.0f;
 
 private:
     /// Computes a PWM ramping function

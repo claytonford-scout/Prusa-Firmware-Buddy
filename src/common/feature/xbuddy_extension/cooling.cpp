@@ -1,23 +1,57 @@
 #include "cooling.hpp"
 
 #include <algorithm>
+#include <feature/chamber_filtration/chamber_filtration.hpp>
 
 namespace buddy {
 
 FanCooling::FanPWM FanCooling::compute_auto_regulation_step(Temperature current_temperature, Temperature target_temperature, FanPWM max_auto_pwm) {
-    FanPWM::Value desired = 0;
+    /**
+     * #### XBuddyExtension Chamber Fan Auto Control Logic (fans 3 & 4 on CORE ONE printers)
+     * - Chamber Fan control algorithm is ramp function with hysteresis on top of it
+     * - If temperature is below target, ramp function output is ramp_breakpoint_pwm (Parameter N)
+     *   The minimal PWM is to ensure good airflow to cool the extruded material fast enough, which is necessary even when the chamber is on the target temperature.
+     *   This minimal required airflow is material specific, and thus it has been exposed to be made configurable via gcode.
+     *
+     * - If temperature is above target, ramp function output is proportional to the error with slope ramp_slope (Parameter G)
+     * - Hysteresis is applied on top of the ramp function to avoid fan premature kick-start and reduce kick-starts frequency
+     * - The PWM output is also modified based on the filtration backend to adjust for different fan configurations
+     *
+     * !! This comment is also doubled in GcodeSuite::M106. If you do changes here, update the other one, too.
+     */
+
+    const auto filtration_backend = chamber_filtration().backend();
+    float ramp_mult = 1.0f; // Parameter multipliers for filters.
+    switch (filtration_backend) {
+    case ChamberFiltrationBackend::xbe_official_filter:
+        ramp_mult = 3.0f;
+        break;
+    case ChamberFiltrationBackend::xbe_filter_on_cooling_fans:
+        ramp_mult = 2.0f;
+        break;
+    case ChamberFiltrationBackend::none:
+        // no multipliers for no filtration
+        break;
+    default:
+        bsod_unreachable();
+        break;
+    }
 
     const float error = current_temperature - target_temperature;
+    float target_pwm = (std::max(error, 0.0f) * ramp_slope + ramp_breakpoint_pwm) * ramp_mult;
 
-    // Simple Feedback Regulator calculation - PID regulator, but only Integration part is used
-    float regulation_output = last_regulation_output + (integration_constant * error);
+    static constexpr float hysteresis_l = 26.0f; // [0-255] PWM duty cycle - below this, turn off
+    static constexpr float hysteresis_h = 38.0f; // [0-255] PWM duty cycle - above this, turn on
+    if (target_pwm < hysteresis_l) {
+        target_pwm = 0;
+    } else if (target_pwm < hysteresis_h && last_regulation_output == 0) {
+        target_pwm = 0;
+    }
 
-    regulation_output = std::clamp<float>(regulation_output, 0.0f, static_cast<float>(max_auto_pwm.value));
+    target_pwm = std::min<float>(max_auto_pwm.value, target_pwm);
 
-    // convert float result to integer, while keeping the range of float for next loop
-    desired = static_cast<FanPWM::Value>(regulation_output);
-    last_regulation_output = regulation_output;
-
+    last_regulation_output = target_pwm;
+    FanPWM::Value desired = static_cast<FanPWM::Value>(target_pwm);
     return FanPWM { desired };
 }
 
