@@ -377,6 +377,12 @@ public:
 };
 
 #if BOARD_IS_XBUDDY()
+
+class MI_INFO_BED_VOLTAGE : public MenuItemAutoUpdatingLabel<float> {
+public:
+    MI_INFO_BED_VOLTAGE();
+};
+
 class MI_INFO_HEATER_VOLTAGE : public MenuItemAutoUpdatingLabel<float> {
 public:
     MI_INFO_HEATER_VOLTAGE();
@@ -414,11 +420,6 @@ public:
     MI_INFO_BUDDY_5V_CURRENT();
 };
 #endif
-
-class MI_INFO_INPUT_VOLTAGE : public MenuItemAutoUpdatingLabel<float> {
-public:
-    MI_INFO_INPUT_VOLTAGE();
-};
 
 class MI_INFO_BOARD_TEMP : public MenuItemAutoUpdatingLabel<float> {
 public:

@@ -623,19 +623,24 @@ MI_ODOMETER_TIME::MI_ODOMETER_TIME()
     }) {}
 
 #if BOARD_IS_XBUDDY()
+MI_INFO_BED_VOLTAGE::MI_INFO_BED_VOLTAGE()
+    : MenuItemAutoUpdatingLabel(_("Bed Voltage"), "%.1f V",
+        [](auto) { return sensor_data().bed_voltage.load(); } //
+    ) {}
+
 MI_INFO_HEATER_VOLTAGE::MI_INFO_HEATER_VOLTAGE()
     : MenuItemAutoUpdatingLabel(_("Heater Voltage"), "%.1f V",
-        [](auto) { return sensor_data().heaterVoltage.load(); } //
+        [](auto) { return sensor_data().heater_voltage.load(); } //
     ) {}
 
 MI_INFO_HEATER_CURRENT::MI_INFO_HEATER_CURRENT()
     : MenuItemAutoUpdatingLabel(_("Heater Current"), "%.1f A",
-        [](auto) { return sensor_data().heaterCurrent.load(); } //
+        [](auto) { return sensor_data().heater_current.load(); } //
     ) {}
 
 MI_INFO_INPUT_CURRENT::MI_INFO_INPUT_CURRENT()
     : MenuItemAutoUpdatingLabel(_("Input Current"), "%.1f A",
-        [](auto) { return sensor_data().inputCurrent.load(); } //
+        [](auto) { return sensor_data().input_current.load(); } //
     ) {}
 
 MI_INFO_MMU_CURRENT::MI_INFO_MMU_CURRENT()
@@ -660,11 +665,6 @@ MI_INFO_BUDDY_5V_CURRENT::MI_INFO_BUDDY_5V_CURRENT()
         [](auto) { return sensor_data().buddy5VCurrent.load(); } //
     ) {}
 #endif
-
-MI_INFO_INPUT_VOLTAGE::MI_INFO_INPUT_VOLTAGE()
-    : MenuItemAutoUpdatingLabel(_("Input Voltage"), "%.1f V",
-        [](auto) { return sensor_data().inputVoltage.load(); } //
-    ) {}
 
 MI_INFO_BOARD_TEMP::MI_INFO_BOARD_TEMP()
     : MenuItemAutoUpdatingLabel(_("Board Temperature"), standard_print_format::temp_c,

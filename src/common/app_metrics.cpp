@@ -285,20 +285,20 @@ void RecordMarlinVariables() {
     #if BOARD_IS_XBUDDY()
 void RecordPowerStats() {
     {
-        METRIC_DEF(metric_bed_v, "volt_bed", METRIC_VALUE_FLOAT, 1001, METRIC_ENABLED);
-        metric_record_float(&metric_bed_v, sensor_data().inputVoltage.load());
+        METRIC_DEF(bed_voltage, "bed_voltage", METRIC_VALUE_FLOAT, 1001, METRIC_ENABLED);
+        metric_record_float(&bed_voltage, sensor_data().bed_voltage.load());
     }
     {
-        METRIC_DEF(metric_nozzle_v, "volt_nozz", METRIC_VALUE_FLOAT, 1003, METRIC_ENABLED);
-        metric_record_float(&metric_nozzle_v, sensor_data().heaterVoltage.load());
+        METRIC_DEF(heater_voltage, "heater_voltage", METRIC_VALUE_FLOAT, 1003, METRIC_ENABLED);
+        metric_record_float(&heater_voltage, sensor_data().heater_voltage.load());
     }
     {
-        METRIC_DEF(metric_nozzle_i, "curr_nozz", METRIC_VALUE_FLOAT, 1005, METRIC_ENABLED);
-        metric_record_float(&metric_nozzle_i, sensor_data().heaterCurrent.load());
+        METRIC_DEF(heater_current, "heater_current", METRIC_VALUE_FLOAT, 1005, METRIC_ENABLED);
+        metric_record_float(&heater_current, sensor_data().heater_current.load());
     }
     {
-        METRIC_DEF(metric_input_i, "curr_inp", METRIC_VALUE_FLOAT, 1007, METRIC_ENABLED);
-        metric_record_float(&metric_input_i, sensor_data().inputCurrent.load());
+        METRIC_DEF(input_current, "input_current", METRIC_VALUE_FLOAT, 1007, METRIC_ENABLED);
+        metric_record_float(&input_current, sensor_data().input_current.load());
     }
         #if HAS_MMU2()
     {

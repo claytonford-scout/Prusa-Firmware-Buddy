@@ -66,17 +66,10 @@ void SensorData::update() {
 
 #if BOARD_IS_XBUDDY()
 
-    // Input voltage
-    inputVoltage = advancedpower.GetBedVoltage();
-
-    // Heater voltage
-    heaterVoltage = advancedpower.GetHeaterVoltage();
-
-    // Heater current
-    heaterCurrent = advancedpower.GetHeaterCurrent();
-
-    // Input current
-    inputCurrent = advancedpower.GetInputCurrent();
+    bed_voltage = advancedpower.bed_voltage();
+    heater_voltage = advancedpower.heater_voltage();
+    heater_current = advancedpower.heater_current();
+    input_current = advancedpower.input_current();
 
     #if HAS_MMU2()
 

@@ -34,17 +34,18 @@ public:
     RelaxedAtomic<float> splitterTemp;
     RelaxedAtomic<float> boardTemp;
     RelaxedAtomic<float> hbrFan;
-    RelaxedAtomic<float> inputVoltage;
 #if BOARD_IS_XLBUDDY()
+    RelaxedAtomic<float> inputVoltage;
     RelaxedAtomic<float> sandwich5VVoltage;
     RelaxedAtomic<float> sandwich5VCurrent;
     RelaxedAtomic<float> buddy5VCurrent;
     RelaxedAtomic<float> dwarfBoardTemperature;
     RelaxedAtomic<float> dwarfMCUTemperature;
 #elif BOARD_IS_XBUDDY()
-    RelaxedAtomic<float> heaterVoltage;
-    RelaxedAtomic<float> heaterCurrent;
-    RelaxedAtomic<float> inputCurrent;
+    RelaxedAtomic<float> bed_voltage;
+    RelaxedAtomic<float> heater_voltage;
+    RelaxedAtomic<float> heater_current;
+    RelaxedAtomic<float> input_current;
     RelaxedAtomic<float> mmuCurrent;
 #else
 #endif

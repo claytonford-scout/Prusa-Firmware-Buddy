@@ -107,8 +107,8 @@ struct ScreenMenuSensorInfo__<std::index_sequence<hotend...>> {
     #endif
 
     #if BOARD_IS_XBUDDY()
+        MI_INFO_BED_VOLTAGE,
         MI_INFO_HEATER_VOLTAGE,
-        MI_INFO_INPUT_VOLTAGE,
         MI_INFO_HEATER_CURRENT,
         MI_INFO_INPUT_CURRENT,
     #endif

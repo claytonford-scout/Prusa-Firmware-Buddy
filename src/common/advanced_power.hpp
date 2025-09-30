@@ -16,23 +16,21 @@ public:
     AdvancedPower();
 
 #if BOARD_IS_XBUDDY()
-    inline float GetBedVoltage() const {
-        return beforeVoltageDivider11(RawValueToVoltage(AdcGet::inputVoltage()));
-    }
+    /// Bed voltage [V]
+    /// This is the voltage between GND and 24V3 node in the xBUDDY schematics.
+    float bed_voltage() const;
 
-    inline float GetHeaterVoltage() const {
-        return beforeVoltageDivider11(RawValueToVoltage(AdcGet::heaterVoltage()));
-    }
+    /// Heater voltage [V]
+    /// This is the voltage between GND and 24V2 node in the xBUDDY schematics.
+    float heater_voltage() const;
 
-    inline float GetHeaterCurrent() const {
-        return ((RawValueToVoltage(AdcGet::heaterCurrent()) / 1.95f) * 2.00f);
-    }
+    /// Heater current [A]
+    /// This is the current flowing from HEATER_24V to 24V2 node in the xBUDDY schematics.
+    float heater_current() const;
 
-    /**
-     * @brief Get the Input Current
-     * @return float current [mA]
-     */
-    float GetInputCurrent() const;
+    /// Input current [A]
+    /// This is the current flowing from GND node to ground terminal in the xBUDDY schematics.
+    float input_current() const;
 
     bool HeaterOvercurentFaultDetected() const;
 
