@@ -8,6 +8,7 @@
 #include <standard_frame/frame_prompt.hpp>
 #include <standard_frame/frame_prompt.hpp>
 #include <img_resources.hpp>
+#include <fsm/nozzle_cleaning_failed_mapper.hpp>
 
 using Phase = PhaseNozzleCleaningFailed;
 
