@@ -53,3 +53,4 @@ endif()
 
 add_subdirectory(ramming)
 add_subdirectory(cork)
+add_subdirectory(safety_timer)
