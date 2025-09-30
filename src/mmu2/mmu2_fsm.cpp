@@ -172,7 +172,7 @@ bool Fsm::Activate() {
     }
 
     created_this = true;
-    marlin_server::fsm_create(PhasesLoadUnload::initial);
+    marlin_server::fsm_create(PhasesLoadUnload::LoadFilamentIntoMMU);
     return true;
 }
 
