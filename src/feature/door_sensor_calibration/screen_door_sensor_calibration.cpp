@@ -109,6 +109,26 @@ public:
         } {}
 };
 
+class FrameAskEnableSafetyFeatures final : FrameText {
+public:
+    FrameAskEnableSafetyFeatures(window_t *parent)
+        : FrameText {
+            parent,
+            _("Do you want to enable door sensor safety features? "),
+            WizardDefaults::row_1,
+        } {}
+};
+
+class FrameWarnDisabledSensor final : FrameText {
+public:
+    FrameWarnDisabledSensor(window_t *parent)
+        : FrameText {
+            parent,
+            _("Caution! Disabling the door sensor may lead to injury or printer damage.\n\nProceeding means you accept full responsibility.\n\nWe are not liable for any harm or damages."),
+            WizardDefaults::row_1,
+        } {}
+};
+
 class FrameDone final : FrameText {
 public:
     FrameDone(window_t *parent)
@@ -133,8 +153,9 @@ using Frames = FrameDefinitionList<ScreenDoorSensorCalibration::FrameStorage,
     FrameDefinition<PhaseDoorSensorCalibration::loosen_screw_half, FrameLoosenScrewHalf>,
     FrameDefinition<PhaseDoorSensorCalibration::finger_test, FrameFingerTest>,
     FrameDefinition<PhaseDoorSensorCalibration::loosen_screw_quarter, FrameLoosenScrewQuarter>,
+    FrameDefinition<PhaseDoorSensorCalibration::ask_enable_safety_features, FrameAskEnableSafetyFeatures>,
+    FrameDefinition<PhaseDoorSensorCalibration::warn_disabled_sensor, FrameWarnDisabledSensor>,
     FrameDefinition<PhaseDoorSensorCalibration::done, FrameDone>>;
-
 } /* namespace */
 
 ScreenDoorSensorCalibration::ScreenDoorSensorCalibration()

@@ -636,6 +636,8 @@ enum class PhaseDoorSensorCalibration : PhaseUnderlyingType {
     loosen_screw_half,
     finger_test,
     loosen_screw_quarter,
+    ask_enable_safety_features,
+    warn_disabled_sensor,
     done,
     finish,
     _last = finish,
@@ -1094,6 +1096,8 @@ inline constexpr EnumArray<PhaseDoorSensorCalibration, PhaseResponses, CountPhas
     { PhaseDoorSensorCalibration::loosen_screw_half, { Response::Continue, Response::Abort } },
     { PhaseDoorSensorCalibration::finger_test, { Response::Continue, Response::Abort } },
     { PhaseDoorSensorCalibration::loosen_screw_quarter, { Response::Continue, Response::Abort } },
+    { PhaseDoorSensorCalibration::ask_enable_safety_features, { Response::Yes, Response::No } },
+    { PhaseDoorSensorCalibration::warn_disabled_sensor, { Response::Cancel, Response::Disable } }, // Cancel is first to have it selected (temporary solution till we rewrite the frames used to have radio button in as well to be able to change focus from inside the frame)
     { PhaseDoorSensorCalibration::done, { Response::Continue } },
     { PhaseDoorSensorCalibration::finish, {} },
 };
