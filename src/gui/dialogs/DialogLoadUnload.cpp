@@ -506,27 +506,13 @@ using Frames = FrameDefinitionList<DialogLoadUnload::FrameStorage,
 } // anonymous namespace
 
 DialogLoadUnload::DialogLoadUnload(fsm::BaseData data)
-    : IDialogMarlin(GuiDefaults::RectScreenNoHeader)
-    , inner_frame(this, GetRect()) {
-    fsm_base_data = data;
+    : DialogFSM(data) {
     create_frame();
 }
 
 DialogLoadUnload::~DialogLoadUnload() {
     Sound_Stop();
     destroy_frame();
-}
-
-void DialogLoadUnload::Change(fsm::BaseData new_fsm_base_data) {
-    if (new_fsm_base_data.GetPhase() != fsm_base_data.GetPhase()) {
-        destroy_frame();
-        fsm_base_data = new_fsm_base_data;
-        create_frame();
-    } else {
-        fsm_base_data = new_fsm_base_data;
-    }
-    update_frame();
-    CaptureNormalWindow(inner_frame);
 }
 
 void DialogLoadUnload::create_frame() {
