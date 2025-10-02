@@ -250,7 +250,7 @@ DeviceState get_state(bool ready) {
     case ClientFSM::ColdPull:
 #endif
 #if HAS_MANUAL_BELT_TUNING()
-    case ClientFSM::BeltTuning:
+    case ClientFSM::ManualBeltTuning:
 #endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:
@@ -463,7 +463,7 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::ColdPull:
 #endif
 #if HAS_MANUAL_BELT_TUNING()
-    case ClientFSM::BeltTuning:
+    case ClientFSM::ManualBeltTuning:
 #endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:

@@ -50,7 +50,7 @@ enum class ClientFSM : uint8_t {
     ColdPull,
     #endif
     #if HAS_MANUAL_BELT_TUNING()
-    BeltTuning,
+    ManualBeltTuning,
     #endif
     #if HAS_PHASE_STEPPING_CALIBRATION()
     PhaseSteppingCalibration,
