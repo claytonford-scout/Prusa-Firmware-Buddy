@@ -5,6 +5,7 @@
 #include <fsm_states.hpp>
 #include <client_response.hpp>
 #include <marlin_vars.hpp>
+#include <fsm/safety_timer_phases.hpp>
 #include <option/has_esp.h>
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_gearbox_alignment.h>
@@ -195,6 +196,8 @@ DeviceState get_state(bool ready) {
         is_preheating = states.is_active(ClientFSM::Preheat);
     });
 
+    const DeviceState busy_state = is_printing ? DeviceState::Printing : DeviceState::Busy;
+
     State state = marlin_vars().print_state;
     if (!top) {
         // No FSM present...
@@ -276,7 +279,10 @@ DeviceState get_state(bool ready) {
         // preheat menu to be the only menu screen to not be Idle... :-(
     case ClientFSM::Preheat:
     case ClientFSM::Wait:
-        return DeviceState::Busy;
+        return busy_state;
+
+    case ClientFSM::SafetyTimer:
+        return safety_timer_is_phase_attention.test(data.GetPhase()) ? DeviceState::Attention : busy_state;
 
     case ClientFSM::Warning: {
         auto result = get_print_state(state, ready);
@@ -452,6 +458,7 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::Printing:
     case ClientFSM::Serial_printing:
         break;
+
 #if HAS_SELFTEST()
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
@@ -481,15 +488,17 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::DoorSensorCalibration:
 #endif
     case ClientFSM::Preheat:
-        // TODO: On some future sunny day, we want to cover all the selftests
+    case ClientFSM::SafetyTimer:
+        // TODO: On some future sunny day, we want to cover all of these
         // and ESP flashing with actual dialogs too; currently we only show a
         // possible warning dialog sitting _on top_ of these.
         //
         // But that's a lot of work, complex, etc, and may need some „special“
         // dialogs too. Leaving it out for now.
         break;
-        // Not possible, we would already return, if no FSM is set, here just to satisfy compiler, that it is handled
+
     case ClientFSM::_none:
+        // Not possible, we would already return, if no FSM is set, here just to satisfy compiler, that it is handled
         break;
     }
 
