@@ -156,8 +156,9 @@ struct FSMDialogDefBase {
     }
 };
 
-template <ClientFSM fsm_, typename Dialog>
+template <ClientFSM fsm_, typename Dialog_>
 struct FSMDialogDef : public FSMDialogDefBase {
+    using Dialog = Dialog_;
     static constexpr ClientFSM fsm = fsm_;
 
     [[nodiscard]] static bool open(fsm::BaseData data) {
@@ -303,6 +304,16 @@ void visit_display_config(ClientFSM fsm, auto f) {
 
 static constexpr size_t fsm_display_config_size = []<class... T>(FSMDisplayConfigDef<T...>) { return sizeof...(T); }(FSMDisplayConfig());
 static_assert(fsm_display_config_size == std::to_underlying(ClientFSM::_count) + 1);
+
+static constexpr auto dlg_size = []<typename T> {
+    if constexpr (std::is_base_of_v<FSMDialogDefBase, T>) {
+        return sizeof(typename T::Dialog);
+    } else {
+        return 0;
+    }
+};
+static constexpr size_t required_dlg_mem_space = []<class... T>(FSMDisplayConfigDef<T...>) { return std::max(std::initializer_list<size_t> { dlg_size.operator()<T>()... }); }(FSMDisplayConfig {});
+static_assert(sizeof(mem_space) < required_dlg_mem_space + 100, "DialogHandler::mem_space is unnecessarily big");
 
 //*****************************************************************************
 // method definitions
