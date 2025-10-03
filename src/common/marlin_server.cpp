@@ -1225,6 +1225,7 @@ bool is_processing() {
     return queue.has_commands_queued()
         || planner.processing()
         || gcode.busy_state != GcodeSuite::NOT_BUSY // We might be still in the gcode (while no commands are queued)
+        || SelftestInstance().IsInProgress() // Some selftests are still not gcodes :(
         || !inject_queue.is_empty() //
         ;
 }
