@@ -12,7 +12,6 @@
 #include <WinMenuContainer.hpp>
 #include <fsm_menu_item.hpp>
 #include <fsm_network_setup.hpp>
-#include <gui/frame_qr_layout.hpp>
 #include <logging/log.hpp>
 #include "timing.h"
 #include <DialogConnectReg.hpp>
@@ -370,40 +369,11 @@ public:
     }
 };
 
-class FrameRadioQR {
-
-public:
-    FrameRadioQR(window_t *parent, Phase phase, const string_view_utf8 &text, const char *text_url, const char *qr_url)
-        : text(parent, FrameQRLayout::text_rect(), is_multiline::yes)
-        , link(parent, FrameQRLayout::link_rect(), is_multiline::no)
-        , icon_phone(parent, FrameQRLayout::phone_icon_rect(), &img::hand_qr_59x72)
-        , qr(parent, FrameQRLayout::qrcode_rect(), Align_t::Center(), qr_url)
-        , radio(parent, GuiDefaults::GetButtonRect(parent->GetRect()), phase) //
-    {
-        this->text.SetText(text);
-        link.SetText(string_view_utf8::MakeCPUFLASH(text_url));
-        static_cast<window_frame_t *>(parent)->CaptureNormalWindow(radio);
-    }
-
-private:
-    window_text_t text;
-    window_text_t link;
-    window_icon_t icon_phone;
-    QRStaticStringWindow qr;
-    RadioButtonFSM radio;
-};
-
 using FrameHelpQR = WithConstructorArgs<FrameQRPrompt, Phase::help_qr, N_("To setup or troubleshoot your Wi-Fi, please visit:"), "wifi"_tstr>;
 
 #if HAS_NFC()
-class FrameAskUsePrusaApp : public FrameRadioQR {
-    static constexpr const char *url = "prusa.io/app";
 
-public:
-    FrameAskUsePrusaApp(window_frame_t *parent)
-        : FrameRadioQR(parent, Phase::ask_use_prusa_app, _("Do you want to connect to the Wi-Fi with the Prusa app on your phone using NFC?"), url, url) {
-    }
-};
+using FrameAskUsePrusaApp = WithConstructorArgs<FrameQRPrompt, Phase::ask_use_prusa_app, N_("Do you want to connect to the Wi-Fi with the Prusa app on your phone using NFC?"), "app"_tstr>;
 
 class FrameWaitForNFC : public FramePrompt {
     nfc::SharedEnabler nfc_enable;
