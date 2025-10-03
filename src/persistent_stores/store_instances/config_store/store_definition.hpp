@@ -718,6 +718,8 @@ struct CurrentStore
     StoreItem<bool, false, ItemFlag::calibrations, journal::hash("Manual Belt Tuning Completed")> manual_belt_tuning_completed;
 #endif
 
+    StoreItem<bool, DEVELOPMENT_ITEMS(), ItemFlag::user_interface | ItemFlag::common_misconfigurations, journal::hash("Fast Draw Enabled")> fast_draw_enabled;
+
 private:
     void perform_config_migrations();
 };

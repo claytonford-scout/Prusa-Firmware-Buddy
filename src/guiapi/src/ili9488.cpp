@@ -544,7 +544,8 @@ void ili9488_fill_rect_colorFormat666(uint16_t rect_x, uint16_t rect_y, uint16_t
     assert(!ili9488_buff_borrowed && "Buffer lent to someone");
 
     // fast path for black and white pixels; no need to support more colors at the moment
-    if (clr666 == 0x00000000 || clr666 == 0x00fcfcfc) {
+    static const auto fast_draw_enabled = config_store().fast_draw_enabled.get();
+    if (fast_draw_enabled && (clr666 == 0x00000000 || clr666 == 0x00fcfcfc)) {
         const uint8_t clr33 = clr666 == 0 ? 0 : 0x3f;
         ili9488_fill_rect_color_fast(rect_x, rect_y, rect_w, rect_h, clr33);
         return;
