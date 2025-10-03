@@ -69,8 +69,6 @@ GcodeSuite gcode;
 #include <utils/serial_logging_disabler.hpp>
 #include <feature/safety_timer/safety_timer.hpp>
 
-millis_t GcodeSuite::previous_move_ms;
-
 // Relative motion mode for each logical axis
 static constexpr xyze_bool_t ar_init = AXIS_RELATIVE_MODES;
 uint8_t GcodeSuite::axis_relative = (
