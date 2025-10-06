@@ -3029,7 +3029,7 @@ void Temperature::isr() {
           SERIAL_EOL();
         }
 
-        idle(true, true);
+        idle(true);
 
         const float temp = degHotend(target_extruder);
         statusGuard.update<PrintStatusMessage::waiting_for_hotend_temp>({.progress{ .current = temp, .target = target_temp }, .tool=target_extruder});
@@ -3244,7 +3244,7 @@ void Temperature::isr() {
               start_diff = fabs(start_target - bed_frame_est_celsius);
             }
 
-            idle(true, true);
+            idle(true);
 
             auto progress = std::clamp(100 - (fabs(temp_bed.target - bed_frame_est_celsius) / start_diff) * 100, 0.f, 100.f);
 

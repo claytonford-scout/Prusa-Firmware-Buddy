@@ -299,7 +299,7 @@ static bool wait_for_movement_state(phase_stepping::AxisState &axis_state,
         if (ticks_diff(cur_time, start_time) > timeout_ms) {
             return false;
         } else {
-            idle(true, true);
+            idle(true);
         }
     }
     return true;
@@ -1067,7 +1067,7 @@ static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_sampl
             break;
 
         case GetSampleResult::buffer_empty:
-            idle(true, true);
+            idle(true);
             break;
 
         case GetSampleResult::error: {
@@ -1787,7 +1787,7 @@ phase_stepping::calibrate_axis(AxisEnum axis, CalibrateAxisHooks &hooks) {
     phase_stepping::EnsureEnabled _;
 
     auto should_abort = [&]() {
-        idle(true, true);
+        idle(true);
         return hooks.on_idle() == phase_stepping::CalibrateAxisHooks::ContinueOrAbort::Abort;
     };
 
