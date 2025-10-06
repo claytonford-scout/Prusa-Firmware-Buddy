@@ -298,7 +298,7 @@ bool anyHeatherIsActive() {
  *  - Pulse FET_SAFETY_PIN if it exists
  */
 
-void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
+void manage_inactivity() {
 
   #if HAS_FILAMENT_SENSOR
     runout.run();
@@ -398,7 +398,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
  *   @par @c true Keep steppers from disabling on timeout
  *   @par @c false Allow steppers to release (and lose position) on timeout
  */
-void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
+void idle(bool waiting, [[maybe_unused]] bool no_stepper_sleep/*=false*/) {
   #if HAS_PLANNER()
     endstops.event_handler();
   #endif
@@ -411,7 +411,7 @@ void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
     gcode.host_keepalive();
   #endif
 
-  manage_inactivity(no_stepper_sleep);
+  manage_inactivity();
 
   thermalManager.manage_heater();
 
