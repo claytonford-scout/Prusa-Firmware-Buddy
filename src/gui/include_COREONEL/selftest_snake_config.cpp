@@ -52,6 +52,17 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
             break;
         }
 #endif /* HAS_CHAMBER_API() */
+#if HAS_BED_FAN()
+        {
+            const auto bed_fan_results = config_store().bed_fan_selftest_result.get();
+            for (const auto &fan_result : bed_fan_results.fans) {
+                res = evaluate_results(res, fan_result);
+            }
+        }
+#endif
+#if HAS_PSU_FAN()
+        res = evaluate_results(res, config_store().psu_fan_selftest_result.get());
+#endif
         return res;
     }
     case Action::ZAlign:
