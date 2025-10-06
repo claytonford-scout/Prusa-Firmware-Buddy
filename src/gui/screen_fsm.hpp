@@ -58,14 +58,12 @@ struct FrameDefinitionList {
     }
 };
 
-template <typename Parent>
+template <typename Parent, size_t FrameStorageSize>
 class WindowFSM : public Parent {
-    static constexpr size_t frame_static_storage_size = 1324;
-
 public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    using FrameStorage = StaticStorage<frame_static_storage_size>;
+    using FrameStorage = StaticStorage<FrameStorageSize>;
 #pragma GCC diagnostic pop
 
     template <typename... Args>
@@ -97,7 +95,7 @@ protected:
     virtual void update_frame() = 0;
 };
 
-class ScreenFSM : public WindowFSM<screen_t> {
+class ScreenFSM : public WindowFSM<screen_t, 1324> {
 
 public:
     ScreenFSM(const char *header_txt, Rect16 inner_frame_rect = GuiDefaults::RectScreenNoHeader)
@@ -120,7 +118,7 @@ protected:
     window_header_t header;
 };
 
-class DialogFSM : public WindowFSM<IDialogMarlin> {
+class DialogFSM : public WindowFSM<IDialogMarlin, 1324> {
 
 public:
     DialogFSM(fsm::BaseData data)
