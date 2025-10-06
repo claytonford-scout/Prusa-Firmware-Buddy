@@ -153,9 +153,6 @@ struct CurrentStore
     /// Stores newest_migration_version of the previous firmware
     StoreItem<uint8_t, 0, ItemFlag::special, journal::hash("Config Version")> config_version;
 
-    // wizard flags
-    StoreItem<bool, true, ItemFlag::calibrations, journal::hash("Run Selftest")> run_selftest;
-
     /// If false, a ScreenPrinterSetup will appear on printer boot
     StoreItem<bool, false, ItemFlag::calibrations, journal::hash("Printer setup done")> printer_setup_done;
 
@@ -852,6 +849,8 @@ struct DeprecatedStore
         StoreItem<uint32_t, defaults::side_fs_value_span, ItemFlag::calibrations | ItemFlag::dev_items, journal::hash("Side FS Value Span 3")> side_fs_value_span_3;
         StoreItem<uint32_t, defaults::side_fs_value_span, ItemFlag::calibrations | ItemFlag::dev_items, journal::hash("Side FS Value Span 4")> side_fs_value_span_4;
         StoreItem<uint32_t, defaults::side_fs_value_span, ItemFlag::calibrations | ItemFlag::dev_items, journal::hash("Side FS Value Span 5")> side_fs_value_span_5;
+
+        StoreItem<bool, true, ItemFlag::calibrations, journal::hash("Run Selftest")> run_selftest;
         */
 };
 
