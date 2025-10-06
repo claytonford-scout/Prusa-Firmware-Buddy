@@ -467,9 +467,17 @@ volatile bool Temperature::temp_meas_ready = false;
             t_low = t2 - t1;
             if (cycles > 0) {
               const long max_pow = GHV(MAX_BED_POWER, PID_MAX);
+              float last_bias = bias;
+              float last_d = d;
               bias += (d * (t_high - t_low)) / (t_low + t_high);
               LIMIT(bias, 20, max_pow - 20);
+              float delta_bias = bias - last_bias;
+              if(delta_bias > 10) bias = last_bias + 10;
+              if(delta_bias < -10) bias = last_bias - 10;
               d = (bias > max_pow >> 1) ? max_pow - 1 - bias : bias;
+              float delta_d = d - last_d;
+              if(delta_d > 10) d = last_d + 10;
+              if(delta_d < -10) d = last_d - 10;
 
               SERIAL_ECHOPAIR(MSG_BIAS, bias, MSG_D, d, MSG_T_MIN, minT, MSG_T_MAX, maxT);
               if (cycles > 2) {
