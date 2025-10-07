@@ -95,7 +95,7 @@ protected:
     virtual void update_frame() = 0;
 };
 
-class ScreenFSM : public WindowFSM<screen_t, 1324> {
+class ScreenFSM : public WindowFSM<screen_t, 1368> {
 
 public:
     ScreenFSM(const char *header_txt, Rect16 inner_frame_rect = GuiDefaults::RectScreenNoHeader)
@@ -118,7 +118,7 @@ protected:
     window_header_t header;
 };
 
-class DialogFSM : public WindowFSM<IDialogMarlin, 1324> {
+class DialogFSM : public WindowFSM<IDialogMarlin, 1124> {
 
 public:
     DialogFSM(fsm::BaseData data)
