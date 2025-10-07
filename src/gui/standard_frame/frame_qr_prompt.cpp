@@ -9,7 +9,7 @@
 namespace {
 static constexpr uint8_t qr_size = GuiDefaults::QRSize;
 static constexpr uint8_t txt_height = WizardDefaults::txt_h;
-static constexpr uint8_t margin = 16;
+static constexpr uint8_t spacing = 16;
 static constexpr auto txt_details = N_("More details at");
 static constexpr auto txt_scan_me = N_("Scan me!");
 
@@ -19,14 +19,14 @@ static constexpr Rect16 inner_frame_rect =
         WizardDefaults::col_0,
         WizardDefaults::row_0,
         GuiDefaults::ScreenWidth - 2 * WizardDefaults::MarginLeft, // 2* = 1 left, 1 right
-        qr_size + txt_height + 2 * margin // QR code with scanMe + margin (text is beside it)
+        qr_size + txt_height + 2 * spacing // QR code with scanMe + spacing (text is beside it)
     };
 #else // MINI
     Rect16 {
         WizardDefaults::col_0,
         WizardDefaults::row_0,
         GuiDefaults::ScreenWidth - 2 * WizardDefaults::MarginLeft,
-        txt_height * 6 + margin + qr_size // 8 lines of text, margin, QR code with scanMe  (text is above qr)
+        txt_height * 6 + spacing + qr_size // 8 lines of text, spacing, QR code with scanMe  (text is above qr)
     };
 #endif
 
@@ -35,7 +35,7 @@ static constexpr Rect16 info_text_rect =
     Rect16 {
         inner_frame_rect.Left(),
         inner_frame_rect.Top(),
-        GuiDefaults::ScreenWidth - qr_size - 3 * WizardDefaults::MarginLeft, // 3* = left, right, between qr and text
+        GuiDefaults::ScreenWidth - qr_size - 2 * WizardDefaults::MarginLeft + spacing, // 2* = left, right, spacing =  between qr and text
         inner_frame_rect.Height()
     };
 #else // MINI
@@ -50,7 +50,7 @@ static constexpr Rect16 info_text_rect =
 static constexpr Rect16 qr_rect =
 #if HAS_LARGE_DISPLAY()
     Rect16 {
-        info_text_rect.Right() + WizardDefaults::MarginLeft,
+        info_text_rect.Right() + spacing,
         inner_frame_rect.Top(),
         qr_size,
         qr_size
@@ -58,7 +58,7 @@ static constexpr Rect16 qr_rect =
 #else // MINI
     Rect16 {
         inner_frame_rect.Left(),
-        info_text_rect.Bottom() + margin,
+        info_text_rect.Bottom() + spacing,
         qr_size,
         qr_size
     };
@@ -67,16 +67,16 @@ static constexpr Rect16 qr_rect =
 static constexpr Rect16 scan_me_rect =
 #if HAS_LARGE_DISPLAY()
     Rect16 {
-        info_text_rect.Right() + WizardDefaults::MarginLeft,
-        qr_rect.Bottom(),
+        info_text_rect.Right() + spacing,
+        qr_rect.Bottom(), // no spacing here to be as close to the QR code as possible (the qr doesnt fill the whole qr_rect)
         qr_size,
-        txt_height + margin
+        txt_height + spacing
     };
 #else // MINI
     Rect16 {
-        qr_rect.Right() + margin,
+        qr_rect.Right() + spacing,
         qr_rect.Top(),
-        inner_frame_rect.Width() - margin - qr_rect.Width(), // rest of space beside qr
+        inner_frame_rect.Width() - spacing - qr_rect.Width(), // rest of space beside qr
         qr_rect.Height()
     };
 #endif
@@ -85,9 +85,9 @@ static constexpr std::array layout_no_footer {
     StackLayoutItem { .height = inner_frame_rect.Height() }, // space for inner_frame
     StackLayoutItem {
         .height = StackLayoutItem::stretch,
-        .margin_side = margin,
+        .margin_side = WizardDefaults::MarginLeft,
     }, // Details
-    StackLayoutItem { .height = txt_height, .margin_side = margin }, // Link
+    StackLayoutItem { .height = txt_height, .margin_side = WizardDefaults::MarginLeft }, // Link
     standard_stack_layout::for_radio,
 };
 static constexpr std::array layout_only_footer {
