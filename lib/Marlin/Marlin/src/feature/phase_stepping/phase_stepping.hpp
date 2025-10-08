@@ -139,11 +139,9 @@ struct AxisState {
             case State::full:
                 return value;
             case State::updating:
-                assert(0);
-                return std::nullopt;
+                bsod_unreachable();
             }
-            assert(0);
-            return std::nullopt;
+            bsod_unreachable();
         }
         /// Steal the value.
         ///

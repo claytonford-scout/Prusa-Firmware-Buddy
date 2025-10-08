@@ -219,10 +219,10 @@ step_event_info_t phase_stepping::next_step_event_classic(
             const uint64_t next_print_time_ticks = convert_absolute_time_to_ticks(axis_state.next_target_end_time);
             const uint64_t move_duration_ticks = next_print_time_ticks - axis_state.current_print_time_ticks;
             MoveTarget next(move_start_pos, *next_move, axis, move_duration_ticks);
+            axis_state.next_target.set(next);
             axis_state.current_print_time_ticks = next_print_time_ticks;
 
             const int32_t target_steps = pos_to_steps(AxisEnum(axis), next.target_pos);
-            axis_state.next_target.set(next);
             step_generator_state.current_distance[axis] = target_steps;
 
             next_step_event.flags |= STEP_EVENT_FLAG_KEEP_ALIVE;
@@ -274,10 +274,10 @@ step_event_info_t phase_stepping::next_step_event_input_shaping(
                 const uint64_t next_print_time_ticks = convert_absolute_time_to_ticks(axis_state.next_target_end_time);
                 const uint64_t move_duration_ticks = next_print_time_ticks - axis_state.current_print_time_ticks;
                 MoveTarget next(move_start_pos, *step_generator.is_state, move_duration_ticks);
+                axis_state.next_target.set(next);
                 axis_state.current_print_time_ticks = next_print_time_ticks;
 
                 const int32_t target_steps = pos_to_steps(AxisEnum(axis), next.target_pos);
-                axis_state.next_target.set(next);
                 step_generator_state.current_distance[axis] = target_steps;
 
                 next_step_event.flags |= STEP_EVENT_FLAG_KEEP_ALIVE;
