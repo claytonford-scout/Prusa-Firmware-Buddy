@@ -147,7 +147,7 @@ xyze_pos_t destination; // {0}
       "Offsets for the first hotend must be 0.0."
     );
     // Transpose from [XYZ][HOTENDS] to [HOTENDS][XYZ]
-    HOTEND_LOOP() LOOP_XYZ(a) hotend_offset[e][a] = tmp[a][e];
+    for (int8_t e = 0; e < HOTENDS; e++) LOOP_XYZ(a) hotend_offset[e][a] = tmp[a][e];
   }
 #endif
 

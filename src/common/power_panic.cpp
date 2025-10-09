@@ -379,7 +379,7 @@ void resume_loop() {
         if (state_buf.planner.was_paused) {
             resume_state = ResumeState::ParkForPause;
         } else {
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
                 marlin_server::set_temp_to_display(state_buf.planner.target_nozzle[e], e);
                 thermalManager.setTargetHotend(state_buf.planner.target_nozzle[e], e);
             }
@@ -447,7 +447,7 @@ void resume_loop() {
         }
 
         // original planner state
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             planner.flow_percentage[e] = state_buf.planner.flow_percentage[e];
         }
         gcode.axis_relative = state_buf.planner.axis_relative;
@@ -933,7 +933,7 @@ void ac_fault_isr() {
 #endif
 
         // remaining planner parameters
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             state_buf.planner.flow_percentage[e] = planner.flow_percentage[e];
         }
         state_buf.planner.axis_relative = gcode.axis_relative;

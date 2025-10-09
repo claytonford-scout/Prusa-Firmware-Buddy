@@ -176,7 +176,7 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
         // Process dwarf buttons
         static bool was_up = false, was_down = false;
         bool is_up = false, is_down = false;
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             if (prusa_toolchanger.getTool(e).is_button_up_pressed()) { is_up = true; }
             if (prusa_toolchanger.getTool(e).is_button_down_pressed()) { is_down = true; }
         }
@@ -190,7 +190,7 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
         was_down = is_down;
 
         // Refresh until next loop
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             prusa_toolchanger.getTool(e).refresh_buttons();
         }
         break;

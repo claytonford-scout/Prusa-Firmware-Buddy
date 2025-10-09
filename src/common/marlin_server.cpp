@@ -320,7 +320,7 @@ namespace {
             }
 
             if (disable_hotend) {
-                HOTEND_LOOP() {
+                for (int8_t e = 0; e < HOTENDS; e++) {
                     thermalManager.setTargetHotend(0, e);
                     set_temp_to_display(0, e);
                 }
@@ -1140,7 +1140,7 @@ static void settings_load() {
     Temperature::temp_bed.pid.Kd = config_store().pid_bed_d.get();
 #endif
 #if ENABLED(PIDTEMP)
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         Temperature::temp_hotend[e].pid.Kp = config_store().pid_nozzle_p.get();
         Temperature::temp_hotend[e].pid.Ki = config_store().pid_nozzle_i.get();
         Temperature::temp_hotend[e].pid.Kd = config_store().pid_nozzle_d.get();
@@ -1497,7 +1497,7 @@ static void prepare_tool_pickup() {
     disable_XY(); // Let user move the carriage
 
     // Disable heaters
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if ((marlin_vars().hotend(e).target_nozzle > 0)) {
             thermalManager.setTargetHotend(0, e);
             set_temp_to_display(0, e);
@@ -2110,7 +2110,7 @@ static void _server_print_loop(void) {
             feedrate_percentage = 100;
 
             // Reset flow factor for all extruders
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
                 planner.flow_percentage[e] = 100;
                 planner.refresh_e_factor(e);
             }
@@ -2398,7 +2398,7 @@ static void _server_print_loop(void) {
 #if FAN_COUNT > 0
         thermalManager.set_fan_speed(0, 0);
 #endif
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             set_temp_to_display(0, e);
         }
 
@@ -2775,7 +2775,7 @@ static void _server_print_loop(void) {
 #endif
 
     if (do_fan_check) {
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
 #if !PRINTER_IS_PRUSA_iX()
             const auto fan_state = Fans::heat_break(e).get_state();
             hotendFanErrorChecker[e].checkTrue(fan_state != CFanCtlCommon::FanState::error_running && fan_state != CFanCtlCommon::FanState::error_starting, WarningType::HotendFanError, true, true);
@@ -2809,7 +2809,7 @@ static void _server_print_loop(void) {
 #endif
     }
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (Fans::heat_break(e).get_rpm_is_ok()) {
             hotendFanErrorChecker[e].reset();
         }
@@ -2819,7 +2819,7 @@ static void _server_print_loop(void) {
     }
 
 #if HAS_TEMP_HEATBREAK
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
     #if ENABLED(PRUSA_TOOLCHANGER)
         if (!prusa_toolchanger.is_tool_enabled(e)) {
             continue;
@@ -2848,7 +2848,7 @@ static void _server_print_loop(void) {
     // Check MCU temperatures
     mcuMaxTempErrorChecker.check(AdcGet::getMCUTemp(), WarningType::BuddyMCUMaxTemp, "Buddy");
 #if HAS_DWARF()
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (prusa_toolchanger.is_tool_enabled(e)) {
             dwarfMaxTempErrorChecker[e].check(buddy::puppies::dwarfs[e].get_mcu_temperature(), WarningType::DwarfMCUMaxTemp, dwarf_names[e]);
         }
@@ -2861,14 +2861,14 @@ static void _server_print_loop(void) {
 
 void resuming_begin(void) {
     // Reset errors, so it can be triggered immediately again
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         hotendFanErrorChecker[e].reset();
     }
     printFanErrorChecker.reset();
 
     mcuMaxTempErrorChecker.reset();
 #if HAS_DWARF()
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (prusa_toolchanger.is_tool_enabled(e)) {
             dwarfMaxTempErrorChecker[e].reset();
         }
@@ -3165,7 +3165,7 @@ static void _server_update_vars() {
         marlin_vars().logical_curr_pos[i] = curr_pos_mm[i];
     }
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         auto &extruder = marlin_vars().hotend(e);
 
         extruder.temp_nozzle = thermalManager.degHotend(e);
@@ -3465,7 +3465,7 @@ static void _server_set_var(const Request &request) {
     }
 
     // Now see if extruder variable is set
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         auto &extruder = marlin_vars().hotend(e);
         if (reinterpret_cast<uintptr_t>(&extruder.target_nozzle) == variable_identifier) {
             extruder.target_nozzle = request.set_variable.float_value;

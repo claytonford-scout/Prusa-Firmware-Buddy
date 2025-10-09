@@ -283,7 +283,7 @@ bool anyHeatherIsActive() {
   #if HAS_HEATED_BED
     active |= thermalManager.degTargetBed() != 0;
   #endif
-  HOTEND_LOOP() active |= thermalManager.degTargetHotend(e) != 0;
+  for (int8_t e = 0; e < HOTENDS; e++) active |= thermalManager.degTargetHotend(e) != 0;
   return active;
 }
 
@@ -691,7 +691,7 @@ void setup() {
   #endif
 
   #if HAS_TEMP_HEATBREAK_CONTROL
-    HOTEND_LOOP(){
+    for (int8_t e = 0; e < HOTENDS; e++){
       thermalManager.setTargetHeatbreak(DEFAULT_HEATBREAK_TEMPERATURE, e);
     }
   #endif

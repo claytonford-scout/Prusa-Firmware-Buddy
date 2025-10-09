@@ -705,7 +705,7 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
     };
     uint8_t fanState = 0;
 
-    HOTEND_LOOP()
+    for (int8_t e = 0; e < HOTENDS; e++)
       if (temp_hotend[e].celsius >= EXTRUDER_AUTO_FAN_TEMPERATURE)
         SBI(fanState, pgm_read_byte(&fanBit[e]));
 
@@ -1413,7 +1413,7 @@ void Temperature::manage_heater() {
 
   #if HOTENDS
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
       #if ENABLED(THERMAL_PROTECTION_HOTENDS)
         if (degHotend(e) > temp_range[e].maxtemp)
          _temp_error((heater_ind_t)e, PSTR(MSG_T_THERMAL_RUNAWAY), GET_TEXT(MSG_THERMAL_RUNAWAY));
@@ -1639,7 +1639,7 @@ void Temperature::suspend_heatbreak_fan(millis_t ms) {
   // TODO: why do have next_heatbreak_check_ms instead of using the nicer watch_heatbreak?
   next_heatbreak_check_ms = millis() + ms;
 
-  HOTEND_LOOP(){
+  for (int8_t e = 0; e < HOTENDS; e++){
     temp_heatbreak[e].soft_pwm_amount = 0;
   }
   WRITE_HEATER_HEATBREAK(LOW);
@@ -1792,9 +1792,9 @@ constexpr float compensate_bed_temperature(float celsius) {
 void Temperature::updateTemperaturesFromRawValues() {
   #if HOTENDS
     #if ENABLED(PRUSA_TOOLCHANGER)
-      HOTEND_LOOP() temp_hotend[e].celsius = prusa_toolchanger.getTool(e).get_hotend_temp();
+      for (int8_t e = 0; e < HOTENDS; e++) temp_hotend[e].celsius = prusa_toolchanger.getTool(e).get_hotend_temp();
     #else
-      HOTEND_LOOP() temp_hotend[e].celsius = analog_to_celsius_hotend(temp_hotend[e].raw, e);
+      for (int8_t e = 0; e < HOTENDS; e++) temp_hotend[e].celsius = analog_to_celsius_hotend(temp_hotend[e].raw, e);
     #endif
   #endif
   #if HAS_HEATED_BED
@@ -1828,9 +1828,9 @@ void Temperature::updateTemperaturesFromRawValues() {
   #endif
   #if HAS_TEMP_HEATBREAK
     #if ENABLED(PRUSA_TOOLCHANGER)
-      HOTEND_LOOP() temp_heatbreak[e].celsius = prusa_toolchanger.getTool(e).get_heatbreak_temp();
+      for (int8_t e = 0; e < HOTENDS; e++) temp_heatbreak[e].celsius = prusa_toolchanger.getTool(e).get_heatbreak_temp();
     #else
-      HOTEND_LOOP() temp_heatbreak[e].celsius = analog_to_celsius_heatbreak(temp_heatbreak[e].raw);
+      for (int8_t e = 0; e < HOTENDS; e++) temp_heatbreak[e].celsius = analog_to_celsius_heatbreak(temp_heatbreak[e].raw);
     #endif
   #endif
   #if HAS_TEMP_BOARD
@@ -2304,7 +2304,7 @@ void Temperature::disable_heaters(Temperature::disable_bed_t disable_bed) {
   #endif
 
   #if HOTENDS
-    HOTEND_LOOP() setTargetHotend(0, e);
+    for (int8_t e = 0; e < HOTENDS; e++) setTargetHotend(0, e);
   #endif
 
   #if HAS_HEATED_BED
@@ -2377,7 +2377,7 @@ void Temperature::set_current_temp_raw() {
   #endif
 
   #if HAS_TEMP_HEATBREAK
-    HOTEND_LOOP() temp_heatbreak[e].update();
+    for (int8_t e = 0; e < HOTENDS; e++) temp_heatbreak[e].update();
   #endif
 
   #if HAS_TEMP_BOARD
@@ -2398,7 +2398,7 @@ void Temperature::readings_ready() {
   if (!temp_meas_ready) set_current_temp_raw();
 
   #if HOTENDS
-    HOTEND_LOOP() temp_hotend[e].reset();
+    for (int8_t e = 0; e < HOTENDS; e++) temp_hotend[e].reset();
   #endif
 
   #if HAS_HEATED_BED
@@ -2410,7 +2410,7 @@ void Temperature::readings_ready() {
   #endif
 
   #if HAS_TEMP_HEATBREAK
-    HOTEND_LOOP() temp_heatbreak[e].reset();
+    for (int8_t e = 0; e < HOTENDS; e++) temp_heatbreak[e].reset();
   #endif
 
   #if HAS_TEMP_BOARD
@@ -2495,7 +2495,7 @@ void Temperature::readings_ready() {
   #endif
 
   #if HAS_TEMP_HEATBREAK
-    HOTEND_LOOP(){
+    for (int8_t e = 0; e < HOTENDS; e++){
       #if TEMPDIRHEATBREAK < 0
         #define HEATBREAKCMP(A,B) ((A)<=(B))
       #else
@@ -2861,7 +2861,7 @@ void Temperature::isr() {
     #endif // HAS_TEMP_BOARD
 
     #if HOTENDS > 1
-      HOTEND_LOOP() print_heater_state(degHotend(e), degTargetHotend(e)
+      for (int8_t e = 0; e < HOTENDS; e++) print_heater_state(degHotend(e), degTargetHotend(e)
         , (heater_ind_t)e
       );
     #endif
@@ -2878,7 +2878,7 @@ void Temperature::isr() {
       SERIAL_ECHOPAIR(" HBR@:", getHeaterPower((heater_ind_t)(H_HEATBREAK_E0 + target_extruder)));
     #endif
     #if HOTENDS > 1
-      HOTEND_LOOP() {
+      for (int8_t e = 0; e < HOTENDS; e++) {
         SERIAL_ECHOPAIR(" @", e);
         SERIAL_CHAR(':');
         SERIAL_ECHO(getHeaterPower((heater_ind_t)e));

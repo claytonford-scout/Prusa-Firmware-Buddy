@@ -772,7 +772,7 @@ void ToolsMappingBody::update_shown_state_after_scroll(uint8_t previous_idx) {
 
 void ToolsMappingBody::update_dwarf_lights() {
 #if PRINTER_IS_PRUSA_XL()
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         prusa_toolchanger.getTool(e).set_cheese_led(0, 0); // disable all
     }
 

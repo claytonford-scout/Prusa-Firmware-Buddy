@@ -727,7 +727,7 @@ public:
           #endif
           #if ENABLED(PRUSA_TOOLCHANGER)
             // Set PID parameters to all dwarves
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
               buddy::puppies::dwarfs[e].set_pid(Temperature::temp_hotend[e].pid.Kp, Temperature::temp_hotend[e].pid.Ki, Temperature::temp_hotend[e].pid.Kd);
             }
           #endif /*HAS_DWARF()*/

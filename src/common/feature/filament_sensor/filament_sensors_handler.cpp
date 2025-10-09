@@ -107,7 +107,7 @@ bool FilamentSensors::gui_wait_for_init_with_msg() {
 #endif
 
 void FilamentSensors::for_all_sensors(const stdext::inplace_function<void(IFSensor &sensor, uint8_t index, bool is_side)> &f) {
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (IFSensor *s = GetExtruderFSensor(e)) {
             f(*s, e, false);
         }
@@ -289,7 +289,7 @@ void FilamentSensors::process_enable_state_update() {
     const uint8_t extruder_enable_bits = config_store().fsensor_extruder_enabled_bits.get();
     const uint8_t side_enable_bits = config_store().fsensor_side_enabled_bits.get();
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (IFSensor *s = GetExtruderFSensor(e)) {
             s->set_enabled(global_enable && (extruder_enable_bits & (1 << e)));
         }
