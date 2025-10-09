@@ -39,7 +39,6 @@
     #include <calibration_z.hpp>
     #include <option/has_uneven_bed_prompt.h>
 
-
     #include <mapi/motion.hpp>
 
 /** \addtogroup G-Codes
@@ -283,7 +282,6 @@ void GcodeSuite::G29() {
                 return;
             }
 
-            G28_no_parser(true, true, true);
             continue;
         }
     #endif
