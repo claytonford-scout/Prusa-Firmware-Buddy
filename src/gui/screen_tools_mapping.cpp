@@ -275,7 +275,7 @@ bool all_nozzles_same(GCodeInfo &gcode_info) {
         return nozzle_diameter_distance <= 0.001f;
     };
     // check gcodes
-    EXTRUDER_LOOP() {
+    for (int8_t e = 0; e < EXTRUDERS; e++) {
         if (!gcode_info.get_extruder_info(e).used()) {
             continue;
         }
@@ -297,7 +297,7 @@ bool all_nozzles_same(GCodeInfo &gcode_info) {
     }
 
     // check physicals
-    EXTRUDER_LOOP() {
+    for (int8_t e = 0; e < EXTRUDERS; e++) {
         if (!is_tool_enabled(e)) {
             continue;
         }
