@@ -59,6 +59,9 @@ using MI_REORDER_FILAMENTS
 using MI_FILAMENTS_VISIBILITY
     = MI_SCREEN<N_("Enable Filaments"), class ScreenFilamentsVisibility>;
 
+using MI_FAN_INFO
+    = MI_SCREEN<N_("Fan Info"), class ScreenMenuFanInfo>;
+
 using MI_VERSION_INFO
     = MI_SCREEN<N_("Version Info"), class ScreenMenuVersionInfo>;
 

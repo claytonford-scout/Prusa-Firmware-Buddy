@@ -290,16 +290,6 @@ public:
     MI_INFO_SIDE_FILL_SENSOR();
 };
 
-class MI_INFO_PRINT_FAN : public WI_FAN_LABEL_t {
-public:
-    MI_INFO_PRINT_FAN();
-};
-
-class MI_INFO_HBR_FAN : public WI_FAN_LABEL_t {
-public:
-    MI_INFO_HBR_FAN();
-};
-
 class MI_PRINT_PROGRESS_TIME : public WiSpin {
 
 public:

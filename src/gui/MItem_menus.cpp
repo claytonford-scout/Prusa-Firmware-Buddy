@@ -3,6 +3,7 @@
 #include <option/buddy_enable_connect.h>
 #include "screen_messages.hpp"
 #include "translator.hpp"
+#include "screen_menu_fan_info.hpp"
 #include "screen_menu_temperature.hpp"
 #include "screen_menu_move.hpp"
 #include "screen_menu_sensor_info.hpp"
@@ -97,6 +98,7 @@ template struct MI_SCREEN_CTOR<ScreenFilamentManagement>;
 template struct MI_SCREEN_CTOR<ScreenFilamentManagementList>;
 template struct MI_SCREEN_CTOR<ScreenFilamentsReorder>;
 template struct MI_SCREEN_CTOR<ScreenFilamentsVisibility>;
+template struct MI_SCREEN_CTOR<ScreenMenuFanInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuVersionInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuSensorInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuOdometer>;

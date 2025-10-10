@@ -48,6 +48,7 @@ target_sources(
           screen_menu_enclosure.cpp
           screen_menu_error_test.cpp
           screen_menu_fail_stat.cpp
+          screen_menu_fan_info.cpp
           screen_menu_filament.cpp
           screen_menu_footer_settings.cpp
           screen_menu_hardware.cpp
