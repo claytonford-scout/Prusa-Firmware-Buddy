@@ -95,8 +95,6 @@ struct ScreenMenuSensorInfo__<std::index_sequence<hotend...>> {
         MI_INFO_FINDA,
     #endif
 
-        MI_FAN_INFO,
-
     #if BOARD_IS_XBUDDY()
         MI_INFO_BED_VOLTAGE,
         MI_INFO_HEATER_VOLTAGE,
@@ -111,7 +109,7 @@ struct ScreenMenuSensorInfo__<std::index_sequence<hotend...>> {
     #if HAS_MMU2()
         MI_INFO_MMU_CURRENT,
     #endif
-        MI_ALWAYS_HIDDEN
+        MI_FAN_INFO
 #endif
         >;
 };
