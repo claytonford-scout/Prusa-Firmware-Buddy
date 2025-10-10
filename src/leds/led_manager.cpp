@@ -22,6 +22,11 @@
     #include <feature/xbuddy_extension/xbuddy_extension.hpp>
 #endif
 
+#include <option/has_ac_controller.h>
+#if HAS_AC_CONTROLLER()
+    #include <puppies/ac_controller.hpp>
+#endif
+
 #include <option/xl_enclosure_support.h>
 #if XL_ENCLOSURE_SUPPORT()
     #include <CFanCtlEnclosure.hpp>
@@ -104,6 +109,10 @@ void LEDManager::update() {
 #if XBUDDY_EXTENSION_VARIANT_STANDARD()
     // Bed LEDs copy LCD status bar strip
     buddy::xbuddy_extension().set_bed_leds_color(data[1].data);
+#endif
+
+#if HAS_AC_CONTROLLER()
+    buddy::puppies::ac_controller.set_rgbw_led({ data[1].r, data[1].g, data[1].b, data[1].w });
 #endif
 
     status_leds.update();
