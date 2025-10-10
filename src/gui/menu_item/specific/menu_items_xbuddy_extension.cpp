@@ -91,7 +91,7 @@ MI_INFO_XBUDDY_EXTENSION_FAN2::MI_INFO_XBUDDY_EXTENSION_FAN2()
 // MI_INFO_XBUDDY_EXTENSION_FAN3
 // =============================================
 MI_INFO_XBUDDY_EXTENSION_FAN3::MI_INFO_XBUDDY_EXTENSION_FAN3()
-    : WI_FAN_LABEL_t(_("Filtration fan"), fan_info_function<buddy::XBuddyExtension::Fan::filtration_fan>) {
+    : WI_FAN_LABEL_t(_("Filtration Fan"), fan_info_function<buddy::XBuddyExtension::Fan::filtration_fan>) {
     set_is_hidden(buddy::xbuddy_extension().status() == buddy::XBuddyExtension::Status::disabled);
 }
 
