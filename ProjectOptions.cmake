@@ -431,6 +431,23 @@ set_feature_for_printers_master_board(HAS_PRINT_FAN_TYPE "XL")
 set_feature_for_printers_master_board(HAS_GEARBOX_ALIGNMENT "MK4" "COREONE" "XL")
 set_feature_for_printers_master_board(HAS_MANUAL_CHAMBER_VENTS "COREONE")
 
+# Use websocket to talk to Connect instead of many http requests.
+#
+# iX can't have websockets yet because of AFS version of Connect, all other printers should have it
+# enabled.
+#
+# Eventually, this'll become the only used and supported way to talk to Connect. At that point, both
+# this option and the "old" code will be removed.
+set_feature_for_printers(
+  WEBSOCKET
+  "MINI"
+  "MK3.5"
+  "MK4"
+  "XL"
+  "COREONE"
+  "XL_DEV_KIT"
+  )
+
 # Set printer board
 set(BOARDS_WITH_ADVANCED_POWER "XBUDDY" "XLBUDDY" "DWARF")
 set(BOARDS_WITH_ILI9488 "XBUDDY" "XLBUDDY")
@@ -790,19 +807,6 @@ set(DEBUG_WITH_BEEPS
     )
 define_boolean_option(DEBUG_WITH_BEEPS ${DEBUG_WITH_BEEPS})
 
-# Use websocket to talk to Connect instead of many http requests.
-#
-# The server part is not ready and the protocol is in a flux too. For that reason, this is not
-# enabled in "real builds", but we need to be able to have the code around and be able to turn it on
-# for custom build - to allow debugging the server too.
-#
-# Eventually, this'll become the only used and supported way to talk to Connect. At that point, both
-# this option and the "old" code will be removed.
-set(WEBSOCKET
-    "ON"
-    CACHE BOOL "Use websocket to talk to connect. In development"
-    )
-define_boolean_option(WEBSOCKET ${WEBSOCKET})
 set(MDNS
     "ON"
     CACHE BOOL "Enable MDNS responder"
