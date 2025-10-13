@@ -104,6 +104,9 @@ LOG_COMPONENT_REF(MarlinServer);
   static constexpr uint8_t soft_pwm_bit_shift = 1;
 #endif
 
+// Rough estimate of room temperature
+static constexpr float room_temperature = 25.0f;
+
 Temperature thermalManager;
 
 /**
@@ -3209,8 +3212,6 @@ void Temperature::isr() {
     }
 
     void Temperature::init_bed_frame_est_celsius() {
-        static constexpr float room_temperature = 25.0f;
-
         if (temp_bed.celsius < room_temperature) {
           // If around room temperature, init directly to bed temperature
           bed_frame_est_celsius = temp_bed.celsius;
@@ -3234,6 +3235,11 @@ void Temperature::isr() {
         if (marlin_debug_flags & MARLIN_DEBUG_DRYRUN) {
             // In dry run, the bed is left cold. The temperature would never stabilize.
             return;
+        }
+
+        if (temp_bed.target <= room_temperature) {
+          log_info(MarlinServer, "Absorbing heat: target lower than room temp, continuing");
+          return;
         }
 
         SkippableGCode::Guard skippable_operation;
