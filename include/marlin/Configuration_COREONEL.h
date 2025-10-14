@@ -318,7 +318,7 @@
  * heater. If your configuration is significantly different than this and you don't understand
  * the issues involved, don't use bed PID until someone else verifies that your hardware works.
  */
-#define PIDTEMPBED
+//#define PIDTEMPBED
 #if ENABLED(PIDTEMPBED)
 
     //#define PID_BED_DEBUG // Sends debug data to the serial port.
@@ -403,7 +403,7 @@
  */
 
 #define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
-#define THERMAL_PROTECTION_BED // Enable thermal protection for the heated bed
+//#define THERMAL_PROTECTION_BED // remote bed has its own thermal protection
 //#define THERMAL_PROTECTION_CHAMBER // Enable thermal protection for the heated chamber
 
 //===========================================================================
@@ -544,7 +544,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 #define DEFAULT_AXIS_STEPS_PER_UNIT \
-    { 100, 100, 400, 380 }
+    { 100, 100, 800, 380 }
 
 /**
  * Default Max Feed Rate (mm/s)
@@ -902,19 +902,19 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 250
-#define Y_BED_SIZE 220
-#define Z_SIZE 275
+#define X_BED_SIZE 300
+#define Y_BED_SIZE 300
+#define Z_SIZE 330
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
 #define X_MIN_POS -2
-#define Y_MIN_POS -19
+#define Y_MIN_POS -15
 #define Z_MIN_POS 0
 #define X_MAX_POS (X_BED_SIZE + 2)
 #define Y_MAX_POS (Y_BED_SIZE + 1)
 #define Y_MAX_PRINT_POS Y_MAX_POS
 #ifdef USE_PRUSA_EEPROM_AS_SOURCE_OF_DEFAULT_VALUES
-    #define DEFAULT_Z_MAX_POS Z_SIZE
+    #define DEFAULT_Z_MAX_POS 338
     #define Z_MIN_LEN_LIMIT 1
     #define Z_MAX_LEN_LIMIT 10000
     #define Z_MAX_POS (get_z_max_pos_mm())
@@ -1134,8 +1134,8 @@
 
 // Homing speeds (mm/m)
 #define HOMING_FEEDRATE_XY (70 * 60)
-#define HOMING_FEEDRATE_Z (19 * 60)
-#define HOMING_FEEDRATE_INVERTED_Z (19 * 60)
+#define HOMING_FEEDRATE_Z (8 * 60)
+#define HOMING_FEEDRATE_INVERTED_Z (8 * 60)
 
 // Validate that endstops are triggered on homing moves
 //#define VALIDATE_HOMING_ENDSTOPS

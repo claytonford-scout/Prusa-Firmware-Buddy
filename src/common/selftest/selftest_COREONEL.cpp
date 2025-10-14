@@ -36,25 +36,25 @@ static constexpr auto Zfr_table = std::to_array<float>({ HOMING_FEEDRATE_Z / 60 
 // reads data from eeprom, cannot be constexpr
 const AxisConfig_t selftest::Config_XAxis = {
     .partname = "X-Axis",
-    .length = X_MAX_LENGTH,
+    .length = 307,
     .fr_table_fw = XYfr_table.data(),
     .fr_table_bw = XYfr_table.data(),
-    .length_min = X_MAX_LENGTH - 10,
-    .length_max = X_MAX_LENGTH + X_END_GAP,
+    .length_min = 302,
+    .length_max = 307,
     .axis = X_AXIS,
     .steps = XYfr_table.size(),
     .movement_dir = -1,
     .park = true,
     .park_pos = 15,
-}; // MINI has movement_dir -1
+};
 
 const AxisConfig_t selftest::Config_YAxis = {
     .partname = "Y-Axis",
-    .length = Y_MAX_LENGTH,
+    .length = 314,
     .fr_table_fw = XYfr_table.data(),
     .fr_table_bw = XYfr_table.data(),
-    .length_min = Y_MAX_LENGTH - 1,
-    .length_max = Y_MAX_LENGTH + Y_END_GAP,
+    .length_min = 310,
+    .length_max = 314,
     .axis = Y_AXIS,
     .steps = XYfr_table.size(),
     .movement_dir = 1,
@@ -64,11 +64,11 @@ const AxisConfig_t selftest::Config_YAxis = {
 
 static const AxisConfig_t Config_ZAxis = {
     .partname = "Z-Axis",
-    .length = get_z_max_pos_mm(),
+    .length = 338,
     .fr_table_fw = Zfr_table.data(),
     .fr_table_bw = Zfr_table.data(),
-    .length_min = get_z_max_pos_mm() - 5,
-    .length_max = get_z_max_pos_mm() + 6,
+    .length_min = 333,
+    .length_max = 338,
     .axis = Z_AXIS,
     .steps = Zfr_table.size(),
     .movement_dir = 1,
@@ -103,15 +103,17 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
     }
 };
 
+static float bed_fake_pid_constant = 0.0;
+
 static constexpr HeaterConfig_t Config_HeaterBed = {
     .partname = "Bed",
     .type = heater_type_t::Bed,
     .tool_nr = 0,
     .getTemp = []() { return thermalManager.temp_bed.celsius; },
     .setTargetTemp = [](int target_temp) { thermalManager.setTargetBed(target_temp); },
-    .refKp = Temperature::temp_bed.pid.Kp,
-    .refKi = Temperature::temp_bed.pid.Ki,
-    .refKd = Temperature::temp_bed.pid.Kd,
+    .refKp = bed_fake_pid_constant,
+    .refKi = bed_fake_pid_constant,
+    .refKd = bed_fake_pid_constant,
     .heatbreak_fan_fnc = Fans::heat_break,
     .print_fan_fnc = Fans::print,
     .heat_time_ms = 60000,

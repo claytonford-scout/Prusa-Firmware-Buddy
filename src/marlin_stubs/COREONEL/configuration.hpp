@@ -1,7 +1,7 @@
 #pragma once
 /**
  * @file configuration.hpp
- * @brief non constant definitions from Configuration_COREONE(_adv).h
+ * @brief non constant definitions from Configuration_COREONEL(_adv).h
  * (Prusa eeprom dependent for at least one Prusa printer type)
  */
 #include <cstdint>
