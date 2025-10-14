@@ -3237,6 +3237,12 @@ void Temperature::isr() {
             return;
         }
 
+        if (temp_bed.target < bed_frame_est_celsius) {
+          // Do not wait for cooldown. Cooling is slow and propagated evenly across the bed, it won't warp the bed differently.
+          log_info(MarlinServer, "Absorbing heat: target lower than actual temp, continuing");
+          return;
+        }
+
         if (temp_bed.target <= room_temperature) {
           log_info(MarlinServer, "Absorbing heat: target lower than room temp, continuing");
           return;
