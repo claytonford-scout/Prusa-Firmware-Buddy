@@ -132,62 +132,56 @@ ScreenSplash::ScreenSplash()
     const bool run_wizard = false;
 #endif
 
-    constexpr auto pepa_callback = +[] {
-        const char *txt =
-#if PRINTER_IS_PRUSA_XL()
-            N_("Hi, this is your\nOriginal Prusa XL printer.\n"
-               "I would like to guide you\nthrough the setup process.");
-#elif PRINTER_IS_PRUSA_MK4()
-            // The MK4 is left out intentionally - it could be MK4, MK4S or MK3.9, we don't know yet
-            N_("Hi, this is your\nOriginal Prusa printer.\n"
-               "I would like to guide you\nthrough the setup process.");
-#elif PRINTER_IS_PRUSA_MK3_5()
-            N_("Hi, this is your\nOriginal Prusa MK3.5 printer.\n"
-               "I would like to guide you\nthrough the setup process.");
-#elif PRINTER_IS_PRUSA_MINI()
-            N_("Hi, this is your\nOriginal Prusa MINI printer.\n"
-               "I would like to guide you\nthrough the setup process.");
-#elif PRINTER_IS_PRUSA_iX()
-            N_("Hi, this is your\nOriginal Prusa iX printer.\n"
-               "I would like to guide you\nthrough the setup process.");
-#elif PRINTER_IS_PRUSA_COREONE()
-            N_("Hi, this is your\nPrusa CORE One printer.\n"
-               "I would like to guide you\nthrough the setup process.");
-#else
-    #error unknown config
-#endif
-        MsgBoxPepaCentered(_(txt), Responses_Ok);
-    };
-
-#if HAS_TOUCH()
-    constexpr auto touch_error_callback = +[] {
-        touchscreen.set_enabled(false);
-        MsgBoxWarning(_("Touch driver failed to initialize, touch functionality disabled"), Responses_Ok);
-    };
-#endif
-
-    constexpr auto network_callback = +[] {
-        // Calls network_initial_setup_wizard
-        marlin_client::gcode("M1703 A");
-    };
 #if HAS_SELFTEST()
     if (run_wizard) {
         Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<ScreenMenuSTSWizard>);
     }
 #endif
-    bool network_setup_needed = !config_store().printer_network_setup_done.get();
-    bool hw_config_needed = !config_store().printer_hw_config_done.get();
+    const bool network_setup_needed = !config_store().printer_network_setup_done.get();
     if (network_setup_needed) {
+        constexpr auto network_callback = +[] {
+            // Calls network_initial_setup_wizard
+            marlin_client::gcode("M1703 A");
+        };
         Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, network_callback>);
     }
+
+    const bool hw_config_needed = !config_store().printer_hw_config_done.get();
     if (hw_config_needed) {
         Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<ScreenPrinterSetup>);
     }
+
     if (network_setup_needed || hw_config_needed
 #if HAS_SELFTEST()
         || run_wizard
 #endif
     ) {
+        constexpr auto pepa_callback = +[] {
+            const char *txt =
+#if PRINTER_IS_PRUSA_XL()
+                N_("Hi, this is your\nOriginal Prusa XL printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_MK4()
+                // The MK4 is left out intentionally - it could be MK4, MK4S or MK3.9, we don't know yet
+                N_("Hi, this is your\nOriginal Prusa printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_MK3_5()
+                N_("Hi, this is your\nOriginal Prusa MK3.5 printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_MINI()
+                N_("Hi, this is your\nOriginal Prusa MINI printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_iX()
+                N_("Hi, this is your\nOriginal Prusa iX printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_COREONE()
+                N_("Hi, this is your\nPrusa CORE One printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#else
+    #error unknown config
+#endif
+            MsgBoxPepaCentered(_(txt), Responses_Ok);
+        };
         Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, pepa_callback>);
     }
 
@@ -222,6 +216,10 @@ ScreenSplash::ScreenSplash()
 
 #if HAS_TOUCH()
     if (touchscreen.is_enabled() && !touchscreen.is_hw_ok()) {
+        constexpr auto touch_error_callback = +[] {
+            touchscreen.set_enabled(false);
+            MsgBoxWarning(_("Touch driver failed to initialize, touch functionality disabled"), Responses_Ok);
+        };
         Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, touch_error_callback>);
     }
 #endif // HAS_TOUCH
