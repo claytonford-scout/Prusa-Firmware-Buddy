@@ -92,42 +92,9 @@ ScreenSplash::ScreenSplash()
 #endif
 
 #if HAS_SELFTEST() && !PRINTER_IS_PRUSA_iX()
-    const bool run_wizard =
-        []() {
-            SelftestResult sr = config_store().selftest_result.get();
-
-            auto any_passed = [](std::same_as<TestResult> auto... results) -> bool {
-                static_assert(sizeof...(results) > 0, "Pass at least one result");
-
-                return ((results == TestResult_Passed) || ...);
-            };
-
-            if (any_passed(sr.xaxis, sr.yaxis, sr.zaxis, sr.bed
-    #if PRINTER_IS_PRUSA_XL()
-                    ,
-                    config_store().selftest_result_phase_stepping.get()
-
-    #endif
-                        )) {
-                return false;
-            }
-            for (size_t e = 0; e < config_store_ns::max_tool_count; e++) {
-    #if HAS_TOOLCHANGER()
-                if (!prusa_toolchanger.is_tool_enabled(e)) {
-                    continue;
-                }
-    #endif
-                if (any_passed(sr.tools[e].printFan, sr.tools[e].heatBreakFan,
-    #if HAS_SWITCHED_FAN_TEST()
-                        sr.tools[e].fansSwitched,
-    #endif /* HAS_SWITCHED_FAN_TEST() */
-                        sr.tools[e].nozzle, sr.tools[e].fsensor, sr.tools[e].loadcell, sr.tools[e].dockoffset, sr.tools[e].tooloffset)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }();
+    // A crude heuristic to make the wizard show only "on the first run"
+    // Yes, we are ignoring other selftest results outside of this struct, but this is good enough for the purpose
+    const bool run_wizard = (config_store().selftest_result.get() == config_store_ns::defaults::selftest_result);
 #elif HAS_SELFTEST()
     const bool run_wizard = false;
 #endif
