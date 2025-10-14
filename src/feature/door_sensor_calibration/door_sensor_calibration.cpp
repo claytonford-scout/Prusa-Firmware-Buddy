@@ -14,12 +14,17 @@ static_assert(HAS_DOOR_SENSOR_CALIBRATION(), "Doesn't support door sensor calibr
 static_assert(HAS_DOOR_SENSOR(), "Doesn't support door sensor, but tries to compile door sensor calibration");
 
 using marlin_server::wait_for_response;
+using namespace door_sensor_calibration;
 
 class DoorSensorCalibration {
 public:
     DoorSensorCalibration() = default;
 
-    void run() {
+    void run(const RunArgs &args) {
+        if (args.ask_enable_only) {
+            fsm_change(PhaseDoorSensorCalibration::ask_enable_safety_features);
+        }
+
         do {
             run_current_phase();
         } while (curr_phase != PhaseDoorSensorCalibration::finish);
@@ -189,12 +194,13 @@ private:
 
     PhaseDoorSensorCalibration curr_phase = PhaseDoorSensorCalibration::skip_ask;
     PhaseDoorSensorCalibration last_phase = PhaseDoorSensorCalibration::skip_ask;
+    marlin_server::FSM_Holder holder { PhaseDoorSensorCalibration::skip_ask };
 };
 
 namespace door_sensor_calibration {
-void run() {
+void run(const RunArgs &args) {
     DoorSensorCalibration calibration;
-    marlin_server::FSM_Holder holder { PhaseDoorSensorCalibration::skip_ask };
-    calibration.run();
+    calibration.run(args);
 }
+
 } // namespace door_sensor_calibration

@@ -24,6 +24,7 @@
 #include <option/has_translations.h>
 #include <option/has_e2ee_support.h>
 #include <gui/screen_printer_setup.hpp>
+#include <option/has_emergency_stop.h>
 
 #include <option/has_selftest.h>
 #if HAS_SELFTEST()
@@ -89,6 +90,25 @@ ScreenSplash::ScreenSplash()
 #if DEVELOPER_MODE()
     // don't present any screen or wizard
     return;
+#endif
+
+#if HAS_EMERGENCY_STOP()
+    static constexpr auto needs_emergency_stop_consent = [] {
+        return !config_store().emergency_stop_enable.get()
+            && !config_store().emergency_stop_disable_consent_given.get();
+    };
+    // Check first time - avoid black screen blinking if we're sure we won't need it
+    if (needs_emergency_stop_consent()) {
+        constexpr auto callback = +[] {
+            // Check again - the user might have given the consent as part of the selftest snake
+            if (needs_emergency_stop_consent()) {
+                // Run the door sensor calibration, only ask for the consent (and run the calibration)
+                marlin_client::gcode("M1980 O");
+                static_assert(HAS_DOOR_SENSOR_CALIBRATION());
+            }
+        };
+        Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, callback>);
+    }
 #endif
 
 #if HAS_SELFTEST() && !PRINTER_IS_PRUSA_iX()
