@@ -107,6 +107,7 @@ private:
         switch (wait_for_response(curr_phase)) {
         case Response::Yes:
             config_store().emergency_stop_enable.set(true);
+            config_store().emergency_stop_disable_consent_given.set(false);
             fsm_change(PhaseDoorSensorCalibration::finish);
             break;
         case Response::No:
@@ -122,6 +123,7 @@ private:
         switch (wait_for_response(curr_phase)) {
         case Response::Disable:
             config_store().emergency_stop_enable.set(false);
+            config_store().emergency_stop_disable_consent_given.set(true);
             fsm_change(PhaseDoorSensorCalibration::finish);
             break;
         case Response::Cancel:

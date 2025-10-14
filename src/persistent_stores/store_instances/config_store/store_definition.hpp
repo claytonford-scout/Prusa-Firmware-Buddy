@@ -638,6 +638,12 @@ struct CurrentStore
 
 #if HAS_EMERGENCY_STOP()
     StoreItem<bool, false, ItemFlag::features, journal::hash("Emergency stop enable v2")> emergency_stop_enable;
+
+    /// Whether the user has given a consent for the emergency stop to be disabled
+    StoreItem<bool, false, ItemFlag::features, journal::hash("Emergency stop disable consent")> emergency_stop_disable_consent_given;
+
+    // These two guys must have the same flags. If the emergency_stop gets factory-reset to off, we need to ask the user for the consent again.
+    static_assert(decltype(emergency_stop_enable)::flags == decltype(emergency_stop_disable_consent_given)::flags);
 #endif
 
 #if HAS_ILI9488_DISPLAY()
