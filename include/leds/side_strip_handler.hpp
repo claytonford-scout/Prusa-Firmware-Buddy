@@ -1,6 +1,6 @@
 #pragma once
 
-#include "color.hpp"
+#include <utils/led_color.hpp>
 #include "printers.h"
 #include "dimming_enabled.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <leds/color.hpp>
+#include <utils/led_color.hpp>
 #include "leds/frame_animation.hpp"
 
 #include <freertos/mutex.hpp>

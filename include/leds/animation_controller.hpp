@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utils/enum_array.hpp>
-#include <leds/color.hpp>
+#include <utils/led_color.hpp>
 #include <timing.h>
 
 namespace leds {

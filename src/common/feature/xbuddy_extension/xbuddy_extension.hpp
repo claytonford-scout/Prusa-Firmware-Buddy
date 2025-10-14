@@ -6,7 +6,7 @@
 
 #include <utils/enum_array.hpp>
 #include <freertos/mutex.hpp>
-#include <leds/color.hpp>
+#include <utils/led_color.hpp>
 #include <temperature.hpp>
 #include <pwm_utils.hpp>
 

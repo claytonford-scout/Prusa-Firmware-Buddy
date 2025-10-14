@@ -1,7 +1,7 @@
 #pragma once
 
 #include <timing.h>
-#include <leds/color.hpp>
+#include <utils/led_color.hpp>
 
 namespace leds {
 

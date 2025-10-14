@@ -1,4 +1,5 @@
-#include <leds/color.hpp>
+#include "led_color.hpp"
+#include <cmath>
 
 namespace leds {
 
