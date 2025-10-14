@@ -148,13 +148,14 @@ struct CurrentStore
     void perform_config_check();
 
     /// Config store "version", gets incremented each time we need to add a new config migration
-    static constexpr uint8_t newest_config_version = 2;
+    static constexpr uint8_t newest_config_version = 3;
 
     /// Stores newest_migration_version of the previous firmware
     StoreItem<uint8_t, 0, ItemFlag::special, journal::hash("Config Version")> config_version;
 
     /// If false, a ScreenPrinterSetup will appear on printer boot
-    StoreItem<bool, false, ItemFlag::calibrations, journal::hash("Printer setup done")> printer_setup_done;
+    StoreItem<bool, false, ItemFlag::network, journal::hash("Printer network done")> printer_network_setup_done;
+    StoreItem<bool, false, ItemFlag::hw_config, journal::hash("Printer hw-config done")> printer_hw_config_done;
 
     /// Global filament sensor enable
     StoreItem<bool, defaults::fsensor_enabled, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("FSensor Enabled V2")> fsensor_enabled;
@@ -625,7 +626,8 @@ struct CurrentStore
 
 #if HAS_XBUDDY_EXTENSION()
     StoreItem<XBEFanTestResults, XBEFanTestResults {}, ItemFlag::calibrations, journal::hash("XBE Chamber fan selftest results")> xbe_fan_test_results;
-    StoreItem<bool, true, ItemFlag::features, journal::hash("XBE USB Host power")> xbe_usb_power;
+    // Has flag of hw_config because the user toggles this as part of hw_config in printer setup
+    StoreItem<bool, true, ItemFlag::hw_config, journal::hash("XBE USB Host power")> xbe_usb_power;
     StoreItem<uint8_t, 102, ItemFlag::features, journal::hash("XBuddy Extension Chamber Fan Max Control Limit")> xbe_cooling_fan_max_auto_pwm;
     StoreItem<uint8_t, PWM255::from_percent(70).value, ItemFlag::features, journal::hash("XBE Filtration Fan Max Auto PWM")> xbe_filtration_fan_max_auto_pwm;
 #endif
@@ -852,6 +854,9 @@ struct DeprecatedStore
 
         StoreItem<bool, true, ItemFlag::calibrations, journal::hash("Run Selftest")> run_selftest;
         */
+
+    // This was replaced by 2 separate items for network and hw_config
+    StoreItem<bool, false, journal::hash("Printer setup done")> printer_setup_done;
 };
 
 } // namespace config_store_ns
