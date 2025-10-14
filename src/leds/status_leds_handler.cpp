@@ -1,6 +1,7 @@
 #include "leds/status_leds_handler.hpp"
 
-#include "leds/animation_controller.hpp"
+#include <led_animation_controller/animation_controller.hpp>
+#include <led_animation_controller/frame_animation.hpp>
 #include "marlin_vars.hpp"
 #include "client_response.hpp"
 #include <option/has_side_fsensor.h>

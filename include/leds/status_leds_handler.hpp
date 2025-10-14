@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utils/led_color.hpp>
-#include "leds/frame_animation.hpp"
+#include <led_animation_controller/frame_animation.hpp>
 
 #include <freertos/mutex.hpp>
 

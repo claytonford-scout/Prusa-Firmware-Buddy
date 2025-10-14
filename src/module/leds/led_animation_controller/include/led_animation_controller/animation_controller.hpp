@@ -2,7 +2,7 @@
 
 #include <utils/enum_array.hpp>
 #include <utils/led_color.hpp>
-#include <timing.h>
+#include <freertos/timing.hpp>
 
 namespace leds {
 
@@ -17,7 +17,7 @@ public:
     }
 
     void update() {
-        uint32_t time_ms = ticks_ms();
+        uint32_t time_ms = freertos::millis();
 
         data_ = current_animation.second.render();
 

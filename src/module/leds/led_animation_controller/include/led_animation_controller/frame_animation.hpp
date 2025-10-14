@@ -1,6 +1,6 @@
 #pragma once
 
-#include <timing.h>
+#include <freertos/timing.hpp>
 #include <utils/led_color.hpp>
 
 namespace leds {
@@ -38,7 +38,7 @@ public:
 
     void start(const Params &p) {
         params = &p;
-        start_time = ticks_ms();
+        start_time = freertos::millis();
     }
 
     std::array<ColorRGBW, count> render() const {
@@ -52,7 +52,7 @@ public:
             return data;
         }
 
-        uint32_t progress_time = ticks_ms() - start_time;
+        uint32_t progress_time = freertos::millis() - start_time;
         uint32_t frame_cycle_time = params->frame_length + params->frame_delay;
         uint32_t time_in_cycle = progress_time % (frame_cycle_time * params->frames.size());
 

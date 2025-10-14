@@ -1,4 +1,6 @@
-#include "leds/simple_transition_controller.hpp"
+#include <led_animation_controller/simple_transition_controller.hpp>
+#include <cmath>
+#include <freertos/timing.hpp>
 
 namespace leds {
 
@@ -11,7 +13,7 @@ void SimpleTransitionController::update() {
         return;
     }
 
-    uint32_t time_ms = ticks_ms();
+    uint32_t time_ms = freertos::millis();
 
     float blend = static_cast<float>(time_ms - transition_start) / transition_time;
     if (blend < 1.0f) {
@@ -26,7 +28,7 @@ void SimpleTransitionController::set(ColorRGBW color, uint32_t transition_time) 
     if (color != target_color) {
         prev_color = current_color;
         target_color = color;
-        transition_start = ticks_ms();
+        transition_start = freertos::millis();
         this->transition_time = transition_time;
         animation_finished = false;
     }

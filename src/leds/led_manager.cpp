@@ -82,7 +82,7 @@ void LEDManager::init() {
 }
 
 void LEDManager::update() {
-    const uint32_t now = ticks_ms();
+    const uint32_t now = freertos::millis();
     if (!rate_limiter.check(now)) {
         return;
     }
