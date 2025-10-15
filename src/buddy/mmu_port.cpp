@@ -4,7 +4,6 @@
 #include <common/timing_precise.hpp>
 #include <common/timing.h>
 #include <freertos/critical_section.hpp>
-#include <buddy/mmu_port.hpp>
 #include <common/hwio_pindef.h>
 #include <hw_configuration.hpp>
 #include <freertos/binary_semaphore.hpp>
@@ -14,27 +13,6 @@ namespace mmu_port {
 
 // TODO: Make hw a standalone module -> this would allow this to be standalone module too
 using namespace buddy::hw;
-
-void activate_reset() {
-    ext_reset.write(Configuration::Instance().has_inverted_mmu_reset() ? Pin::State::low : Pin::State::high);
-}
-
-void deactivate_reset() {
-    ext_reset.write(Configuration::Instance().has_inverted_mmu_reset() ? Pin::State::high : Pin::State::low);
-}
-
-void setup_reset_pin() {
-    const auto &config = Configuration::Instance();
-
-    // Newer BOMs need push-pull for the reset pin, older open drain.
-    // Setting it like this is a bit hacky, because the ext_reset defined in hwio_pindef is constexpr,
-    // so it's not possible to change it right at the source.
-    if (config.needs_push_pull_mmu_reset_pin()) {
-        OutputPin pin = ext_reset;
-        pin.m_mode = OMode::pushPull;
-        pin.configure();
-    }
-}
 
 template <uint32_t us_high, uint32_t us_low, uint32_t us_total>
 void mmu_soft_start() {
@@ -53,7 +31,7 @@ void power_on() {
     const auto &config = Configuration::Instance();
 
     // Power on the MMU with sreset activated
-    activate_reset();
+    config.activate_ext_reset();
 
     if (config.needs_software_mmu_powerup()) {
         if (!config.has_mmu_power_up_hw()) {
@@ -115,7 +93,7 @@ void power_on() {
         ext_pwr_enable.write(Pin::State::high);
     }
 
-    deactivate_reset();
+    config.deactivate_ext_reset();
 }
 
 void power_off() {

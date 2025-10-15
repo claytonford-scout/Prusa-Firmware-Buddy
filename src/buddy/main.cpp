@@ -110,10 +110,6 @@
     #include <nfc.hpp>
 #endif
 
-#if HAS_XBUDDY_EXTENSION()
-    #include <buddy/mmu_port.hpp>
-#endif
-
 #if HAS_ADVANCED_POWER()
     #include <advanced_power.hpp>
 #endif
@@ -446,7 +442,7 @@ extern "C" void main_cpp(void) {
 #endif
 
 #if HAS_XBUDDY_EXTENSION()
-    mmu_port::setup_reset_pin();
+    buddy::hw::Configuration::Instance().setup_ext_reset();
     buddy::hw::ext_pwr_enable.set();
 #endif
 

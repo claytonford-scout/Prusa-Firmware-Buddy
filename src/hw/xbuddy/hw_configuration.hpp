@@ -21,14 +21,25 @@ public:
     static Configuration &Instance();
 
     bool has_inverted_fans() const;
-    bool has_inverted_mmu_reset() const;
     bool has_mmu_power_up_hw() const;
     bool has_trinamic_oscillators() const;
     bool is_fw_compatible_with_hw() const;
     bool needs_heatbreak_thermistor_table_5() const;
-    bool needs_push_pull_mmu_reset_pin() const;
     bool needs_software_mmu_powerup() const;
     float curr_measurement_voltage_to_current(float voltage) const;
+
+    /// Configures the ext_reset pin correctly based on the revision
+    void setup_ext_reset() const;
+
+    /// Activates the ext_reset pin correctly based on the revision
+    void activate_ext_reset() const;
+
+    /// Deactivates ext_reset pin correctly based on the revision
+    void deactivate_ext_reset() const;
+
+private:
+    bool has_inverted_mmu_reset() const;
+    bool needs_push_pull_mmu_reset_pin() const;
 };
 
 } // namespace buddy::hw
