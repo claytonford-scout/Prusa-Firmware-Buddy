@@ -543,7 +543,7 @@ bool shutdown_loop() {
 #if BOARD_IS_XBUDDY()
     case ShutdownState::mmu:
         // Cut power to the MMU connector
-        buddy::hw::MMUEnable.reset();
+        buddy::hw::ext_pwr_enable.reset();
         break;
 #endif
 

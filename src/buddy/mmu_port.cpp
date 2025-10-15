@@ -16,21 +16,21 @@ namespace mmu_port {
 using namespace buddy::hw;
 
 void activate_reset() {
-    MMUReset.write(Configuration::Instance().has_inverted_mmu_reset() ? Pin::State::low : Pin::State::high);
+    ext_reset.write(Configuration::Instance().has_inverted_mmu_reset() ? Pin::State::low : Pin::State::high);
 }
 
 void deactivate_reset() {
-    MMUReset.write(Configuration::Instance().has_inverted_mmu_reset() ? Pin::State::high : Pin::State::low);
+    ext_reset.write(Configuration::Instance().has_inverted_mmu_reset() ? Pin::State::high : Pin::State::low);
 }
 
 void setup_reset_pin() {
     const auto &config = Configuration::Instance();
 
     // Newer BOMs need push-pull for the reset pin, older open drain.
-    // Setting it like this is a bit hacky, because the MMUReset defined in hwio_pindef is constexpr,
+    // Setting it like this is a bit hacky, because the ext_reset defined in hwio_pindef is constexpr,
     // so it's not possible to change it right at the source.
     if (config.needs_push_pull_mmu_reset_pin()) {
-        OutputPin pin = MMUReset;
+        OutputPin pin = ext_reset;
         pin.m_mode = OMode::pushPull;
         pin.configure();
     }
@@ -41,9 +41,9 @@ void mmu_soft_start() {
     for (uint32_t i = 0; i < us_total; i += (us_high + us_low)) {
         {
             buddy::InterruptDisabler disable_interrupts;
-            MMUEnable.write(Pin::State::high);
+            ext_pwr_enable.write(Pin::State::high);
             delay_us_precise<us_high>();
-            MMUEnable.write(Pin::State::low);
+            ext_pwr_enable.write(Pin::State::low);
         }
         delay_us(us_low);
     }
@@ -67,7 +67,7 @@ void power_on() {
             static constexpr uint32_t us_total = 15000;
             mmu_soft_start<us_high, us_low, us_total>();
 
-            MMUEnable.write(Pin::State::high);
+            ext_pwr_enable.write(Pin::State::high);
 
             // Give some time for the MMU to catch up with the reset signal - it takes some time for the voltage to actually start
             delay(200);
@@ -81,14 +81,14 @@ void power_on() {
             auto awdg = awdg::get_single_channel_watchdog(
                 &hadc3, ADC_CHANNEL_4, [&trigger_time, &early_oc](awdg::ADCWatchdog &wdg) {
                 wdg.adjust_range(0, MAX_THR);
-                MMUEnable.reset();
+                ext_pwr_enable.reset();
                 trigger_time = ticks_us();
                 early_oc.release_from_isr(); }, 0, HIGH_THR);
             auto current_wait_time = START_WAIT_TIME;
             auto start_time = ticks_us();
             while (true) {
                 awdg->adjust_range(0, HIGH_THR);
-                MMUEnable.set();
+                ext_pwr_enable.set();
                 if (!early_oc.try_acquire_for(100)) {
                     // We didn't trigger the watchdog for 100ms, ether the MMU is not connected or the MMU is charged enough and we can continue
                     break;
@@ -112,14 +112,14 @@ void power_on() {
             }
         }
     } else {
-        MMUEnable.write(Pin::State::high);
+        ext_pwr_enable.write(Pin::State::high);
     }
 
     deactivate_reset();
 }
 
 void power_off() {
-    MMUEnable.write(Pin::State::low);
+    ext_pwr_enable.write(Pin::State::low);
 }
 
 } // namespace mmu_port
