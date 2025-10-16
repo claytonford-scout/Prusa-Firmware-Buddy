@@ -383,10 +383,15 @@ volatile bool Temperature::temp_meas_ready = false;
       #endif
       #define ONHEATINGSTART() printerEventLEDs.onBedHeatingStart()
       #define ONHEATING(S,C,T) printerEventLEDs.onBedHeating(S,C,T)
-    #else
+    #else /* ENABLED(PIDTEMP) && DISABLED(PIDTEMPBED) */
       #define GHV(B,H) H
       #if ENABLED(HW_PWM_HEATERS)
-        #define SHV(B,H) analogWrite_HEATER_BED(H)
+        // Need to write soft_pwm_amount even when using hardware pwm heater to prevent
+        // power manager from shutting us down, leading to temperature check failure.
+        #define SHV(B,H) do {                         \
+            analogWrite(HEATER_0_PIN, H);             \
+            temp_hotend[heater].soft_pwm_amount = H;  \
+        } while (0)
       #else
         #define SHV(B,H) (temp_hotend[heater].soft_pwm_amount = H)
       #endif
