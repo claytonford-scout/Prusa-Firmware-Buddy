@@ -50,6 +50,7 @@
 #include <option/has_manual_belt_tuning.h>
 #include <option/has_bed_fan.h>
 #include <option/has_psu_fan.h>
+#include <option/has_heatbed_screws_during_transport.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -648,6 +649,10 @@ struct CurrentStore
 
     // These two guys must have the same flags. If the emergency_stop gets factory-reset to off, we need to ask the user for the consent again.
     static_assert(decltype(emergency_stop_enable)::flags == decltype(emergency_stop_disable_consent_given)::flags);
+#endif
+
+#if HAS_HEATBED_SCREWS_DURING_TRANSPORT()
+    StoreItem<bool, false, ItemFlag::features, journal::hash("Heatbed screws removal approved")> heatbed_screws_removal_approved;
 #endif
 
 #if HAS_ILI9488_DISPLAY()

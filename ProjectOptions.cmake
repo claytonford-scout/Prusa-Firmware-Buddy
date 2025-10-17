@@ -539,6 +539,7 @@ set_feature_for_printers_master_board(HAS_AUTOMATIC_CHAMBER_VENTS "COREONEL")
 set_feature_for_printers_master_board(HAS_BED_FAN "COREONEL")
 set_feature_for_printers_master_board(HAS_PSU_FAN "COREONEL")
 set_feature_for_printers(HAS_AC_CONTROLLER "COREONEL")
+set_feature_for_printers(HAS_HEATBED_SCREWS_DURING_TRANSPORT "COREONEL")
 
 # Use websocket to talk to Connect instead of many http requests.
 #
