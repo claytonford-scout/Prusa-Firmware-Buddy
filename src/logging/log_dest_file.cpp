@@ -65,6 +65,12 @@ static void file_log_write(AsyncJobExecutionControl &) {
 
     data->write_buffer();
 
+    if (was_overflow) {
+        // Write a newline on overflow - it was likely chopped
+        // You know what, write two to visually separate the sections
+        fwrite("\n\n", 1, 2, data->file.get());
+    }
+
     // If we fail writing, disable the logger
     if (ferror(data->file.get())) {
         _gd.unlock();
