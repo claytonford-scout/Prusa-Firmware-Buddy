@@ -92,7 +92,13 @@ namespace defaults {
     inline constexpr uint32_t footer_draw_type { footer::ItemDrawCnf::get_default() };
     inline constexpr std::array<char, pl_password_size> prusalink_password { "" };
 
-    inline constexpr std::array<char, connect_host_size + 1> connect_host { "buddy-a.\x01\x01" }; // "Compressed" - this means buddy-a.connect.prusa3d.com.
+    inline constexpr std::array<char, connect_host_size + 1> connect_host {
+#if PRINTER_IS_PRUSA_iX()
+        "connect.afs"
+#else
+        "buddy-a.\x01\x01" // "Compressed" - this means buddy-a.connect.prusa3d.com.
+#endif
+    };
     inline constexpr std::array<char, connect_token_size + 1> connect_token { "" };
     inline constexpr std::array<char, connect_proxy_size + 1> connect_proxy_host { "" };
     inline constexpr uint16_t connect_port { 443 };
@@ -100,7 +106,13 @@ namespace defaults {
     // Defaults for metrics
 #if DEVELOPMENT_ITEMS()
     // Development build has metrics allowed
-    inline constexpr std::array<char, metrics_host_size + 1> metrics_host { "matrix.prusa.vc" };
+    inline constexpr std::array<char, metrics_host_size + 1> metrics_host {
+    #if PRINTER_IS_PRUSA_iX()
+        "metrics.afs"
+    #else
+        "matrix.prusa.vc"
+    #endif
+    };
     inline constexpr bool enable_metrics { true };
 #else /*DEVELOPMENT_ITEMS()*/
     // Production build need user to intentionally allow them
