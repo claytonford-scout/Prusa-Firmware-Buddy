@@ -23,7 +23,7 @@ namespace file {
     static_assert(sizeof(BufferChunk) == 32);
 
     struct Data {
-        AtomicCircularQueue<BufferChunk, uint8_t, 16> buffer;
+        AtomicCircularQueue<BufferChunk, uint8_t, 32> buffer;
         AsyncJob write_job;
         unique_file_ptr file;
 
