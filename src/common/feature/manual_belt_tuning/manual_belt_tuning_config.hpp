@@ -44,6 +44,30 @@ constexpr uint16_t belt_hz_per_rev2 = 12;
 // optimal belt tension for the printer
 constexpr uint16_t tension_optimal_N = 19;
 
+#elif PRINTER_IS_PRUSA_COREONEL()
+
+// top belt length (vibrating part) 318 - 6.5 = 311.5mm
+constexpr float length_top_belt = 0.3115f;
+// bottom belt length (vibrating part) 318 + 6.5 = 324.5mm
+constexpr float length_bottom_belt = 0.3245f;
+
+constexpr int16_t calib_position_x = 294;
+constexpr int16_t calib_position_y = 0;
+
+// range of valid measured frequencies
+// outside measurements are considered to have x-gantry misalignment
+constexpr uint16_t freq_result_min = 76; // loosen to 75 if needed
+constexpr uint16_t freq_result_max = 82; // loosen to 83 if needed
+
+// constants for calculating how many revolutions to do for any frequency differences
+// this constants represents average frequency change of the belt per one revolution of its own screw
+constexpr uint16_t belt_hz_per_rev = 12;
+// this constants represents average frequency change of the belt per one revolution of second belt screw
+constexpr uint16_t belt_hz_per_rev2 = 10;
+
+// optimal belt tension for the printer
+constexpr uint16_t tension_optimal_N = 25;
+
 #else
     #error
 #endif

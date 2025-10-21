@@ -82,6 +82,10 @@ dependencies = {
         'version': '2.5.0',
         'url': 'https://prusa-buddy-firmware-dependencies.s3.eu-central-1.amazonaws.com/bootloader-mk4-2.5.0-F25989EA-595A-4CE4-BF6F-4E5A6E30EDF2.zip',
     },
+    'bootloader-coreonel': {
+        'version': '2.5.0',
+        'url': 'https://prusa-buddy-firmware-dependencies.s3.eu-central-1.amazonaws.com/bootloader-mk4-2.5.0-F25989EA-595A-4CE4-BF6F-4E5A6E30EDF2.zip',
+    },
     'bootloader-mk3.5': {
         'version': '2.5.0',
         'url': 'https://prusa-buddy-firmware-dependencies.s3.eu-central-1.amazonaws.com/bootloader-mk4-2.5.0-F25989EA-595A-4CE4-BF6F-4E5A6E30EDF2.zip',
@@ -93,6 +97,10 @@ dependencies = {
     'bootloader-ix': {
         'version': '2.5.1',
         'url': 'https://prusa-buddy-firmware-dependencies.s3.eu-central-1.amazonaws.com/bootloader-ix-2.5.1-5A2FF4DF-9D77-402D-89CB-6ED914311775.zip',
+    },
+    'firmware-coreonel_ac_controller': {
+        'version': '0.0.1',
+        'url': 'https://prusa-buddy-firmware-dependencies.s3.eu-central-1.amazonaws.com/firmware-coreonel_ac_controller-0.0.1-D73B188E-8467-4391-8544-EAF22FAB3CF1.zip',
     },
     'firmware-mmu': {
         'version': '3.0.3',

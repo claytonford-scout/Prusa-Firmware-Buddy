@@ -197,7 +197,7 @@ namespace defaults {
     };
 
     inline constexpr uint8_t nozzle_is_high_flow {
-#if PRINTER_IS_PRUSA_COREONE()
+#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
         1 << 0, // Bitset -> first and only nozzle
 #else
         0,
@@ -246,7 +246,7 @@ namespace defaults {
 
 #if HAS_HOTEND_TYPE_SUPPORT()
     inline constexpr HotendType hotend_type {
-    #if PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE()
+    #if PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
         HotendType::stock_with_sock
     #else
         HotendType::stock
@@ -295,7 +295,7 @@ namespace defaults {
         .nozzle_preheat_temperature = 170,
     };
 
-#if PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_XL()
+#if PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL() || PRINTER_IS_PRUSA_XL()
     static_assert(HAS_PHASE_STEPPING());
     inline constexpr bool phase_stepping_enabled = true;
 

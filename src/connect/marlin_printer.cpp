@@ -39,7 +39,7 @@ static_assert(HAS_CHAMBER_FILTRATION_API());
     #include <feature/chamber_filtration/chamber_filtration.hpp>
 #endif
 
-#if PRINTER_IS_PRUSA_COREONE()
+#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
     #include <feature/chamber/chamber.hpp>
     #include <feature/xbuddy_extension/xbuddy_extension.hpp>
 #endif
@@ -305,7 +305,7 @@ Printer::Params MarlinPrinter::params() const {
         .time_in_use = config_store().chamber_filter_time_used_s.get()
     };
 #endif
-#if PRINTER_IS_PRUSA_COREONE()
+#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
     {
         auto xbe = buddy::xbuddy_extension().get_fan12_state(); // avoid locking 2 mutexes just to read a single value (and we are reading 4 values)
         params.chamber_info = {

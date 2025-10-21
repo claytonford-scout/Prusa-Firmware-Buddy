@@ -4,6 +4,7 @@
 #include "data_exchange.hpp"
 #include "otp.hpp"
 #include "timing_precise.hpp"
+#include <adc.hpp>
 #include <common/hwio_pindef.h>
 #include <option/bootloader.h>
 #include <option/has_door_sensor.h>
@@ -113,8 +114,16 @@ bool Configuration::is_fw_compatible_with_hw() const {
     }
     #endif /* !PRINTER_IS_PRUSA_MK3_5() */
 
+    // Disconnected thermistor should read 0x3ff value (10-bit adc channel with oversampling).
+    // However, there are some 3V3 fluctuations so we allow changes on 2 least significant bits
+    // When the thermistor is connected, we read values around 0x3D0
+    constexpr uint32_t disconnected_bed_mask = 0b11'1111'1100;
+    [[maybe_unused]] const bool bed_thermistor_connected = (AdcGet::bed() & disconnected_bed_mask) != disconnected_bed_mask;
+
     #if PRINTER_IS_PRUSA_COREONE()
-    return door_sensor_connected;
+    return door_sensor_connected && bed_thermistor_connected;
+    #elif PRINTER_IS_PRUSA_COREONEL()
+    return door_sensor_connected && !bed_thermistor_connected;
     #elif PRINTER_IS_PRUSA_MK4()
     return !door_sensor_connected && (loveboard_present || !mk35_extruder_detected);
     #elif PRINTER_IS_PRUSA_MK3_5()

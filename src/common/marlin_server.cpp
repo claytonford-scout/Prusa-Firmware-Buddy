@@ -105,6 +105,7 @@
 #include <option/has_emergency_stop.h>
 #include <option/has_uneven_bed_prompt.h>
 #include <option/has_nextruder.h>
+#include <option/has_automatic_chamber_vents.h>
 
 #if HAS_DWARF()
     #include <puppies/Dwarf.hpp>
@@ -192,6 +193,11 @@
 
 #if HAS_NOZZLE_CLEANER()
     #include <nozzle_cleaner.hpp>
+#endif
+
+#include "option/has_bed_fan.h"
+#if HAS_BED_FAN()
+    #include <feature/bed_fan/controller.hpp>
 #endif
 
 using namespace ExtUI;
@@ -511,7 +517,7 @@ static void handle_warnings() {
 #if HAS_MANUAL_CHAMBER_VENTS()
     case PhasesWarning::ChamberVents:
         if (response == Response::Disable) {
-            config_store().check_manual_vent_state.set(false);
+            config_store().check_chamber_vent_state.set(false);
         }
         break;
 #endif
@@ -806,6 +812,10 @@ static void cycle() {
     // Although the timeout should never trigger within idle() (= when a gcode is run),
     // We still need to run the step() there to prevent "sampling bias" so that the timer could reset itself during movements and single-injected gcodes
     buddy::stepper_timeout().step();
+
+#if HAS_BED_FAN()
+    bed_fan::controller().step();
+#endif
 
     record_fanctl_metrics();
 
@@ -2185,9 +2195,9 @@ static void _server_print_loop(void) {
                 fsm_create(PhasesPrinting::active);
             }
         }
-#if HAS_MANUAL_CHAMBER_VENTS()
-        if (config_store().check_manual_vent_state.get()) {
-            buddy::chamber().check_vent_state();
+#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
+        if (config_store().check_chamber_vent_state.get()) {
+            buddy::chamber().manage_ventilation_state();
         }
 #endif
 #if HAS_CHAMBER_FILTRATION_API()

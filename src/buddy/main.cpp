@@ -262,7 +262,7 @@ extern "C" void main_cpp(void) {
     SPI_INIT(led);
 #endif
 
-#if PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_COREONE()
+#if PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
     /*
      * MK3.5 HW detected on MK4 firmware or vice versa
      * MK4 HW detected on CORE ONE firmware or vice versa

@@ -22,6 +22,11 @@
 
 #include "../../inc/MarlinConfig.h"
 
+#include <option/has_bed_fan.h>
+#if HAS_BED_FAN()
+    #include <feature/bed_fan/controller.hpp>
+#endif
+
 #if FAN_COUNT > 0
 
     #include "../gcode.h"
@@ -93,6 +98,25 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
         buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::filtration_fan, pwm_or_auto);
         return true;
     #endif // XBUDDY_EXTENSION_VARIANT_STANDARD()
+
+    #if HAS_BED_FAN()
+    case 5:
+        if (set_auto) {
+            constexpr float default_temp_threshold = -1.0f; // disabled
+            bed_fan::controller().set_mode(bed_fan::Controller::AutomaticMode {
+                .max_pwm = parser.byteval('A', 255),
+                .bed_temp_threshold = parser.celsiusval('B', default_temp_threshold),
+                .chamber_temp_threshold = parser.celsiusval('C', default_temp_threshold),
+            });
+        } else {
+            bed_fan::controller().set_mode(bed_fan::Controller::ManualMode {
+                .pwm = speed,
+            });
+        }
+        return true;
+    #endif
+    default:
+        break;
     }
 
     return false;
@@ -108,6 +132,7 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
  *#### Usage
  *
  *   M106 [ S | P | T ]
+ *   M106 P5 [ S | A B C ]  // Bed fan specific usage
  *
  *#### Parameters
  *
@@ -118,11 +143,14 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
  *     - `2` - ...
  *     - `3` - Cooling fan (if supported) or Enclosure fan (XL)
  *     - `4` - Filtration fan (if supported)
+ *     - `5` - Bed Fan (if supported)
  * - `R` - Set the to auto control (if supported by the fan)
- * - `A` - ???
  * - `T` - Select which tool if the same fan is on multiple tools, active_extruder if not specified
  * - `N` - Ramp function breakpoint PWM for chamber fan regulator (0-255, P3/P4 only). See description below.
  * - `G` - Proportional gain (ramp_slope) for chamber fan regulator (float, P3/P4 only). See description below.
+ * - `A` - Maximum PWM for automatic bed fan control (0-255, P5 only)
+ * - `B` - Bed temperature threshold for automatic control (°C, P5 only)
+ * - `C` - Chamber temperature threshold for automatic control (°C, P5 only)
  *
  *#### XBuddyExtension Chamber Fan Auto Control Logic (fans 3 & 4 on CORE ONE printers)
  * - Chamber Fan control algorithm is ramp function with hysteresis on top of it
@@ -135,6 +163,20 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
  * - The PWM output is also modified based on the filtration backend to adjust for different fan configurations
  *
  * !! This comment is also doubled in the FanCooling::compute_auto_regulation_step. If you do changes here, update the other one, too.
+ *
+ *#### Bed Fan (P5) Examples
+ * - `M106 P5 S128` - Manual control at PWM 128 (50%)
+ * - `M106 P5 R A200 B10` - Auto control, max PWM 200, bed threshold 10°C
+ * - `M106 P5 R A180 C5` - Auto control, max PWM 180, chamber threshold 5°C
+ * - `M106 P5 R A255 B10 C5` - Auto control, chamber priority if both targets set
+ *
+ *#### Bed Fan Auto Control Logic
+ * - If chamber threshold (C) set and chamber target > 0: use chamber control
+ * - Else if bed threshold (B) set and bed target > 0: use bed control
+ * - Temperature difference > threshold: maximum PWM (A parameter)
+ * - Temperature difference 0-threshold: linear scaling
+ *
+ *Enclosure fan (index 3) don't support T parameter
  */
 void GcodeSuite::M106() {
     const uint8_t p = parser.byteval('P', _ALT_P);
@@ -191,6 +233,7 @@ void GcodeSuite::M106() {
  *     - `2` - ...
  *     - `3` - Cooling fan (if supported) or Enclosure fan (XL)
  *     - `4` - Filtration fan (if supported)
+ *     - `5` - Bed Fan (if supported)
  * - `T` - Select which tool if there are multiple fans, one on each tool
  */
 void GcodeSuite::M107() {

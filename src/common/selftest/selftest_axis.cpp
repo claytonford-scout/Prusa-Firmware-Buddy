@@ -132,6 +132,12 @@ LoopResult CSelftestPart_Axis::stateHomeXY() {
 
     log_info(Selftest, "%s home single axis", config.partname);
 
+#ifdef HOMING_PREEMPTIVE_MOVE_Y
+    ArrayStringBuilder<14> gcode;
+    gcode.append_printf("G0 Y%f", HOMING_PREEMPTIVE_MOVE_Y);
+    queue.enqueue_one_now(gcode.str());
+#endif
+
     const auto home_result = GcodeSuite::G28_no_parser(config.axis == X_AXIS, config.axis == Y_AXIS, false,
         G28Flags {
             // Non-CoreXY machines need precise homing here

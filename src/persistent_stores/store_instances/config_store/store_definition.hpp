@@ -44,13 +44,18 @@
 #include <option/has_auto_retract.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_chamber_vents.h>
+#include <option/has_automatic_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_e2ee_support.h>
 #include <option/has_manual_belt_tuning.h>
+#include <option/has_bed_fan.h>
+#include <option/has_psu_fan.h>
+#include <option/has_heatbed_screws_during_transport.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
 #include <feature/xbuddy_extension/xbuddy_extension_fan_results.hpp>
+#include <feature/bed_fan/selftest_result.hpp>
 #include <print_fan_type.hpp>
 
 #if HAS_SHEET_PROFILES()
@@ -646,6 +651,10 @@ struct CurrentStore
     static_assert(decltype(emergency_stop_enable)::flags == decltype(emergency_stop_disable_consent_given)::flags);
 #endif
 
+#if HAS_HEATBED_SCREWS_DURING_TRANSPORT()
+    StoreItem<bool, false, ItemFlag::features, journal::hash("Heatbed screws removal approved")> heatbed_screws_removal_approved;
+#endif
+
 #if HAS_ILI9488_DISPLAY()
     StoreItem<bool, false, ItemFlag::hw_config | ItemFlag::common_misconfigurations, journal::hash("Reduce Display Baudrate")> reduce_display_baudrate;
 #endif
@@ -715,8 +724,8 @@ struct CurrentStore
     static_assert(HOTENDS <= 8);
 #endif
 
-#if HAS_MANUAL_CHAMBER_VENTS()
-    StoreItem<bool, true, ItemFlag::printer_state, journal::hash("Check chamber ventilation state")> check_manual_vent_state;
+#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
+    StoreItem<bool, true, ItemFlag::printer_state, journal::hash("Check chamber ventilation state")> check_chamber_vent_state;
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()
@@ -724,6 +733,13 @@ struct CurrentStore
 #endif
 
     StoreItem<bool, DEVELOPMENT_ITEMS(), ItemFlag::user_interface | ItemFlag::common_misconfigurations, journal::hash("Fast Draw Enabled")> fast_draw_enabled;
+
+#if HAS_BED_FAN()
+    StoreItem<bed_fan::SelftestResult, bed_fan::SelftestResult {}, ItemFlag::calibrations, journal::hash("Bed fan selftest results")> bed_fan_selftest_result;
+#endif
+#if HAS_PSU_FAN()
+    StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("PSU fan selftest result")> psu_fan_selftest_result;
+#endif
 
 private:
     void perform_config_migrations();

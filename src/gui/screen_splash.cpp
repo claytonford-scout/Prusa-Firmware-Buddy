@@ -25,6 +25,7 @@
 #include <option/has_e2ee_support.h>
 #include <gui/screen_printer_setup.hpp>
 #include <option/has_emergency_stop.h>
+#include <option/has_heatbed_screws_during_transport.h>
 
 #include <option/has_selftest.h>
 #if HAS_SELFTEST()
@@ -111,6 +112,32 @@ ScreenSplash::ScreenSplash()
     }
 #endif
 
+#if HAS_HEATBED_SCREWS_DURING_TRANSPORT()
+    //  C1L is shipped with the bed screwed into the bottom of the chassis. And hence the screws have to be removed.
+    const bool bed_screws_removal_approved = config_store().heatbed_screws_removal_approved.get();
+
+    if (!bed_screws_removal_approved) {
+        // Ask the user to approve the removal of the bed screws
+        static constexpr point_ui16_t icon_point = point_ui16_t(40, 20);
+        constexpr auto callback = [] {
+            MsgBoxIconned msgbox(
+                Rect16(0, 0, GuiDefaults::ScreenWidth, GuiDefaults::ScreenHeight),
+                icon_point,
+                Responses_Ok,
+                0,
+                nullptr,
+                _("Before using the 3D printer, it is necessary to remove all 3 screws, that secure the heated bed during transport.\n\nThe screws are marked with a sticker."),
+                is_multiline::yes,
+                &img::ac_heatbed_screw_80x246,
+                is_closed_on_click_t::yes);
+            Screens::Access()->gui_loop_until_dialog_closed();
+            config_store().heatbed_screws_removal_approved.set(true);
+        };
+        Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, callback>);
+    };
+
+#endif
+
 #if HAS_SELFTEST() && !PRINTER_IS_PRUSA_iX()
     // A crude heuristic to make the wizard show only "on the first run"
     // Yes, we are ignoring other selftest results outside of this struct, but this is good enough for the purpose
@@ -163,6 +190,9 @@ ScreenSplash::ScreenSplash()
                    "I would like to guide you\nthrough the setup process.");
 #elif PRINTER_IS_PRUSA_COREONE()
                 N_("Hi, this is your\nPrusa CORE One printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+#elif PRINTER_IS_PRUSA_COREONEL()
+                N_("Hi, this is your\nPrusa CORE One L printer.\n"
                    "I would like to guide you\nthrough the setup process.");
 #else
     #error unknown config
@@ -251,6 +281,12 @@ ScreenSplash::ScreenSplash()
                 { BootstrapStage::flashing_xbuddy_extension, 10 },
                 { BootstrapStage::verifying_xbuddy_extension, 1 },
     #endif
+    #if HAS_AC_CONTROLLER()
+                { BootstrapStage::ac_controller_unknown, 1 },
+                { BootstrapStage::ac_controller_verify, 1 },
+                { BootstrapStage::ac_controller_flash, 10 },
+                { BootstrapStage::ac_controller_ready, 1 },
+    #endif
 #endif
         }) };
 
@@ -306,6 +342,16 @@ static const char *message(BootstrapStage stage) {
         return "Flashing xbuddy extension";
     case BootstrapStage::verifying_xbuddy_extension:
         return "Verifying xbuddy extension";
+    #endif
+    #if HAS_AC_CONTROLLER()
+    case BootstrapStage::ac_controller_unknown:
+        return "AC controller: unknown";
+    case BootstrapStage::ac_controller_verify:
+        return "AC controller: verifying";
+    case BootstrapStage::ac_controller_flash:
+        return "AC controller: flashing";
+    case BootstrapStage::ac_controller_ready:
+        return "AC controller: ready";
     #endif
 #endif
     }

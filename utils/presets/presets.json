@@ -14,6 +14,18 @@
             }
         },
         {
+            "name": "coreonel",
+            "description": "Original Prusa CORE One L",
+            "cacheVariables": {
+                "PRINTER": "COREONEL",
+                "BOARD": "XBUDDY",
+                "XBUDDY_EXTENSION_BINARY_DIR": {
+                    "type": "FILEPATH",
+                    "value": "build-vscode-xbuddy-extension"
+                }
+            }
+        },
+        {
             "name": "mini",
             "description": "Original Prusa MINI",
             "cacheVariables": {
@@ -233,6 +245,14 @@
             "description": "Original Prusa CORE One Extension Board",
             "cacheVariables": {
                 "PRINTER": "COREONE",
+                "BOARD": "XBUDDY_EXTENSION"
+            }
+        },
+        {
+            "name": "coreonel-xbuddy-extension",
+            "description": "Original Prusa CORE One L Extension Board",
+            "cacheVariables": {
+                "PRINTER": "COREONEL",
                 "BOARD": "XBUDDY_EXTENSION"
             }
         }
