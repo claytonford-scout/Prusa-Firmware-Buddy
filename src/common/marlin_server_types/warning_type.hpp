@@ -8,8 +8,6 @@
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_selftest.h>
 #include <option/has_precise_homing_corexy.h>
-#include <option/has_bed_fan.h>
-#include <option/has_psu_fan.h>
 
 enum class WarningType : uint32_t {
 #if HAS_EMERGENCY_STOP()
@@ -95,12 +93,6 @@ enum class WarningType : uint32_t {
     HomingCalibrationFromMenuNeeded,
 #endif
     AccelerometerCommunicationFailed,
-#if HAS_BED_FAN()
-    BedFanError,
-#endif
-#if HAS_PSU_FAN()
-    PsuFanError,
-#endif
 #if HAS_ILI9488_DISPLAY()
     DisplayProblemDetected,
 #endif

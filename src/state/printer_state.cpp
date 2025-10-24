@@ -22,8 +22,6 @@
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_side_fsensor.h>
 #include <option/has_belt_tuning.h>
-#include <option/has_bed_fan.h>
-#include <option/has_psu_fan.h>
 
 #if HAS_LOADCELL()
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
@@ -717,15 +715,6 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 #if HAS_SELFTEST()
     case WarningType::SelftestNotSuccessfullyCompleted:
         return ErrCode::CONNECT_UNFINISHED_SELFTEST;
-#endif
-
-#if HAS_BED_FAN()
-    case WarningType::BedFanError:
-        return ErrCode::CONNECT_BED_FAN_ERROR;
-#endif
-#if HAS_PSU_FAN()
-    case WarningType::PsuFanError:
-        return ErrCode::CONNECT_PSU_FAN_ERROR;
 #endif
 
     case WarningType::_cnt:
