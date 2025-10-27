@@ -30,7 +30,7 @@ public:
     void set_lcd_brightness(uint8_t brightness);
 
 private:
-    static constexpr uint32_t gui_delay_redraw = 40; // 40 ms => 25 fps
+    static constexpr uint32_t gui_delay_redraw = 60; // 60 ms => 17 fps
     RateLimiter<uint32_t> rate_limiter { gui_delay_redraw };
     freertos::Mutex power_panic_mutex;
     bool power_panic { false };
