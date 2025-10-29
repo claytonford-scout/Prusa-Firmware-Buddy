@@ -2805,6 +2805,8 @@ static void _server_print_loop(void) {
         printFanErrorChecker.checkTrue(fan_state != CFanCtlCommon::FanState::error_running && fan_state != CFanCtlCommon::FanState::error_starting, WarningType::PrintFanError, false, true);
 
 #if XBUDDY_EXTENSION_VARIANT_STANDARD()
+        // TODO: Fix error checking of chamber fans
+        /*
         const bool cool_fan_ok = buddy::xbuddy_extension().is_fan_ok(buddy::XBuddyExtension::Fan::cooling_fan_1) && buddy::xbuddy_extension().is_fan_ok(buddy::XBuddyExtension::Fan::cooling_fan_2);
         xbe_cool_fan_checker.checkTrue(cool_fan_ok, WarningType::ChamberCoolingFanError, false, false);
         if (cool_fan_ok) {
@@ -2816,6 +2818,7 @@ static void _server_print_loop(void) {
         if (filter_fan_ok) {
             xbe_filter_fan_checker.reset();
         }
+        */
 #endif /* XBUDDY_EXTENSION_VARIANT_STANDARD() */
 #if XL_ENCLOSURE_SUPPORT()
         const bool enclosure_fan_ok = Fans::enclosure().is_fan_ok();
