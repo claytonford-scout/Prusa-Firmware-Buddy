@@ -128,6 +128,9 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src/
           ${CMAKE_BINARY_DIR}/lib/libbgcode/src/
   )
+target_compile_options(
+  connect_tests PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/printer_type_override.hpp
+  )
 target_link_libraries(connect_tests mbedTLS bgcode_core raii xbuddy_extension)
 
 file(GLOB AUTOMATA_GENERATORS ${PROJECT_ROOT_DIR}/utils/gen-automata/*.py)
@@ -250,6 +253,9 @@ target_include_directories(
   )
 add_dependencies(connect_planner_tests generate-httpc-automata-tests-connect)
 
+target_compile_options(
+  connect_planner_tests PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/printer_type_override.hpp
+  )
 target_link_libraries(connect_planner_tests raii xbuddy_extension)
 
 add_executable(
@@ -349,6 +355,9 @@ target_include_directories(
 add_dependencies(connect_registration_tests generate-httpc-automata-tests-connect)
 
 target_link_libraries(connect_registration_tests raii xbuddy_extension)
+target_compile_options(
+  connect_registration_tests PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/printer_type_override.hpp
+  )
 
 add_catch_test(connect_tests)
 add_catch_test(connect_planner_tests)
