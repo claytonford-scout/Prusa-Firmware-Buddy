@@ -123,104 +123,6 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            matrix {
-                agent {
-                    dockerfile {
-                        label 'docker-v2'
-                        filename 'utils/holly/Dockerfile'
-                        additionalBuildArgs '-t prusa-firmware-buddy'
-                    }
-                }
-                axes {
-                    axis {
-                        name 'configuration'
-                        // preset,build_type,bootloader(yesboot|noboot|emptyboot)
-                        values 'coreone,release,yesboot',
-                            'mini-en-cs,release,yesboot',
-                            'mini-en-de,release,yesboot',
-                            'mini-en-es,release,yesboot',
-                            'mini-en-fr,release,yesboot',
-                            'mini-en-it,release,yesboot',
-                            'mini-en-ja,release,yesboot',
-                            'mini-en-pl,release,yesboot',
-                            'mini-en-uk,release,yesboot',
-                            'mk3.5,release,yesboot',
-                            'mk4,release,yesboot',
-                            'mk4,release,noboot', // Needed for integration tests, please don't delete
-                            'xl,release,yesboot',
-                            'xl-burst,release,yesboot',
-                            'ix,release,yesboot'
-                    }
-                }
-                stages {
-                    stage('Build') {
-                        steps {
-                            script {
-                                def config_components = configuration.split(',')
-                                def config = [
-                                    preset: config_components[0],
-                                    build_type: config_components[1],
-                                    bootloader: config_components[2]]
-                                def version = get_version_info()
-
-                                echo "Building ${config.preset} ${config.build_type} ${config.bootloader}"
-
-                                def dev_items
-                                if (env.BRANCH_NAME.startsWith("RELEASE-") || env.BRANCH_NAME == "xl" || env.BRANCH_NAME == "mk4-release") {
-                                    // This is an RC build
-                                    dev_items = "no"
-                                } else {
-                                    // This is build of an ordinary branch (not a release branch)
-                                    dev_items = "yes"
-                                }
-
-                                // remove the "boot" suffix from the config.bootloader
-                                if (config.bootloader != "boot" && config.bootloader.endsWith("boot")) {
-                                    config.bootloader = config.bootloader.substring(0, config.bootloader.length() - 4)
-                                }
-
-                                // create the build stages
-                                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                                    sshagent(credentials: ['prusa_holly']) {
-                                        sh """
-                                            export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-                                            ln -fs /work/.dependencies
-                                            ln -fs /work/.venv
-                                            . .venv/bin/activate
-                                            rm -rf build
-                                            python3 utils/build.py \
-                                                --preset ${config.preset} \
-                                                --build-type ${config.build_type} \
-                                                --bootloader ${config.bootloader} \
-                                                --generate-dfu \
-                                                --no-store-output \
-                                                --skip-bootstrap \
-                                                --version-suffix=${version.suffix_full} \
-                                                --version-suffix-short=${version.suffix_short} \
-                                                -DCUSTOM_COMPILE_OPTIONS:STRING="-Werror" \
-                                            -DDEVELOPMENT_ITEMS_ENABLED:BOOL=${dev_items}
-                                        """
-                                    }
-                                    // stash the build artifacts for use by the integration tests
-                                    stash(name: configuration, includes: "build/*boot/firmware*")
-                                    // archive build products
-                                    archiveArtifacts artifacts: 'build/products/*', fingerprint: true
-                                    // cleanup
-                                    sh """rm -rf build*"""
-                                }
-                            }
-                        }
-                        post {
-                            cleanup {
-                                deleteDir()
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Tests') {
             parallel {
                 stage('Unit Tests') {
@@ -254,28 +156,6 @@ pipeline {
                         cleanup {
                             deleteDir()
                         }
-                    }
-                }
-
-                stage('Marlin_server_types python module') {
-                    agent {
-                        dockerfile {
-                            label 'docker-v2'
-                            filename 'utils/holly/Dockerfile'
-                            additionalBuildArgs '-t prusa-firmware-buddy'
-                        }
-                    }
-                    steps {
-                        sh """
-                        ln -fs /work/.dependencies
-                        ln -fs /work/.venv
-                        . .venv/bin/activate
-                        export MST_INSTALL_PATH=\$PWD/build_mst/
-                        rm \$MST_INSTALL_PATH -rf
-                        pip install \$PWD/src/common/marlin_server_types/python_binding/ --target=\$MST_INSTALL_PATH
-                        export PYTHONPATH="\$PYTHONPATH:\$MST_INSTALL_PATH"
-                        pytest \$PWD/src/common/marlin_server_types/python_binding/tests/
-                        """
                     }
                 }
 

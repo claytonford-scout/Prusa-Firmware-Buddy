@@ -2,3 +2,6 @@
 # `firmware` targets and similar. Keep it civil, please
 
 add_subdirectory(utils)
+add_subdirectory(raii)
+add_subdirectory(nfc)
+add_subdirectory(iso13239)

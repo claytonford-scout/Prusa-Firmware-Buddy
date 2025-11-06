@@ -25,7 +25,26 @@ if(NOT CMAKE_CROSSCOMPILING)
   add_subdirectory(utils)
 endif()
 
+if(NOT CMAKE_CROSSCOMPILING)
+  option(UNITTESTS_ENABLE "Enable building of unittest" ON)
+endif()
 include(ProjectOptions.cmake)
+
+# link time optimizations to disable LTO run cmake with -DDISABLE_LTO
+if(NOT DEFINED DISABLE_LTO
+   AND NOT DEVELOPER_MODE
+   AND NOT BOARD STREQUAL DWARF
+   AND CMAKE_CROSSCOMPILING # This will not force LTO for unittests and png2font, because those are
+                            # build natively
+   )
+  set(COMPILE_WITH_LTO ON)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  message(STATUS "LTO: Enabled")
+else()
+  set(COMPILE_WITH_LTO OFF)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
+  message(STATUS "LTO: Disabled")
+endif()
 
 # Check GCC Version
 get_recommended_gcc_version(RECOMMENDED_TOOLCHAIN_VERSION)
@@ -59,13 +78,18 @@ add_compile_options(-frandom-seed=BuddyFW)
 
 add_compile_options(
   $<$<COMPILE_LANGUAGE:CXX>:-Wno-register> $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile>
-  $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
   )
+
+if(NOT UNITTESTS_ENABLE)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
+elseif(CMAKE_CROSSCOMPILING)
+  message(FATAL_ERROR "RTTI should be disabled when crosscompiling")
+endif()
 
 # append custom C/C++ flags
 if(CUSTOM_COMPILE_OPTIONS)
-  string(REPLACE " " ";" CUSTOM_COMPILE_OPTIONS "${CUSTOM_COMPILE_OPTIONS}")
-  add_compile_options(${CUSTOM_COMPILE_OPTIONS})
+  string(REPLACE " " ";" EXTRA_COMPILE_OPTIONS "${CUSTOM_COMPILE_OPTIONS}")
+  add_compile_options(${EXTRA_COMPILE_OPTIONS})
 endif()
 
 # find bootloader.bin location
@@ -167,14 +191,7 @@ target_compile_definitions(
   )
 
 target_compile_definitions(
-  BuddyHeaders
-  INTERFACE PRINTER_CODE=${PRINTER_CODE}
-            BOARD=BOARD_${BOARD}
-            BOARD_VERSION_MAJOR=${BOARD_VERSION_MAJOR}
-            BOARD_VERSION_MINOR=${BOARD_VERSION_MINOR}
-            BOARD_VERSION_PATCH=${BOARD_VERSION_PATCH}
-            MARLIN_DISABLE_INFINITE_LOOP
-            PROCESS_CUSTOM_GCODE
+  BuddyHeaders INTERFACE PRINTER_CODE=${PRINTER_CODE} BOARD=BOARD_${BOARD} PROCESS_CUSTOM_GCODE
   )
 target_link_libraries(BuddyHeaders INTERFACE printers)
 
@@ -344,7 +361,10 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       dwarf
       SOURCE_DIR "${DWARF_SOURCE_DIR}"
       BINARY_DIR "${DWARF_BINARY_DIR}"
-      CMAKE_ARGS --preset xl-dwarf_${CMAKE_BUILD_TYPE_lower}_boot -B "${DWARF_BINARY_DIR}"
+      CMAKE_ARGS
+        --preset xl-dwarf_${CMAKE_BUILD_TYPE_lower}_boot -B "${DWARF_BINARY_DIR}"
+        $<$<BOOL:${CUSTOM_COMPILE_OPTIONS}>:-DCUSTOM_COMPILE_OPTIONS=${CUSTOM_COMPILE_OPTIONS}>
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target firmware
       INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step"
       BUILD_BYPRODUCTS "${DWARF_BINARY_PATH}" "${DWARF_BINARY_DIR}/firmware"
       STEP_TARGETS build
@@ -354,7 +374,7 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       )
   endif()
 
-  if(NOT MODULARBED_BINARY_PATH AND HAS_MODULARBED)
+  if(NOT MODULARBED_BINARY_PATH AND HAS_PUPPY_MODULARBED)
     get_filename_component(
       MODULARBED_BINARY_DIR "${MODULARBED_BINARY_DIR}" REALPATH BASE_DIR "${CMAKE_SOURCE_DIR}"
       )
@@ -365,8 +385,11 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       modularbed
       SOURCE_DIR "${MODULARBED_SOURCE_DIR}"
       BINARY_DIR "${MODULARBED_BINARY_DIR}"
-      CMAKE_ARGS --preset ${PRINTER_lower}-modularbed_${CMAKE_BUILD_TYPE_lower}_boot -B
-                 "${MODULARBED_BINARY_DIR}"
+      CMAKE_ARGS
+        --preset ${PRINTER_lower}-modularbed_${CMAKE_BUILD_TYPE_lower}_boot -B
+        "${MODULARBED_BINARY_DIR}"
+        $<$<BOOL:${CUSTOM_COMPILE_OPTIONS}>:-DCUSTOM_COMPILE_OPTIONS=${CUSTOM_COMPILE_OPTIONS}>
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target firmware
       INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step"
       BUILD_BYPRODUCTS "${MODULARBED_BINARY_PATH}" "${MODULARBED_BINARY_DIR}/firmware"
       STEP_TARGETS build
@@ -402,21 +425,16 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
 endif()
 
 # Unittests
-if(NOT CMAKE_CROSSCOMPILING)
-  option(UNITTESTS_ENABLE "Enable building of unittest" ON)
-  if(UNITTESTS_ENABLE)
-    enable_testing()
-    add_subdirectory(tests)
-  endif()
+if(UNITTESTS_ENABLE)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
 
 # std::rand/random
 if(BOARD IN_LIST BUDDY_BOARDS)
   set(ENABLE_HW_STD_RAND TRUE)
-  set(RANDOM_CPP random_hw.cpp)
 else()
   set(ENABLE_HW_STD_RAND FALSE)
-  set(RANDOM_CPP random_sw.cpp)
 endif()
 
 #
@@ -476,11 +494,6 @@ objcopy(firmware "binary" ".bin")
 
 # generate linker map file
 target_link_options(firmware PUBLIC -Wl,-Map=firmware.map,--print-memory-usage)
-
-# link time optimizations
-if(NOT DEVELOPER_MODE)
-  set_target_properties(firmware PROPERTIES INTERPROCEDURAL_OPTIMIZATION True)
-endif()
 
 # inform about the firmware's size in terminal
 report_size(firmware)

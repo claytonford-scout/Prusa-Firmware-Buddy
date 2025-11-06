@@ -1,0 +1,4 @@
+add_subdirectory(nfcv)
+add_subdirectory(openprinttag)
+add_subdirectory(openprinttag_nfcv)
+add_subdirectory(openprinttag_stub)
