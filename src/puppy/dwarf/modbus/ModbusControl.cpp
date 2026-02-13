@@ -303,10 +303,13 @@ static inline int16_t clamp_to_int16(float temperature) {
 }
 
 static void update_fault_status() {
-    const uint32_t gstat = stepperE0.read(0x01);
-    if (gstat != 0) {
-        ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::fault_status, static_cast<uint16_t>(dwarf_shared::errors::FaultStatusMask::TMC_FAULT));
-    }
+    // DISABLED: TMC fault checking to prevent false positives from connector issues
+    // This modification disables error #17536 "Extruder motor is not spinning"
+    // WARNING: Real motor failures will not be detected!
+    // const uint32_t gstat = stepperE0.read(0x01);
+    // if (gstat != 0) {
+    //     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::fault_status, static_cast<uint16_t>(dwarf_shared::errors::FaultStatusMask::TMC_FAULT));
+    // }
 }
 
 static bool should_check_fault_status(bool is_parked, bool is_picked) {
