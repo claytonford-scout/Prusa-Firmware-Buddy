@@ -5,6 +5,7 @@
 #include "Marlin/src/module/temperature.h"
 #include "Marlin/src/module/stepper/trinamic.h"
 #include "Marlin/src/module/planner.h"
+#include "Marlin/src/module/motion.h"
 #include "../loadcell.hpp"
 #include "Pin.hpp"
 #include "Cheese.hpp"
@@ -16,7 +17,6 @@
 #include "utility_extensions.hpp"
 #include "advanced_power.hpp"
 #include "accelerometer.hpp"
-#include "mapi/motion.hpp"
 
 namespace dwarf::ModbusControl {
 
@@ -319,13 +319,21 @@ static void update_fault_status() {
             for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
                 // Purge sequence: 25mm forward, 5mm back, 5mm forward (net: 25mm extruded)
                 // This leaves filament in approximately the same position
-                if (mapi::extruder_move(25.0f, 30.0f)) {
-                    planner.synchronize();
-                    mapi::extruder_move(-5.0f, 30.0f);
-                    planner.synchronize();
-                    mapi::extruder_move(5.0f, 30.0f);
-                    planner.synchronize();
-                }
+                auto pos = planner.position_float;
+                pos.e += 25.0f;
+                current_position.e = pos.e;
+                planner.buffer_line(pos, 30.0f);
+                planner.synchronize();
+                
+                pos.e -= 5.0f;
+                current_position.e = pos.e;
+                planner.buffer_line(pos, 30.0f);
+                planner.synchronize();
+                
+                pos.e += 5.0f;
+                current_position.e = pos.e;
+                planner.buffer_line(pos, 30.0f);
+                planner.synchronize();
                 
                 // Check if fault cleared
                 const uint32_t gstat_after = stepperE0.read(0x01);
