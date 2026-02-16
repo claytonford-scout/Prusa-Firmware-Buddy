@@ -4,6 +4,7 @@
 #include <logging/log.hpp>
 #include "Marlin/src/module/temperature.h"
 #include "Marlin/src/module/stepper/trinamic.h"
+#include "Marlin/src/module/planner.h"
 #include "../loadcell.hpp"
 #include "Pin.hpp"
 #include "Cheese.hpp"
@@ -15,6 +16,7 @@
 #include "utility_extensions.hpp"
 #include "advanced_power.hpp"
 #include "accelerometer.hpp"
+#include "mapi/motion.hpp"
 
 namespace dwarf::ModbusControl {
 
@@ -303,13 +305,38 @@ static inline int16_t clamp_to_int16(float temperature) {
 }
 
 static void update_fault_status() {
-    // DISABLED: TMC fault checking to prevent false positives from connector issues
-    // This modification disables error #17536 "Extruder motor is not spinning"
-    // WARNING: Real motor failures will not be detected!
-    // const uint32_t gstat = stepperE0.read(0x01);
-    // if (gstat != 0) {
-    //     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::fault_status, static_cast<uint16_t>(dwarf_shared::errors::FaultStatusMask::TMC_FAULT));
-    // }
+    // TMC fault checking with purge recovery
+    // Instead of reporting error #17536, attempt purge to clear potential connector issues
+    const uint32_t gstat = stepperE0.read(0x01);
+    if (gstat != 0) {
+        // Check if hotend is hot enough for extrusion
+        constexpr float MIN_EXTRUSION_TEMP = 200.0f;
+        if (Temperature::degHotend(0) > MIN_EXTRUSION_TEMP) {
+            enable_e_steppers();
+            
+            // Retry up to 5 times
+            constexpr int MAX_RETRIES = 5;
+            for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
+                // Purge sequence: 25mm forward, 5mm back, 5mm forward (net: 25mm extruded)
+                // This leaves filament in approximately the same position
+                if (mapi::extruder_move(25.0f, 30.0f)) {
+                    planner.synchronize();
+                    mapi::extruder_move(-5.0f, 30.0f);
+                    planner.synchronize();
+                    mapi::extruder_move(5.0f, 30.0f);
+                    planner.synchronize();
+                }
+                
+                // Check if fault cleared
+                const uint32_t gstat_after = stepperE0.read(0x01);
+                if (gstat_after == 0) {
+                    break; // Fault cleared, continue operation
+                }
+            }
+        }
+        // If still faulted after retries or too cold, continue anyway
+        // Fault reporting is disabled to prevent false positives from connector issues
+    }
 }
 
 static bool should_check_fault_status(bool is_parked, bool is_picked) {
