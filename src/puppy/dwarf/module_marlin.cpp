@@ -107,6 +107,10 @@ void dwarf::modules::marlin::start() {
         dwarf::ModbusControl::ProcessModbusMessages();
         dwarf::ModbusControl::UpdateRegisters();
 
+        // Handle TMC fault recovery with purge sequence (if needed)
+        // This must be called AFTER UpdateRegisters() but with adequate stack space
+        dwarf::ModbusControl::ProcessPurgeFaultRecovery();
+
         check_operation_safety();
 
         // Reload this instance of watchdog

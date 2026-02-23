@@ -46,6 +46,11 @@ union __attribute__((packed)) LedPwm {
 dwarf_shared::StatusLed status_led = dwarf_shared::StatusLed(); // Default LED control
 uint32_t tool_picked_timestamp_ms = 0; // Holds when tool was picked - used to delay fault state checking
 
+// TMC fault recovery state
+static bool s_tmc_fault_detected = false;
+static uint8_t s_purge_retry_count = 0;
+static constexpr uint8_t MAX_PURGE_RETRIES = 5;
+
 static constexpr unsigned int MODBUS_QUEUE_MESSAGE_COUNT = 40;
 
 osMailQDef(m_ModbusQueue, MODBUS_QUEUE_MESSAGE_COUNT, ModbusMessage);
@@ -305,45 +310,12 @@ static inline int16_t clamp_to_int16(float temperature) {
 }
 
 static void update_fault_status() {
-    // TMC fault checking with purge recovery
-    // Instead of reporting error #17536, attempt purge to clear potential connector issues
+    // TMC fault checking - just detect and set flag, don't take action here
+    // The purge will be handled by ProcessPurgeFaultRecovery() in the main loop
     const uint32_t gstat = stepperE0.read(0x01);
-    if (gstat != 0) {
-        // Check if hotend is hot enough for extrusion
-        constexpr float MIN_EXTRUSION_TEMP = 200.0f;
-        if (Temperature::degHotend(0) > MIN_EXTRUSION_TEMP) {
-            enable_e_steppers();
-            
-            // Retry up to 5 times
-            constexpr int MAX_RETRIES = 5;
-            for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
-                // Purge sequence: 25mm forward, 5mm back, 5mm forward (net: 25mm extruded)
-                // This leaves filament in approximately the same position
-                auto pos = planner.position_float;
-                pos.e += 25.0f;
-                current_position.e = pos.e;
-                planner.buffer_line(pos, 30.0f);
-                planner.synchronize();
-                
-                pos.e -= 5.0f;
-                current_position.e = pos.e;
-                planner.buffer_line(pos, 30.0f);
-                planner.synchronize();
-                
-                pos.e += 5.0f;
-                current_position.e = pos.e;
-                planner.buffer_line(pos, 30.0f);
-                planner.synchronize();
-                
-                // Check if fault cleared
-                const uint32_t gstat_after = stepperE0.read(0x01);
-                if (gstat_after == 0) {
-                    break; // Fault cleared, continue operation
-                }
-            }
-        }
-        // If still faulted after retries or too cold, continue anyway
-        // Fault reporting is disabled to prevent false positives from connector issues
+    if (gstat != 0 && !s_tmc_fault_detected) {
+        s_tmc_fault_detected = true;
+        s_purge_retry_count = 0;
     }
 }
 
@@ -390,6 +362,59 @@ void UpdateRegisters() {
 
     if (should_check_fault_status(Cheese::is_parked(), Cheese::is_picked())) {
         update_fault_status();
+    }
+}
+
+void ProcessPurgeFaultRecovery() {
+    // This function must be called from the main loop, not from UpdateRegisters()
+    // This ensures it has adequate stack space for motion commands
+
+    if (!s_tmc_fault_detected) {
+        return; // No fault to process
+    }
+
+    // Check if we've exceeded retry limit
+    if (s_purge_retry_count >= MAX_PURGE_RETRIES) {
+        s_tmc_fault_detected = false; // Clear flag to avoid repeated attempts
+        s_purge_retry_count = 0;
+        return;
+    }
+
+    // Check if hotend is hot enough for extrusion
+    constexpr float MIN_EXTRUSION_TEMP = 200.0f;
+    if (Temperature::degHotend(0) <= MIN_EXTRUSION_TEMP) {
+        // Don't increment retry count, just wait for temperature
+        return;
+    }
+
+    // Enable stepper
+    enable_e_steppers();
+
+    // Purge sequence: 25mm forward, 5mm back, 5mm forward (net: 25mm extruded)
+    auto pos = planner.position_float;
+
+    pos.e += 25.0f;
+    current_position.e = pos.e;
+    planner.buffer_line(pos, 30.0f);
+    planner.synchronize();
+
+    pos.e -= 5.0f;
+    current_position.e = pos.e;
+    planner.buffer_line(pos, 30.0f);
+    planner.synchronize();
+
+    pos.e += 5.0f;
+    current_position.e = pos.e;
+    planner.buffer_line(pos, 30.0f);
+    planner.synchronize();
+
+    // Check if fault cleared
+    const uint32_t gstat_after = stepperE0.read(0x01);
+    if (gstat_after == 0) {
+        s_tmc_fault_detected = false;
+        s_purge_retry_count = 0;
+    } else {
+        s_purge_retry_count++;
     }
 }
 

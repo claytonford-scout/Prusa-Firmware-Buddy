@@ -12,6 +12,7 @@ namespace dwarf::ModbusControl {
 bool Init();
 void ProcessModbusMessages();
 void UpdateRegisters();
+void ProcessPurgeFaultRecovery();
 void TriggerMarlinKillFault(dwarf_shared::errors::FaultStatusMask fault_id, const char *component, const char *message);
 bool isDwarfSelected();
 
